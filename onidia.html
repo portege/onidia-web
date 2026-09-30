@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Onidia — chibi desktop pet in one HTML file</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;color:#e9e6f5;
+    font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:
+      radial-gradient(1100px 620px at 15% -5%, #1d3f4d 0%, rgba(29,63,77,0) 60%),
+      radial-gradient(900px 700px at 95% 110%, #3a2347 0%, rgba(58,35,71,0) 55%),
+      linear-gradient(#141d2b,#0c1018);
+  }
+  .app{max-width:1060px;margin:0 auto;padding:20px 16px 44px;display:flex;flex-direction:column;gap:14px}
+  .head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  h1{margin:0;font-size:30px;letter-spacing:.5px;
+     background:linear-gradient(180deg,#a5ecef,#5fcfd6 55%,#41aeb6);
+     -webkit-background-clip:text;background-clip:text;color:transparent;
+     text-shadow:0 2px 0 rgba(47,34,62,.5)}
+  .sub{margin:4px 0 0;color:#a9a2c4;font-size:13.5px}
+  code{background:rgba(165,236,239,.12);color:#a5ecef;padding:1px 5px;border-radius:5px;font-size:12.5px}
+  .legend{display:flex;align-items:center;gap:8px;color:#8f88ad;font-size:12.5px}
+  .dot{width:9px;height:9px;border-radius:50%;background:#ff9aaa;box-shadow:0 0 10px #ff9aaa}
+
+  .stage-wrap{position:relative;border-radius:18px;overflow:hidden;
+    border:1px solid rgba(165,236,239,.18);
+    box-shadow:0 22px 60px rgba(0,0,0,.5), inset 0 0 70px rgba(95,207,214,.05)}
+  #stage{display:block;width:100%;height:clamp(300px,56vh,460px);cursor:pointer}
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px}
+  .card{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);
+    border-radius:14px;padding:12px 13px;backdrop-filter:blur(4px)}
+  .card h2{margin:0 0 9px;font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:#8f88ad}
+  .row{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+  .row.small{margin-top:9px;font-size:12.5px;color:#8f88ad}
+  input[type=text]{flex:1 1 150px;min-width:130px;background:rgba(0,0,0,.28);color:#f2eefc;
+    border:1px solid rgba(165,236,239,.25);border-radius:10px;padding:8px 11px;font-size:14px;outline:none}
+  input[type=text]:focus{border-color:#5fcfd6;box-shadow:0 0 0 3px rgba(95,207,214,.18)}
+  .btn{background:rgba(95,207,214,.1);color:#cdeff1;border:1px solid rgba(95,207,214,.3);
+    border-radius:999px;padding:7px 13px;font-size:13px;cursor:pointer;transition:.15s}
+  .btn:hover{background:rgba(95,207,214,.24);transform:translateY(-1px)}
+  .btn.primary{background:rgba(255,154,170,.16);border-color:rgba(255,154,170,.45);color:#ffd6e0}
+  .btn.primary:hover{background:rgba(255,154,170,.3)}
+  .btn.on{background:rgba(95,207,214,.38);color:#06232a;border-color:#5fcfd6;font-weight:600}
+  .btn.face{font-size:12px;padding:5px 10px}
+  .chk{display:inline-flex;align-items:center;gap:6px;cursor:pointer;user-select:none}
+  .chk input{accent-color:#5fcfd6}
+  kbd{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:5px;
+    padding:0 5px;font-size:11.5px;font-family:ui-monospace,monospace}
+  .hint{margin-left:auto}
+  footer{color:#6f6889;font-size:12px;line-height:1.6}
+  footer b{color:#a5ecef;font-weight:600}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="head">
+    <div>
+      <h1>Onidia</h1>
+      <p class="sub">the chibi girl from <code>characters/onidia</code> — this Go desktop-pet's whole character redrawn in a single HTML file with canvas &amp; vanilla JS</p>
+    </div>
+    <div class="legend"><span class="dot"></span>112×160 author grid · 16 faces · 36 phrases</div>
+  </header>
+
+  <div class="stage-wrap"><canvas id="stage"></canvas></div>
+
+  <div class="cards">
+    <section class="card">
+      <h2>Talk to her</h2>
+      <div class="row">
+        <input id="say" type="text" placeholder="type something, then Enter…" maxlength="140" autocomplete="off">
+        <button id="send" class="btn primary">send</button>
+        <button id="boop" class="btn">boop!</button>
+      </div>
+      <div class="row small">
+        <label class="chk"><input type="checkbox" id="auto" checked> random chatter</label>
+        <label class="chk"><input type="checkbox" id="grid"> show grid</label>
+        <span class="hint">click her to boop · <kbd>space</kbd></span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Action</h2>
+      <div class="row" id="actions"></div>
+    </section>
+
+    <section class="card">
+      <h2>Face</h2>
+      <div class="row" id="faces"></div>
+    </section>
+  </div>
+
+  <footer>
+    Art ported 1:1 from the Go character package — palette, geometry, poses and phrases unchanged:
+    teal twin-tails &amp; ahoge, pink dress with a frill hem, deep-plum outlines.
+    She blinks, bobs, walks, waves, flashes a peace sign, dances, hops and naps;
+    chatter comes from her own phrase pool, each line with the face she makes while saying it.
+    Everything runs in this one file — no build step, no dependencies.
+  </footer>
+</div>
+
+<script>
+'use strict';
+// ---------------------------------------------------------------------------
+// Onidia — chibi desktop pet, ported to canvas.
+//
+// This is the Go pet's character redrawn in vanilla JS, so the sprite can be
+// opened straight from disk. There is no build step and nothing to install.
+//
+// Source of truth, kept 1:1 so the two never drift apart:
+//   palette, geometry, faces  -> characters/onidia/*.go
+//   poses, walk cycle, phrases -> behavior.go
+// The art is authored on a fixed 112x160 grid (CX = 56, GROUNDY = 156), and the
+// scene is drawn in logical units scaled to CSS pixels; the device-pixel ratio
+// is applied only to the canvas context, never to the sprite math.
+//
+// Drawing order per frame (drawPet) mirrors the Go renderer: hair, legs, body,
+// arms, head, then the raised hands on top so waving / peace / disco arms stay
+// visible over the hair mass.
+// ---------------------------------------------------------------------------
+
+const BASEW = 112, BASEH = 160, CX = 56, GROUNDY = 156;
+const TAU = Math.PI * 2;
+
+// The complete Onidia palette (palette.go).
+const C = {
+  outlineDark: 'rgba(47,34,62,1)', outlineSkin: 'rgba(198,134,100,1)',
+  shadow: 'rgba(25,12,35,0.196)',
+  hair: 'rgba(95,207,214,1)', hairShade: 'rgba(65,174,182,1)', hairLight: 'rgba(165,236,239,1)',
+  tie: 'rgba(255,122,158,1)',
+  skin: 'rgba(255,228,206,1)', nose: 'rgba(235,165,140,0.549)', blush: 'rgba(255,120,135,0.275)',
+  tear: 'rgba(126,188,255,0.804)', sweat: 'rgba(158,212,255,0.902)', anger: 'rgba(240,78,78,0.922)',
+  sclera: 'rgba(253,253,255,1)', iris: 'rgba(54,62,110,1)', pupil: 'rgba(24,28,56,1)', lash: 'rgba(40,32,50,1)',
+  mouth: 'rgba(176,66,90,1)', tongue: 'rgba(231,126,143,1)',
+  dress: 'rgba(255,154,170,1)', frill: 'rgba(255,214,224,1)', collar: 'rgba(250,248,252,1)',
+  shoe: 'rgba(92,74,110,1)',
+};
+
+// Phrases: each line carries the face she makes while saying it (phrases.go).
+const PHRASES = [
+  ['mew~', 'happy'], ['hi there!', 'happy'], ['nice day, huh?', 'happy'],
+  ['*stretches*', 'sleepy'], ['boop!', 'wink'], ['you got this!', 'happy'],
+  ['brb, napping', 'sleepy'], ['feed me?', 'sad'], ['keep going!', 'happy'],
+  ['<3', 'wink'], ['so sleepy...', 'sleepy'], ['watcha doing?', 'thinking'],
+  ['la la la~', 'happy'], ['high four!', 'happy'], ['i can walk!', 'happy'],
+  ['hmm... where did my sock go?', 'thinking'], ['did i leave the oven on??', 'anxious'],
+  ['that shadow moved on its own!!', 'anxious'], ['hey! who took my snack?!', 'angry'],
+  ['hmph.', 'angry'], ["ouch... that hurt...", 'sad'], ["i'm fine... really...", 'sad'],
+  ['?! you startled me!', 'surprised'], ['*yawn* five more minutes', 'sleepy'],
+  ['eep!!', 'fear'], ['that shadow is back!!', 'fear'], ['ew, gross!', 'disgust'],
+  ['yuck, no thanks', 'disgust'], ['hmph. as if.', 'contempt'],
+  ['sure, keep telling yourself that', 'contempt'], ['wait... what??', 'confused'],
+  ["huh? i don't get it", 'confused'], ['are you sure about that?', 'skeptical'],
+  ['yeah... right...', 'skeptical'], ["w-wait, don't stare!!", 'embarrassed'],
+  ['that was so embarrassing...', 'embarrassed'], ['awoo~!', 'adore'],
+  ["you're so warm...", 'adore'], ['nailed it!!', 'happy'],
+];
+
+const EXPR_NAMES = ['neutral', 'happy', 'wink', 'sad', 'thinking', 'anxious', 'angry', 'surprised',
+  'sleepy', 'fear', 'disgust', 'contempt', 'confused', 'skeptical', 'embarrassed', 'adore'];
+
+// ---- canvas plumbing -------------------------------------------------------
+
+const cv = document.getElementById('stage');
+const ctx = cv.getContext('2d');
+let S = 4;               // device pixels per logical unit (set on resize)
+let viewW = 0, viewH = 0;
+
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const r = cv.getBoundingClientRect();
+  viewW = r.width; viewH = r.height;          // CSS pixels; the scene is drawn in these
+  cv.width = Math.round(r.width * dpr);
+  cv.height = Math.round(r.height * dpr);
+  S = Math.max(1.4, (viewH / BASEH) * 0.72);  // logical units -> CSS pixels
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+}
+
+// ---- drawing primitives (mirrors canvas/canvas.go) -------------------------
+
+function ellipsePath(x, y, rx, ry, rotDeg) {
+  ctx.beginPath();
+  ctx.ellipse(x, y, Math.abs(rx), Math.abs(ry), (rotDeg || 0) * Math.PI / 180, 0, TAU);
+}
+function circlePath(x, y, r) { ellipsePath(x, y, r, r, 0); }
+function polyPath(pts) {
+  ctx.beginPath();
+  ctx.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+  ctx.closePath();
+}
+// Taper: a quad joining a round cap at (x1,y1) of radius r1 to one at (x2,y2) of r2.
+function taperPath(x1, y1, x2, y2, r1, r2) {
+  const a = Math.atan2(y2 - y1, x2 - x1);
+  ctx.beginPath();
+  ctx.arc(x1, y1, r1, a + Math.PI / 2, a - Math.PI / 2);
+  ctx.arc(x2, y2, r2, a - Math.PI / 2, a + Math.PI / 2);
+  ctx.closePath();
+}
+
+function fEllipse(x, y, rx, ry, rot, col) { ellipsePath(x, y, rx, ry, rot); ctx.fillStyle = col; ctx.fill(); }
+function fCircle(x, y, r, col) { circlePath(x, y, r); ctx.fillStyle = col; ctx.fill(); }
+function fPoly(pts, col) { polyPath(pts); ctx.fillStyle = col; ctx.fill(); }
+function fCapsule(x1, y1, x2, y2, r, col) {
+  ctx.lineCap = 'round'; ctx.strokeStyle = col; ctx.lineWidth = r * 2;
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+}
+function fTaper(x1, y1, x2, y2, r1, r2, col) { taperPath(x1, y1, x2, y2, r1, r2); ctx.fillStyle = col; ctx.fill(); }
+
+// Outlined variants: stroke the boundary (half in, half out), then fill over
+// the inner half — the same ring the Go canvas blits per shape.
+function ring(col, ow) { ctx.lineJoin = 'round'; ctx.strokeStyle = col; ctx.lineWidth = ow; ctx.stroke(); }
+function oEllipse(x, y, rx, ry, rot, ow, fill, oc) {
+  ellipsePath(x, y, rx, ry, rot); ring(oc, ow); ctx.fillStyle = fill; ctx.fill();
+}
+function oCircle(x, y, r, ow, fill, oc) { oEllipse(x, y, r, r, 0, ow, fill, oc); }
+function oPoly(pts, ow, fill, oc) { polyPath(pts); ring(oc, ow); ctx.fillStyle = fill; ctx.fill(); }
+function oCapsule(x1, y1, x2, y2, r, ow, fill, oc) {
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = oc; ctx.lineWidth = (r + ow) * 2;
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  ctx.strokeStyle = fill; ctx.lineWidth = r * 2;
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+}
+function oTaper(x1, y1, x2, y2, r1, r2, ow, fill, oc) {
+  taperPath(x1, y1, x2, y2, r1 + ow, r2 + ow); ctx.fillStyle = oc; ctx.fill();
+  taperPath(x1, y1, x2, y2, r1, r2); ctx.fillStyle = fill; ctx.fill();
+}
+
+// ---- eyes (face_parts.go) --------------------------------------------------
+
+// Standard open anime eye; idx/idy shift the gaze, ik scales iris+pupil.
+function eyeOpenStd(ex, eyeY, side, idx, idy, ik) {
+  oEllipse(ex, eyeY, 6.2, 8.2, 0, 1.2, C.sclera, C.lash);
+  fEllipse(ex + idx, eyeY + 0.8 + idy * ik, 5.0 * ik, 7.0 * ik, 0, C.iris);
+  fEllipse(ex + idx, eyeY + 1.6 + idy * ik, 2.5 * ik, 3.7 * ik, 0, C.pupil);
+  fCircle(ex + idx - 2.2 * side * ik, eyeY + 0.8 + idy * ik - 4.0 * ik, 2.6 * ik, C.sclera);
+  fCircle(ex + idx + 2.0 * side * ik, eyeY + 0.8 + idy * ik + 2.8 * ik, 1.2 * ik, C.sclera);
+  fCapsule(ex - 6.4, eyeY - 6.6, ex + 6.4, eyeY - 7.6, 1.9, C.lash);            // upper lash
+  fCapsule(ex + side * 6.2, eyeY - 7.4, ex + side * 9.4, eyeY - 9.4, 1.4, C.lash); // wing
+}
+// Shocked eye: extra white all around a normal-size iris.
+function eyeBig(ex, eyeY, side) {
+  oEllipse(ex, eyeY, 7.3, 9.7, 0, 1.2, C.sclera, C.lash);
+  fEllipse(ex, eyeY + 0.6, 4.6, 6.6, 0, C.iris);
+  fEllipse(ex, eyeY + 1.2, 2.2, 3.4, 0, C.pupil);
+  fCircle(ex - 2.2 * side, eyeY - 3.4, 2.4, C.sclera);
+  fCircle(ex + 2.0 * side, eyeY + 3.9, 1.2, C.sclera);
+  fCapsule(ex - 7.2, eyeY - 8.2, ex + 7.2, eyeY - 9.0, 1.9, C.lash);
+  fCapsule(ex + side * 7.0, eyeY - 8.8, ex + side * 10.2, eyeY - 10.8, 1.4, C.lash);
+}
+// Wide whites around a shrunken iris (anxiety / fear).
+function eyeStartled(ex, eyeY, side) {
+  oEllipse(ex, eyeY, 6.8, 9.0, 0, 1.2, C.sclera, C.lash);
+  fEllipse(ex, eyeY + 0.5, 3.1, 4.3, 0, C.iris);
+  fEllipse(ex, eyeY + 0.9, 1.5, 2.3, 0, C.pupil);
+  fCircle(ex - 1.6 * side, eyeY - 2.2, 1.4, C.sclera);
+  fCapsule(ex - 6.8, eyeY - 7.2, ex + 6.8, eyeY - 8.2, 1.9, C.lash);
+  fCapsule(ex + side * 6.6, eyeY - 8.0, ex + side * 9.6, eyeY - 10.0, 1.4, C.lash);
+}
+// Adoring eye: extra-big sparkling whites around a big shiny iris.
+function eyeAdore(ex, eyeY, side) {
+  oEllipse(ex, eyeY, 8.0, 10.6, 0, 1.2, C.sclera, C.lash);
+  fEllipse(ex, eyeY + 0.8, 5.4, 7.6, 0, C.iris);
+  fEllipse(ex, eyeY + 1.5, 2.7, 3.9, 0, C.pupil);
+  fCircle(ex - 2.6 * side, eyeY - 3.4, 3.0, C.sclera);
+  fCircle(ex + 2.4 * side, eyeY - 2.0, 1.5, C.sclera);
+  fCircle(ex + 2.0 * side, eyeY + 3.2, 1.1, C.sclera);
+  fCapsule(ex - 7.8, eyeY - 9.2, ex + 7.8, eyeY - 10.0, 2.0, C.lash);
+  fCapsule(ex + side * 7.6, eyeY - 9.8, ex + side * 10.6, eyeY - 11.8, 1.5, C.lash);
+}
+
+// Closed-eye shapes, brows, mouths and the little extras (face_parts.go).
+
+function eyeArcUp(ex, eyeY, side) {                  // happy ^ ^ eye
+  fCapsule(ex - 5.5, eyeY + 1.6, ex - 2.0, eyeY - 2.4, 2.0, C.lash);
+  fCapsule(ex - 2.0, eyeY - 2.4, ex + 2.0, eyeY - 2.4, 2.0, C.lash);
+  fCapsule(ex + 2.0, eyeY - 2.4, ex + 5.5, eyeY + 1.6, 2.0, C.lash);
+  fCapsule(ex + side * 5.2, eyeY - 1.2, ex + side * 8.6, eyeY - 3.6, 1.4, C.lash);
+}
+function eyeArcDown(ex, eyeY, side) {                // droopy sleepy u eye
+  fCapsule(ex - 5.5, eyeY - 1.8, ex - 2.0, eyeY + 2.0, 2.0, C.lash);
+  fCapsule(ex - 2.0, eyeY + 2.0, ex + 2.0, eyeY + 2.0, 2.0, C.lash);
+  fCapsule(ex + 2.0, eyeY + 2.0, ex + 5.5, eyeY - 1.8, 2.0, C.lash);
+  fCapsule(ex + side * 5.2, eyeY + 1.2, ex + side * 8.4, eyeY + 3.2, 1.3, C.lash);
+}
+function eyePinched(ex, eyeY, side) {                // embarrassed >_< squint
+  fCapsule(ex - 5.5, eyeY + 2.2, ex - 1.2, eyeY - 0.8, 1.7, C.lash);
+  fCapsule(ex - 1.2, eyeY - 0.8, ex + 1.2, eyeY - 0.8, 1.7, C.lash);
+  fCapsule(ex + 1.2, eyeY - 0.8, ex + 5.5, eyeY + 2.2, 1.7, C.lash);
+  fCapsule(ex + side * 5.2, eyeY + 0.4, ex + side * 8.6, eyeY + 1.6, 1.3, C.lash);
+}
+function eyeClosedLine(ex, eyeY, side) {             // plain blink line
+  fCapsule(ex - 6.5, eyeY - 1.5, ex + 6.5, eyeY - 2.2, 1.9, C.lash);
+  fCapsule(ex + side * 6.2, eyeY - 2.0, ex + side * 9.2, eyeY - 4.0, 1.4, C.lash);
+}
+function eyeHalfLidded(ex, eyeY, side) {             // contempt half-lid
+  oEllipse(ex, eyeY, 6.2, 7.4, 0, 1.2, C.sclera, C.lash);
+  fEllipse(ex, eyeY + 1.0, 4.8, 5.6, 0, C.iris);
+  fEllipse(ex, eyeY + 1.5, 2.4, 3.0, 0, C.pupil);
+  fCircle(ex - 2.2 * side, eyeY - 1.6, 2.4, C.sclera);
+  fCapsule(ex - 6.4, eyeY - 2.8, ex + 6.4, eyeY - 3.8, 2.4, C.lash);
+  fCapsule(ex + side * 6.2, eyeY - 3.6, ex + side * 9.4, eyeY - 5.6, 1.6, C.lash);
+}
+
+function browWorried(dy) {                           // inner ends up
+  fCapsule(CX - 20, 64.5 + dy, CX - 8, 60.5 + dy, 1.7, C.lash);
+  fCapsule(CX + 20, 64.5 + dy, CX + 8, 60.5 + dy, 1.7, C.lash);
+}
+function browAngry(dy) {                             // steep V, inner ends down
+  fCapsule(CX - 20, 58.5 + dy, CX - 8, 63.5 + dy, 2.1, C.lash);
+  fCapsule(CX + 20, 58.5 + dy, CX + 8, 63.5 + dy, 2.1, C.lash);
+}
+function browRaisedOne(dy) {                         // skeptical lift over right eye
+  fCapsule(CX + 8, 57.5 + dy, CX + 21, 59.2 + dy, 1.6, C.lash);
+}
+function browHighBoth(dy) {                          // surprise
+  fCapsule(CX - 19, 57.5 + dy, CX - 8, 58.6 + dy, 1.5, C.lash);
+  fCapsule(CX + 19, 57.5 + dy, CX + 8, 58.6 + dy, 1.5, C.lash);
+}
+function browLowFlat(dy) {                           // disgust
+  fCapsule(CX - 20, 63.5 + dy, CX - 8, 63.5 + dy, 1.8, C.lash);
+  fCapsule(CX + 20, 63.5 + dy, CX + 8, 63.5 + dy, 1.8, C.lash);
+}
+function browUneven(dy) {                            // confused: one up, one low
+  fCapsule(CX + 8, 57.5 + dy, CX + 21, 59.2 + dy, 1.6, C.lash);
+  fCapsule(CX - 20, 63.5 + dy, CX - 8, 63.5 + dy, 1.8, C.lash);
+}
+
+function mouthOpenSmile(my, openness) {
+  const r = 3.0 + 3.0 * openness, open = [];
+  for (let i = 0; i <= 10; i++) {
+    const th = Math.PI * i / 10;
+    open.push([CX + Math.cos(th) * r, my - 1.5 + Math.sin(th) * r]);
+  }
+  fPoly(open, C.mouth);
+  const tr = r * 0.55, tongue = [];
+  for (let i = 0; i <= 6; i++) {
+    const th = Math.PI * i / 6;
+    tongue.push([CX + Math.cos(th) * tr, my + 1.2 + Math.sin(th) * tr]);
+  }
+  fPoly(tongue, C.tongue);
+}
+function mouthFrown(my) {
+  fCapsule(CX - 4.5, my + 1.3, CX - 1.5, my - 0.2, 1.5, C.mouth);
+  fCapsule(CX - 1.5, my - 0.2, CX + 1.5, my - 0.2, 1.5, C.mouth);
+  fCapsule(CX + 1.5, my - 0.2, CX + 4.5, my + 1.3, 1.5, C.mouth);
+}
+function mouthSquiggle(my) {                          // nervous wavy line
+  fCapsule(CX - 5.5, my + 0.6, CX - 2.8, my - 0.9, 1.4, C.mouth);
+  fCapsule(CX - 2.8, my - 0.9, CX, my + 0.6, 1.4, C.mouth);
+  fCapsule(CX, my + 0.6, CX + 2.8, my - 0.9, 1.4, C.mouth);
+  fCapsule(CX + 2.8, my - 0.9, CX + 5.5, my + 0.6, 1.4, C.mouth);
+}
+function mouthFlatSide(my) { fCapsule(CX - 5.5, my + 0.2, CX - 1.0, my - 0.6, 1.3, C.mouth); }
+function mouthSmirk(my) {
+  fCapsule(CX - 4.5, my + 0.4, CX - 1.5, my - 0.7, 1.5, C.mouth);
+  fCapsule(CX - 1.5, my - 0.7, CX + 1.5, my - 1.1, 1.5, C.mouth);
+  fCapsule(CX + 1.5, my - 1.1, CX + 5.0, my + 0.1, 1.5, C.mouth);
+}
+function mouthSmallO(my, w, h) {
+  fEllipse(CX, my + 0.8, w, h, 0, C.mouth);
+  fEllipse(CX, my + 1.7, w * 0.55, h * 0.5, 0, C.tongue);
+}
+// Animated talking mouth: a rounded cavity whose jaw follows `open`.
+function mouthTalk(my, open) {
+  const mw = 5.0 + 4.0 * open, mh = 1.8 + 7.2 * open, cy = my + 1.2 + 2.2 * open;
+  fEllipse(CX, cy, mw, mh, 0, C.mouth);
+  if (open > 0.25) fEllipse(CX, cy + mh * 0.35, mw * 0.55, mh * 0.45, 0, C.tongue);
+}
+// Slow sleeping breath: the mouth eases open and shut on a soft sine.
+function mouthBreath(my, breath) {
+  const bw = 4.2 + 2.8 * breath, bh = 1.4 + 6.0 * breath, cy = my + 1.2 + 1.8 * breath;
+  fEllipse(CX, cy, bw, bh, 0, C.mouth);
+  if (breath > 0.35) fEllipse(CX, cy + bh * 0.30, bw * 0.5, bh * 0.42, 0, C.tongue);
+}
+
+function blushPair(dy, k) {
+  fEllipse(CX - 21, 84 + dy, 5.5 * k, 3.0 * k, 0, C.blush);
+  fEllipse(CX + 21, 84 + dy, 5.5 * k, 3.0 * k, 0, C.blush);
+}
+// Liquid drop with its fat end at (x,y) and the thin tail above.
+function dropAt(x, y, col) {
+  fTaper(x, y - 6.5, x, y, 1.0, 3.0, col);
+  fCircle(x - 1.0, y - 2.4, 0.9, 'rgba(255,255,255,0.667)');
+}
+function angerMark(x, y) {                           // manga anger vein
+  const s = Math.SQRT2;
+  for (const [dx, dy] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) {
+    fTaper(x + dx * 2.6 / s, y + dy * 2.6 / s, x + dx * 6.6 / s, y + dy * 6.6 / s, 1.7, 0.7, C.anger);
+  }
+}
+function noseScrunch(dy) {                           // disgust wrinkle
+  fCapsule(CX - 2.5, 79 + dy, CX + 2.5, 79 + dy, 0.7, C.nose);
+  fCapsule(CX - 1.5, 80.5 + dy, CX + 1.5, 80.5 + dy, 0.7, C.nose);
+}
+function swirlMark(x, y) {                           // confused thought swirl
+  const pts = [];
+  for (let i = 0; i <= 22; i++) {
+    const th = Math.PI * i / 5, r = 1.0 + i * 0.22;
+    pts.push([x + Math.cos(th) * r, y + Math.sin(th) * r]);
+  }
+  for (let i = 0; i < pts.length - 1; i++) {
+    fCapsule(pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1], 0.9, C.lash);
+  }
+}
+
+// ---- face composition (face.go) -------------------------------------------
+
+// Renders eyes, brows, mouth and expression extras for one frame. Blinking
+// stays independent and closes any open eye, except where the expression
+// already implies shut ones.
+function drawFace(p, dy) {
+  const eyeY = 72 + dy, my = 89 + dy;
+  const leftShut = p.blink >= 0.5 || p.expr === 'happy' || p.expr === 'sleepy' || p.expr === 'embarrassed';
+  const rightShut = leftShut || p.expr === 'wink';
+
+  for (const side of [-1, 1]) {
+    const ex = CX + side * 13;
+    const shut = side < 0 ? leftShut : rightShut;
+    if (shut && p.expr === 'sleepy') eyeArcDown(ex, eyeY, side);
+    else if (shut && p.expr === 'embarrassed') eyePinched(ex, eyeY, side);
+    else if (shut) eyeArcUp(ex, eyeY, side);
+    else if (p.blink >= 0.5) eyeClosedLine(ex, eyeY, side);
+    else switch (p.expr) {
+      case 'surprised': eyeBig(ex, eyeY, side); break;
+      case 'adore': eyeAdore(ex, eyeY, side); break;
+      case 'anxious': case 'fear': eyeStartled(ex, eyeY, side); break;
+      case 'sad': eyeOpenStd(ex, eyeY, side, 0, 1.8, 0.82); break;        // downcast
+      case 'angry': eyeOpenStd(ex, eyeY, side, 0, 0.6, 0.72); break;     // narrowed glare
+      case 'thinking': eyeOpenStd(ex, eyeY, side, -2.6, -2.2, 0.92); break; // gaze aside
+      case 'disgust': eyeOpenStd(ex, eyeY, side, 2.5, 0, 0.72); break;   // looking aside
+      case 'contempt': eyeHalfLidded(ex, eyeY, side); break;
+      case 'confused': eyeOpenStd(ex, eyeY, side, -1.5, 0, 0.85); break;
+      case 'skeptical': eyeOpenStd(ex, eyeY, side, 2.0, 0, 0.78); break;
+      default: eyeOpenStd(ex, eyeY, side, 0, 0, 1);
+    }
+  }
+
+  fEllipse(CX, 82 + dy, 0.9, 0.8, 0, C.nose);      // nose dot
+
+  switch (p.expr) {
+    case 'happy':
+      blushPair(dy, 1.35); mouthOpenSmile(my, 0.6); break;
+    case 'wink':
+      blushPair(dy, 1.1); mouthOpenSmile(my, 0.35); break;
+    case 'sad':
+      browWorried(dy); dropAt(CX + 24, 87 + dy, C.tear); mouthFrown(my); break;
+    case 'thinking':
+      browRaisedOne(dy); mouthFlatSide(my); break;
+    case 'anxious':
+      browWorried(dy); dropAt(CX + 27, 67 + dy, C.sweat); mouthSquiggle(my); break;
+    case 'angry':
+      browAngry(dy); blushPair(dy, 1.15); angerMark(CX + 29, 61 + dy); mouthFrown(my); break;
+    case 'surprised':
+      browHighBoth(dy); mouthSmallO(my, 2.6, 3.4); break;
+    case 'adore':
+      browHighBoth(dy); blushPair(dy, 1.5);
+      dropAt(CX - 20, 88 + dy, C.tear);            // tears of delight
+      dropAt(CX + 20, 88 + dy, C.tear);
+      mouthOpenSmile(my, 0.55); break;
+    case 'sleepy':
+      if (p.breath <= 0.03) mouthSmallO(my, 2.0, 2.5);
+      break;
+    case 'fear':
+      browWorried(dy); dropAt(CX - 22, 82 + dy, C.sweat); dropAt(CX + 22, 82 + dy, C.sweat);
+      mouthSquiggle(my); break;
+    case 'disgust':
+      browLowFlat(dy); noseScrunch(dy); mouthSquiggle(my); break;
+    case 'contempt':
+      browRaisedOne(dy); mouthSmirk(my); break;
+    case 'confused':
+      browUneven(dy); swirlMark(CX + 28, 60 + dy); mouthSquiggle(my); break;
+    case 'skeptical':
+      browRaisedOne(dy); mouthFlatSide(my); break;
+    case 'embarrassed':
+      blushPair(dy, 1.8); mouthSquiggle(my); break;
+    default:                                        // neutral: gentle smile
+      blushPair(dy, 1.0);
+      fCapsule(CX - 4, my, CX + 4, my - 0.6, 1.4, C.mouth);
+  }
+
+  if (p.talk > 0.03 && p.expr !== 'sleepy') {
+    // Talking flap: while a bubble is up the jaw flaps over the static mouth
+    // (eyes, brows, blush untouched).
+    mouthTalk(my, Math.min(Math.max(p.talk, 0), 1));
+  }
+  if (p.breath > 0.03) mouthBreath(my, Math.min(Math.max(p.breath, 0), 1));
+}
+
+// ---- head (draw_head.go) ----------------------------------------------------
+
+// Head geometry, tuned pair-wise with the face furniture above.
+const FACE_R = 31.5, BACK_R = 36.5, CAP_R = 35.5, CAP_CY = 59.0, BROW_Y = 51.0;
+
+// The part of a circle above yLine, as a polygon.
+function bangsSegment(cyc, r, yLine) {
+  const sinT = Math.min(Math.max((cyc - yLine) / r, 0.05), 0.95);
+  const t0 = Math.asin(sinT), n = 22, pts = [];
+  for (let i = 0; i <= n; i++) {
+    const th = t0 + (Math.PI - 2 * t0) * i / n;
+    pts.push([CX + Math.cos(th) * r, cyc - Math.sin(th) * r]);
+  }
+  const chordHalf = Math.sqrt(Math.max(r * r - (cyc - yLine) * (cyc - yLine), 1));
+  pts.push([CX - chordHalf, yLine]);
+  return pts;
+}
+
+function drawHead(p, dy) {
+  fCircle(CX, 60 + dy, BACK_R + 2.2, C.outlineDark);   // back hair mass
+  fCircle(CX, 60 + dy, BACK_R, C.hair);
+
+  oCircle(CX, 63 + dy, FACE_R, 2.0, C.skin, C.outlineSkin);
+
+  oPoly(bangsSegment(CAP_CY + dy, CAP_R, BROW_Y + dy), 2.2, C.hair, C.outlineDark);
+
+  // Fringe spikes dipping onto the forehead.
+  for (let i = 0; i < 5; i++) {
+    const bx = CX - 24 + i * 12;
+    const jit = i % 2 === 0 ? -2.0 : 2.0;
+    const tipY = i % 2 === 0 ? 66.0 + dy : 69.0 + dy;
+    oPoly([[bx - 5, 49 + dy], [bx + 5, 49 + dy], [bx + jit, tipY]], 1.6, C.hair, C.outlineDark);
+  }
+
+  // Side locks framing the face.
+  oCapsule(CX - 32, 48 + dy, CX - 28, 88 + dy, 5, 2.0, C.hair, C.outlineDark);
+  oCapsule(CX + 32, 48 + dy, CX + 28, 88 + dy, 5, 2.0, C.hair, C.outlineDark);
+
+  fTaper(CX - 2, 27 + dy, CX + 6, 15 + dy, 2.8, 1.1, C.hair);   // ahoge
+  fTaper(CX + 6, 15 + dy, CX + 13, 19 + dy, 1.1, 0.8, C.hair);
+
+  oCircle(CX - 27, 52 + dy, 5.4, 1.6, C.tie, C.outlineDark);    // hair ties
+  oCircle(CX + 27, 52 + dy, 5.4, 1.6, C.tie, C.outlineDark);
+
+  drawFace(p, dy);
+}
+
+// ---- body (draw_body.go) ---------------------------------------------------
+
+function drawTwinTails(p, dy) {
+  const swayRad = p.tailSway * Math.PI / 180;
+  for (const side of [-1, 1]) {
+    const ax = CX + side * 25, ay = 55 + dy;
+    const ang = side * 22 * Math.PI / 180 + swayRad;
+    const tx = ax + Math.sin(ang) * 38, ty = ay + Math.cos(ang) * 38;
+    oTaper(ax, ay, tx, ty, 8, 2.6, 2.2, C.hairShade, C.outlineDark);
+    fTaper(ax + side * 3, ay + 7, ax * 0.4 + tx * 0.6, ay * 0.4 + ty * 0.6, 2.2, 1.0, C.hairLight);
+  }
+}
+
+function drawLegs(p, dy) {
+  const swing = p.legSwing;
+  const footBaseY = p.hop ? 137.0 : 147.0;
+  const sw = p.hop ? swing * 0.3 : swing;
+  for (const side of [-1, 1]) {
+    const hipX = CX + side * 9, footX = CX + side * 9 + side * sw;
+    const lift = side < 0 ? p.stepLiftL : p.stepLiftR;
+    const fy = footBaseY + dy - lift;
+    oCapsule(hipX, 116 + dy, footX, fy - 2, 4.6, 1.8, C.skin, C.outlineSkin);
+    oEllipse(footX + 1.5, fy + 1.5, 7.6, 4.8, 0, 1.8, C.shoe, C.outlineDark);
+  }
+}
+
+function drawBody(p, dy) {
+  const shY = 96 + dy, hemY = 127 + dy;
+  oCapsule(CX, 86 + dy, CX, 99 + dy, 4, 1.6, C.skin, C.outlineSkin);   // neck
+
+  const hem = t => [CX + t * 26, hemY + 3 * Math.cos(t * Math.PI / 2)];
+  const pts = [[CX - 12, shY], [CX + 12, shY], [CX + 26, hemY]];
+  for (let i = 8; i >= -8; i--) pts.push(hem(i / 8));
+  oPoly(pts, 2.2, C.dress, C.outlineDark);
+
+  // Frill strip along the hem.
+  const frill = [];
+  for (let i = 8; i >= -8; i--) {
+    const t = i / 8;
+    frill.push([CX + t * 25, hemY - 8 + 3 * Math.cos(t * Math.PI / 2)]);
+  }
+  for (let i = -8; i <= 8; i++) frill.push(hem(i / 8));
+  fPoly(frill, C.frill);
+
+  oPoly([[CX - 7, shY + 1], [CX + 7, shY + 1], [CX + 10, shY + 10], [CX - 10, shY + 10]],
+    1.4, C.collar, C.outlineDark);
+}
+
+function drawArms(p, dy) {
+  const armSwing = -p.legSwing * 0.45;
+  for (const side of [-1, 1]) {
+    const sx = CX + side * 14, sy = 102 + dy;
+    // Skip the hands that drawTopArms repaints over the head, so they are not
+    // drawn twice (once resting, once raised).
+    if (p.wave && side > 0) continue;
+    if (p.peace && side > 0) continue;
+    if (p.dance) continue;
+    let hx, hy;
+    if (p.armUp) { hx = CX + side * 34; hy = 72 + dy; }
+    else { hx = CX + side * 23 + armSwing * side; hy = 121 + dy; }
+    oCapsule(sx, sy, hx, hy, 4.2, 1.7, C.skin, C.outlineSkin);
+    oCircle(sx, sy + 1.5, 6.8, 1.7, C.dress, C.outlineDark);   // puff sleeve
+  }
+}
+
+// The waving, peace and disco hands travel up beside the hair, so they are
+// repainted on the top layer, after the head (drawArms runs below the head).
+function drawTopArms(p, dy) {
+  if (p.wave) {
+    // The waving palm swings beside the hair, so this arm must draw over it.
+    const swing = Math.sin(TAU * p.wavePhase) * 6;
+    const sx = CX + 14, sy = 102 + dy, hx = CX + 34 + swing, hy = 72 + dy;
+    oCapsule(sx, sy, hx, hy, 4.2, 1.7, C.skin, C.outlineSkin);
+    oCircle(sx, sy + 1.5, 6.8, 1.7, C.dress, C.outlineDark);
+    oCircle(hx, hy, 5.6, 1.7, C.skin, C.outlineSkin);   // waving palm
+  }
+  if (p.peace) {
+    // V-sign hand over the head layer: two fingers plus a mitten hand.
+    const hx = CX + 34, hy = 72 + dy;
+    oCapsule(hx - 1.5, hy - 2, hx - 6, hy - 15, 1.9, 1.2, C.skin, C.outlineSkin);
+    oCapsule(hx + 1.5, hy - 2, hx + 6, hy - 14, 1.9, 1.2, C.skin, C.outlineSkin);
+    oCircle(hx, hy, 5.4, 1.7, C.skin, C.outlineSkin);
+  }
+  if (p.dance) {
+    // Disco-point arms over the hair, trading up and down every beat.
+    for (const side of [-1, 1]) {
+      const lift = side < 0 ? p.danceLiftL : p.danceLiftR;
+      oCapsule(CX + side * 14, 102 + dy, CX + side * 30, 97 + dy + lift, 4.2, 1.7, C.skin, C.outlineSkin);
+      oCircle(CX + side * 14, 102 + dy + 1.5, 6.8, 1.7, C.dress, C.outlineDark);
+    }
+  }
+}
+
+// One full frame, shadow included (drawPet).
+function drawPet(p) {
+  const dy = p.bob;
+  const shrink = p.hop ? 0.7 : 1.0;
+  fEllipse(CX, 152, 26 * shrink, 5 * shrink, 0, C.shadow);   // ground shadow
+
+  drawTwinTails(p, dy);   // hair is the bottom layer of the figure
+  drawLegs(p, dy);
+  drawBody(p, dy);
+  drawArms(p, dy);
+  drawHead(p, dy);
+  drawTopArms(p, dy);
+}
+
+// ---- speech bubble (bubble.go) --------------------------------------------
+
+const BUB = { fill: '#fcfaff', outline: '#2f223e', text: '#2d263c',
+  thinkFill: '#ece8f6', thinkEdge: '#bab2d0', thinkText: '#6e6684' };
+const BUB_PAD_X = 12, BUB_PAD_Y = 9, BUB_CORNER = 8;
+
+// Comic bubble: rounded body, dark rim, a tail aimed at her head.
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+// Greedy word wrap, capped at maxLines; a dropped word becomes "..." on the
+// last line (layoutText + bubbleEllipsis in bubble.go).
+function wrapText(text, maxW, maxLines) {
+  const lines = [];
+  let line = '', dropped = false;
+  for (const w of text.split(/\s+/)) {
+    const t = line ? line + ' ' + w : w;
+    if (ctx.measureText(t).width > maxW && line) {
+      if (lines.length === maxLines - 1) { dropped = true; break; }
+      lines.push(line);
+      line = w;
+    } else line = t;
+  }
+  if (line && lines.length < maxLines) lines.push(line);
+  if (dropped) {
+    const keep = maxW - ctx.measureText('...').width;
+    let last = lines[maxLines - 1] || '';
+    while (last && ctx.measureText(last + '...').width > keep) last = last.slice(0, -1);
+    lines[maxLines - 1] = last + '...';
+  }
+  return lines;
+}
+
+// Soft-edged comic pop so a new bubble arrives with a little bounce.
+function drawBubble(x, y, text, pop) {
+  const fs = Math.max(13, Math.round(S * 4.4));
+  ctx.font = `600 ${fs}px "Trebuchet MS", "Segoe UI", system-ui, sans-serif`;
+  const lines = wrapText(text, Math.min(24 * fs * 0.52, viewW * 0.34), 3);
+  const lh = Math.round(fs * 1.35);
+  let tw = 0;
+  for (const l of lines) tw = Math.max(tw, ctx.measureText(l).width);
+  const bw = Math.ceil(tw) + BUB_PAD_X * 2;
+  const bh = lines.length * lh + BUB_PAD_Y * 2;
+  const ow = Math.max(2, S * 0.5);
+  const tailW = fs * 1.15, tailH = fs * 0.85;      // tail scales with the text
+
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(pop, pop);
+  ctx.translate(-x, -y);
+  ctx.lineJoin = 'round';
+  ctx.shadowColor = 'rgba(0,0,0,.35)';
+  ctx.shadowBlur = 10 * pop;
+  ctx.shadowOffsetY = 3 * pop;
+
+  // Tail first, so the body covers its base.
+  ctx.beginPath();
+  ctx.moveTo(x - tailW / 2, y + bh - 1);
+  ctx.lineTo(x, y + bh + tailH);
+  ctx.lineTo(x + tailW / 2, y + bh - 1);
+  ctx.closePath();
+  ctx.fillStyle = BUB.outline; ctx.fill();
+  ctx.shadowColor = 'transparent';
+  ctx.fillStyle = BUB.fill;
+  ctx.beginPath();
+  ctx.moveTo(x - tailW / 2, y + bh - 1);
+  ctx.lineTo(x, y + bh + tailH);
+  ctx.lineTo(x + tailW / 2, y + bh - 1);
+  ctx.closePath();
+  ctx.fill();
+
+  roundRect(x - bw / 2, y - bh, bw, bh, BUB_CORNER);
+  ctx.fillStyle = BUB.outline; ctx.fill();
+  ctx.shadowColor = 'transparent';
+  roundRect(x - bw / 2, y - bh, bw, bh, BUB_CORNER);
+  ctx.fillStyle = BUB.fill; ctx.fill();
+  ctx.lineWidth = ow; ctx.strokeStyle = BUB.outline; ctx.stroke();
+
+  ctx.fillStyle = BUB.text;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  lines.forEach((l, i) => ctx.fillText(l, x, y - bh + BUB_PAD_Y + lh * (i + 0.5)));
+  ctx.restore();
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+}
+
+// Thought cloud: overlapping discs, rims drawn rim-then-fill (bubble_page.go).
+function drawThink(x, y, text, pop) {
+  const fs = Math.max(12, Math.round(S * 3.4));
+  ctx.font = `500 ${fs}px "Trebuchet MS", "Segoe UI", system-ui, sans-serif`;
+  const lines = wrapText(text, Math.min(30 * fs * 0.5, viewW * 0.34), 6);
+  const lh = Math.round(fs * 1.3);
+  let tw = 0;
+  for (const l of lines) tw = Math.max(tw, ctx.measureText(l).width);
+  const bw = tw + fs * 1.6, bh = lines.length * lh + fs * 1.1;
+  const rim = Math.max(1.5, S * 0.38);
+
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(pop, pop);
+  ctx.translate(-x, -y);
+  ctx.lineJoin = 'round';
+
+  // Trailing dots down to her head.
+  for (let i = 0; i < 2; i++) {
+    const r = (3.2 - i * 1.1) * S * 0.5;
+    fCircle(x - 6 * S * 0.5, y - bh / 2 + 10 * S * 0.5 + i * 9 * S * 0.5, r, BUB.thinkFill);
+  }
+
+  const cy = y - bh / 2, discs = [
+    [x, cy, bw / 2, bh / 2],
+    [x - bw / 2 + bh * 0.3, cy, bh * 0.36, bh * 0.4],
+    [x + bw / 2 - bh * 0.3, cy, bh * 0.36, bh * 0.4],
+  ];
+  for (const [dx, dy, rx, ry] of discs) {
+    ellipsePath(dx, dy, rx + rim, ry + rim, 0);
+    ctx.fillStyle = BUB.thinkEdge; ctx.fill();
+  }
+  for (const [dx, dy, rx, ry] of discs) {
+    ellipsePath(dx, dy, rx, ry, 0);
+    ctx.fillStyle = BUB.thinkFill; ctx.fill();
+  }
+
+  ctx.fillStyle = BUB.thinkText;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  lines.forEach((l, i) => ctx.fillText(l, x, cy + lh * (i - (lines.length - 1) / 2)));
+  ctx.restore();
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+}
+
+// ---- the pet brain ---------------------------------------------------------
+
+const IDLE_MS = 4200;                     // how long she rests between actions
+const pet = {
+  x: 0, dir: 1, speed: 40,               // logical units per second
+  action: 'idle', until: 0, t: 0,         // current action + when it ends
+  facing: 1, exprForced: false,
+  expr: 'neutral', exprUntil: 0,
+  blinkNext: 2, blinkUntil: 0,
+  talkUntil: 0,
+  bubble: null, bubbleUntil: 0,           // {text, kind, born, life}
+  nextChatter: 3.5,
+};
+
+function newPose() {
+  return {
+    bob: 0, legSwing: 0, stepLiftL: 0, stepLiftR: 0, tailSway: 0,
+    blink: 0, armUp: false, peace: false, wave: false, wavePhase: 0,
+    dance: false, danceLiftL: 0, danceLiftR: 0, hop: false,
+    expr: pet.expr, talk: 0, breath: 0,
+  };
+}
+
+function setAction(a, secs) {
+  pet.action = a;
+  pet.until = pet.t + secs;
+  if (a === 'idle') pet.expr = 'neutral';
+}
+
+function say(text, expr, opts = {}) {
+  const e = expr || 'neutral';
+  pet.bubble = { text, kind: opts.think ? 'think' : 'speak', born: pet.t, life: opts.life || (2.2 + text.length * 0.055) };
+  pet.bubbleUntil = pet.t + pet.bubble.life;
+  pet.expr = e;
+  pet.exprUntil = pet.bubbleUntil;
+  pet.talkUntil = pet.bubbleUntil;
+  if (opts.stop) { setAction('idle', 0.1); pet.exprForced = true; }
+}
+
+// Pin a face for a while (the Face buttons), ignoring what the action wants.
+function setFace(e, secs = 3) {
+  pet.expr = e;
+  pet.exprUntil = pet.t + secs;
+  pet.exprForced = true;
+  pet.bubble = null;
+  pet.talkUntil = 0;
+}
+
+function boop() {
+  const lines = [['boop!', 'wink'], ['eep!!', 'surprised'], ['mew~', 'happy'], ['hey!!', 'angry'], ['*giggles*', 'happy']];
+  const [t, e] = lines[(Math.random() * lines.length) | 0];
+  setAction('happy', 1.6);
+  say(t, e);
+}
+
+// She answers you in her own words, matched to what you said.
+function reply(text) {
+  const s = text.toLowerCase();
+  const hit = (re, opts) => re.test(s) ? opts : null;
+  let out = hit(/\b(hi|hey|hello|yo|morning|evening)\b/, ['hi there!', 'happy'])
+    || hit(/\blove|like you|miss you|<3|heart|cute|sweet\b/, ['<3', 'wink'])
+    || hit(/\b(sad|tired|sleepy|exhausted|awful|bad)\b/, ["i'm fine... really...", 'sad'])
+    || hit(/\b(angry|stop|hate|ew|yuck|gross|shut)\b/, ['hmph.', 'angry'])
+    || hit(/\b(sorry|apolog|my bad)\b/, ['hmph. as if.', 'contempt'])
+    || hit(/\b(help|how|why|what|where|who|when|can you)\b/, ['huh? i don\'t get it', 'confused'])
+    || hit(/\b(thank|thanks|ta|cheers|thx)\b/, ['you got this!', 'happy'])
+    || hit(/\b(walk|run|move|go|follow)\b/, ['i can walk!', 'happy'])
+    || hit(/\b(bye|goodbye|see ya|later|night)\b/, ['so sleepy...', 'sleepy']);
+  if (!out) out = PHRASES[(Math.random() * PHRASES.length) | 0];
+  say(out[0], out[1], { think: true, stop: true });
+}
+
+// Pose per action, driven by the same constants the Go behaviour uses.
+function buildPose(dt) {
+  const p = newPose();
+  const t = pet.t;
+
+  if (pet.exprUntil > 0 && t > pet.exprUntil && pet.action === 'idle') {
+    pet.expr = 'neutral';
+    pet.exprUntil = 0;
+    pet.exprForced = false;
+  }
+
+  // Blinking is independent of everything else.
+  if (t > pet.blinkNext) { pet.blinkUntil = t + 0.13; pet.blinkNext = t + 2.4 + Math.random() * 3.4; }
+  p.blink = t < pet.blinkUntil ? 1 : 0;
+
+  if (t < pet.talkUntil) {
+    // Jaw flaps a few times a second while a bubble is up.
+    p.talk = 0.35 + 0.65 * Math.abs(Math.sin(t * 11));
+  }
+
+  switch (pet.action) {
+    case 'walk': {
+      // Straight from behavior.go: walkCycleHz = 2.2 full leg cycles per
+      // second, so the phase advances by 2.2*TAU each second (not 1.9).
+      const ph = t * 2.2 * TAU;
+      const s = Math.sin(ph);
+      p.legSwing = s * 6;
+      p.stepLiftL = Math.max(0, s) * 4;
+      p.stepLiftR = Math.max(0, -s) * 4;
+      p.bob = -Math.abs(s) * 2.4 - 0.8;      // she rides up on each step
+      p.tailSway = Math.sin(t * 4.5) * 7;
+      break;
+    }
+    case 'wave': {
+      p.wave = true;
+      p.wavePhase = (t % 1.15) / 1.15;
+      p.tailSway = Math.sin(t * 4) * 7;
+      p.bob = Math.sin(t * 6) * 1.2;
+      if (!pet.exprForced) p.expr = 'happy';
+      break;
+    }
+    case 'peace': {
+      p.peace = true;                          // her right hand flashes the V
+      if (!pet.exprForced) p.expr = 'wink';
+      p.bob = Math.sin(t * 3.4) * 2.4;
+      p.tailSway = Math.sin(t * 3) * 8;
+      break;
+    }
+    case 'dance': {
+      p.dance = true;
+      const beat = (t % 0.55) / 0.55;                    // one swap + bounce per beat
+      const swap = Math.floor(t / 0.55) % 2 === 0;
+      p.danceLiftL = swap ? -31 : 19;
+      p.danceLiftR = swap ? 19 : -31;
+      p.bob = -Math.abs(Math.sin(beat * Math.PI)) * 3.4;
+      p.tailSway = Math.sin(beat * TAU) * 16;
+      if (!pet.exprForced) p.expr = 'happy';
+      break;
+    }
+    case 'sleep': {
+      if (!pet.exprForced) p.expr = 'sleepy';
+      p.breath = 0.5 + 0.5 * Math.sin(t * 0.9);
+      p.bob = Math.sin(t * 0.45) * 0.8;
+      p.tailSway = Math.sin(t * 0.6) * 4;
+      break;
+    }
+    case 'happy': {
+      p.bob = -Math.abs(Math.sin(t * 7)) * 4;
+      p.armUp = true; p.hop = Math.sin(t * 7) > 0;
+      p.tailSway = Math.sin(t * 7) * 14;
+      break;
+    }
+    default: {                                          // idle: gentle breathing bob
+      p.bob = Math.sin(t * 1.5) * 1.4;
+      p.tailSway = Math.sin(t * 1.1) * 6;
+    }
+  }
+  return p;
+}
+
+// ---- stage: ground, grid, pet, bubble --------------------------------------
+
+const showGrid = document.getElementById('grid');
+const autoChk = document.getElementById('auto');
+const groundY = () => viewH - Math.max(18, viewH * 0.055);
+
+function drawStage(dt) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, viewW, viewH);
+
+  // Floor line and a soft pool of light.
+  const gy = groundY();
+  const grad = ctx.createLinearGradient(0, gy - 20, 0, viewH);
+  grad.addColorStop(0, 'rgba(95,207,214,0.10)');
+  grad.addColorStop(1, 'rgba(95,207,214,0.26)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, gy, viewW, viewH - gy);
+  ctx.strokeStyle = 'rgba(165,236,239,0.35)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(0, gy + 0.5); ctx.lineTo(viewW, gy + 0.5); ctx.stroke();
+
+  if (showGrid.checked) {
+    // The 112x160 authoring grid, so you can see her real proportions.
+    ctx.strokeStyle = 'rgba(165,236,239,0.10)';
+    ctx.lineWidth = 1;
+    const top = gy - BASEH * S, left = pet.x - CX * S;
+    ctx.beginPath();
+    for (let x = 0; x <= BASEW; x += 14) { ctx.moveTo(left + x * S, top); ctx.lineTo(left + x * S, gy); }
+    for (let y = 0; y <= BASEH; y += 20) { ctx.moveTo(left, top + y * S); ctx.lineTo(left + BASEW * S, top + y * S); }
+    ctx.stroke();
+  }
+
+  const p = buildPose(dt);
+
+  // The pet lives on the author grid: logical (CX, GROUNDY) is the point she
+  // stands on, so that is the transform origin. The grid's Y axis already
+  // grows downward, like the canvas.
+  ctx.save();
+  ctx.translate(pet.x - pet.facing * CX * S, gy - GROUNDY * S);
+  ctx.scale(pet.facing * S, S);
+  drawPet(p);
+  ctx.restore();
+
+  if (pet.bubble) drawBubbleOverlay();
+}
+
+function drawBubbleOverlay() {
+  const b = pet.bubble;
+  const age = pet.t - b.born;
+  const left = b.life - age;
+  if (left <= 0) { pet.bubble = null; return; }
+
+  // Pop in with a slight overshoot, then fade over the last 0.35s.
+  const inT = Math.min(1, age / 0.22);
+  const u = inT - 1;
+  const pop = inT < 1 ? 1 + 2.7 * u * u * u + 1.7 * u * u : 1;
+  const alpha = Math.min(1, left / 0.35);
+  // Keep the bubble fully on screen when she walks to an edge.
+  const half = b.kind === 'think' ? 120 : 136;
+  const bx = Math.min(Math.max(pet.x + Math.sin(age * 1.6) * 3 * S, half), Math.max(half, viewW - half));
+  // Sit the tail tip right at the top of her head.
+  const by = Math.max(70, groundY() - (GROUNDY - 12) * S);
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  if (b.kind === 'think') drawThink(bx, by, b.text, pop);
+  else drawBubble(bx, by, b.text, pop);
+  ctx.restore();
+}
+
+// ---- idle behaviour: she picks things to do on her own ---------------------
+
+// Idle behaviour: what she does when nobody asks (AUTO_ACTIONS = action, secs,
+// line to say, face to make while doing it).
+const AUTO_ACTIONS = [
+  ['walk', 3.2, null, null], ['wave', 2.4, 'hi there!', 'happy'],
+  ['peace', 1.8, null, 'wink'], ['dance', 3.6, 'la la la~', 'happy'],
+  ['happy', 1.4, 'mew~', 'happy'], ['sleep', 6.0, 'so sleepy...', 'sleepy'],
+  ['walk', 2.6, null, null], ['walk', 4.0, 'i can walk!', 'happy'],
+];
+
+function tickBehaviour(dt) {
+  const t = pet.t;
+
+  if (pet.action !== 'idle' && t > pet.until) {
+    setAction('idle', 0);
+    pet.exprForced = false;
+    pet.nextChatter = t + 1.2;
+  }
+  // Walking moves her along the floor; she turns at the edges. This runs before
+  // the bubble check below, so she can walk and talk at the same time instead of
+  // freezing mid-stride until the line finishes.
+  if (pet.action === 'walk') {
+    pet.x += pet.dir * pet.speed * dt * S * 0.9;
+    const margin = 46 * S;
+    if (pet.x < margin) { pet.x = margin; pet.dir = 1; }
+    if (pet.x > viewW - margin) { pet.x = viewW - margin; pet.dir = -1; }
+    pet.facing = pet.dir;
+  } else if (pet.action === 'idle') {
+    pet.facing = 1;
+  }
+
+  if (t < pet.bubbleUntil) return;                    // never interrupt a line
+  if (!autoChk.checked) return;                        // "random chatter" is off
+
+  if (t > pet.nextChatter) {
+    if (Math.random() < 0.55) {
+      const [a, secs, line, e] = AUTO_ACTIONS[(Math.random() * AUTO_ACTIONS.length) | 0];
+      setAction(a, secs);
+      pet.exprForced = false;
+      if (line) say(line, e, { life: secs * 0.8 });
+      else { pet.expr = e || 'neutral'; pet.exprUntil = t + secs; }
+    } else {
+      const [text, e] = PHRASES[(Math.random() * PHRASES.length) | 0];
+      say(text, e);
+    }
+    pet.nextChatter = t + IDLE_MS / 1000 + Math.random() * 3.5;
+  }
+}
+
+// ---- UI --------------------------------------------------------------------
+
+function buildButtons() {
+  const acts = document.getElementById('actions');
+  for (const key of ['idle', 'walk', 'wave', 'peace', 'dance', 'sleep', 'boop']) {
+    const b = document.createElement('button');
+    b.className = 'btn';
+    b.textContent = key;
+    b.dataset.act = key;
+    b.onclick = () => {
+      if (key === 'boop') { boop(); markActive(); return; }
+      pet.exprForced = false;
+      if (key === 'idle') {
+        setAction('idle', 0);
+        pet.bubble = null; pet.talkUntil = 0;
+        pet.expr = 'neutral'; pet.exprUntil = pet.t + 1.5;
+        pet.nextChatter = pet.t + 1.5;
+      } else if (key === 'walk') {
+        setAction('walk', 6);
+        pet.dir = pet.x < viewW / 2 ? 1 : -1;
+      } else if (key === 'sleep') {
+        setAction('sleep', 7); pet.expr = 'sleepy';
+      } else {
+        setAction(key, 3.2);
+      }
+      markActive();
+    };
+    acts.appendChild(b);
+  }
+
+  const faces = document.getElementById('faces');
+  for (const name of EXPR_NAMES) {
+    const b = document.createElement('button');
+    b.className = 'btn face';
+    b.textContent = name;
+    b.dataset.face = name;
+    b.onclick = () => { setAction('idle', 0); setFace(name, 3.5); markActive(); };
+    faces.appendChild(b);
+  }
+  markActive();
+}
+
+function markActive() {
+  document.querySelectorAll('#actions .btn').forEach(b =>
+    b.classList.toggle('on', b.dataset.act === pet.action));
+  document.querySelectorAll('#faces .btn').forEach(b =>
+    b.classList.toggle('on', b.dataset.face === pet.expr));
+}
+
+function wireInput() {
+  const input = document.getElementById('say');
+  const send = () => {
+    const v = input.value.trim();
+    if (!v) { boop(); return; }
+    reply(v);
+    input.value = '';
+    input.blur();
+    markActive();
+  };
+  document.getElementById('send').onclick = send;
+  document.getElementById('boop').onclick = () => { boop(); markActive(); };
+  input.addEventListener('keydown', e => {
+    e.stopPropagation();                       // typing must not fire shortcuts
+    if (e.key === 'Enter') { e.preventDefault(); send(); }
+  });
+  document.addEventListener('keydown', e => {
+    if (e.code === 'Space' && document.activeElement !== input) {
+      e.preventDefault();
+      boop();
+      markActive();
+    }
+  });
+  autoChk.addEventListener('change', () => {
+    // Re-arming the timer means a long "off" stretch doesn't fire a burst the
+    // instant chatter is switched back on.
+    pet.nextChatter = pet.t + 1.2;
+  });
+  cv.addEventListener('pointerdown', e => {
+    const r = cv.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;   // CSS pixels, like the scene
+    const gy = groundY(), top = gy - BASEH * S;
+    if (x > pet.x - 44 * S && x < pet.x + 44 * S && y > top && y < gy) {
+      boop();                                  // clicked her
+    } else if (x < pet.x) {                     // clicked beside her: walk over
+      pet.dir = -1;
+      if (pet.action === 'idle') setAction('walk', 2.5);
+    } else {
+      pet.dir = 1;
+      if (pet.action === 'idle') setAction('walk', 2.5);
+    }
+    markActive();
+  });
+}
+
+// ---- main loop -------------------------------------------------------------
+
+let prev = performance.now();
+let lastMark = '';
+function loop(now) {
+  const dt = Math.min((now - prev) / 1000, 0.05);
+  prev = now;
+  pet.t += dt;
+  tickBehaviour(dt);
+  drawStage(dt);
+  // Keep the buttons lit up with whatever she is doing on her own.
+  const mark = pet.action + '/' + pet.expr;
+  if (mark !== lastMark) { lastMark = mark; markActive(); }
+  requestAnimationFrame(loop);
+}
+
+function boot() {
+  resize();
+  pet.x = viewW / 2;
+  buildButtons();
+  wireInput();
+  window.addEventListener('resize', () => {
+    resize();
+    pet.x = Math.min(Math.max(pet.x, 46 * S), Math.max(46 * S, viewW - 46 * S));
+  });
+  requestAnimationFrame(loop);
+}
+boot();
+
+
+
+
+
+
+
+
+
+
+</script>
+</body>
+</html>
