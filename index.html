@@ -148,7 +148,7 @@
 /* The backdrop, nav and inputs cross-fade between themes. The transition is on
    the properties that actually change colour — not `all` — so layout-affecting
    properties are never animated. */
-body,.nav,.backdrop,.field input,.field textarea,.chip,.clink,.facecard,.card,.shot{
+body,.nav,.backdrop,.field input,.field textarea,.chip,.clink,.fthumb,.card,.shot{
   transition:background-color .35s var(--ease),border-color .35s var(--ease),
              color .35s var(--ease),box-shadow .35s var(--ease);
 }
@@ -166,7 +166,7 @@ body,.nav,.backdrop,.field input,.field textarea,.chip,.clink,.facecard,.card,.s
 :root[data-theme="light"] .a3{background:radial-gradient(circle,rgba(236,96,156,.30),transparent 68%)}
 /* The floating FX and pet drop-shadows are tuned for dark backdrops. */
 :root[data-theme="light"] .fx{filter:drop-shadow(0 3px 8px rgba(43,33,66,.28))}
-:root[data-theme="light"] .facecard img{filter:drop-shadow(0 6px 14px rgba(43,33,66,.22))}
+:root[data-theme="light"] .fthumb img{filter:drop-shadow(0 6px 14px rgba(43,33,66,.22))}
 /* Code + form controls need opaque backgrounds to stay legible on white. */
 :root[data-theme="light"] .codeblock pre{background:#1b1626;color:#e8e4f6}
 :root[data-theme="light"] code:not(pre code){background:rgba(15,111,119,.11);border-color:rgba(15,111,119,.2)}
@@ -188,7 +188,7 @@ body,.nav,.backdrop,.field input,.field textarea,.chip,.clink,.facecard,.card,.s
    these re-pins, --text flips to near-black on the light theme and the buttons
    disappear into the dark panel. Placed after the light block so it wins on
    source order against the :root[data-theme="light"] overrides. */
-.play-wrap,.hero-stage{
+.hero-stage{
   /* `color` has to be re-applied here, not just the tokens. `color` inherits as
      an already-computed value, so re-declaring --text on this element changes
      nothing on its own — body{color:var(--text)} resolved against the *light*
@@ -378,11 +378,10 @@ kbd{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);
   font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--pink-tx);
   padding:3px 10px;border-radius:999px;background:rgba(236,96,156,.14);border:1px solid rgba(236,96,156,.3)}
 .live-pill i{width:6px;height:6px;border-radius:50%;background:var(--pink);animation:pulse 1.8s ease-in-out infinite}
-#hero-canvas{display:block;width:100%;height:clamp(260px,40vh,380px);cursor:pointer}
-/* a status bar under the canvas, so she never walks over the caption */
-.hero-hint{display:block;text-align:center;font-size:.72rem;color:var(--faint);
-  padding:10px 16px;letter-spacing:.04em;pointer-events:none;
-  border-top:1px solid var(--edge);background:var(--chrome);backdrop-filter:blur(8px)}
+/* the stage-canvas wrapper keeps the FX layer aligned to the canvas box, so
+   burst() centres particles on her and not on the whole window frame */
+.stage-canvas{position:relative}
+#stage{display:block;width:100%;height:clamp(300px,46vh,440px);cursor:pointer}
 @media(max-width:1000px){
   .hero-grid{grid-template-columns:1fr;gap:48px}
   section{padding:88px 0}
@@ -391,15 +390,15 @@ kbd{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);
 /* ==========================================================================
    The embedded Onidia web version (playground) — the onidia/onidia.html engine
    ========================================================================== */
-.abbr{margin:0 0 14px;font-size:.86rem;letter-spacing:.16em;text-transform:uppercase;
-  font-weight:600;color:var(--faint)}
-.abbr i{font-style:normal;font-weight:800;color:var(--teal-tx);
-  background:rgba(95,207,214,.12);border-radius:5px;padding:1px 2px}
+/* the acronym only reads as an acronym if its inner capitals survive, so no
+   text-transform here — the casing IS the styling */
+.brand-txt{display:flex;flex-direction:column;line-height:1.05}
+.abbr{font-style:normal;font-weight:600;font-size:.53rem;letter-spacing:.13em;
+  color:var(--faint);white-space:nowrap}
+@media(max-width:1080px){.abbr{display:none}}
 
-.play-wrap{border-radius:var(--r-l);overflow:hidden;border:1px solid var(--edge);
-  box-shadow:var(--shadow),inset 0 0 80px rgba(95,207,214,.05);
-  background:linear-gradient(170deg,rgba(29,63,77,.4),rgba(12,16,24,.9)),var(--app-bg)}
-#stage{display:block;width:100%;height:clamp(320px,56vh,520px);cursor:pointer}
+/* the engine now mounts in the hero, so the window frame is .hero-stage and
+   this block only styles the control bar that hangs beneath the canvas */
 .play-bar{display:grid;grid-template-columns:1fr;gap:16px;padding:16px;
   border-top:1px solid var(--edge);background:var(--chrome-solid)}
 .pcard{background:var(--inset);border:1px solid var(--inset-edge);
@@ -471,14 +470,14 @@ kbd{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);
    arrows to page through. Clicking a shot makes her wear it.
    ========================================================================== */
 .faces{display:grid;gap:18px}
-.fstage{position:relative;display:grid;place-items:center;padding:34px 20px 26px;
+.fstage{position:relative;display:grid;place-items:center;padding:22px 20px 20px;
   border-radius:var(--r-l);border:1px solid var(--surface-3);
   background:radial-gradient(120% 100% at 50% 0,rgba(236,96,156,.1),transparent 62%),var(--glass);
   overflow:hidden}
-.fstage img{width:min(300px,58vw);height:auto;filter:drop-shadow(0 20px 34px rgba(0,0,0,.45));
+.fstage img{width:min(150px,29vw);height:auto;filter:drop-shadow(0 20px 34px rgba(0,0,0,.45));
   animation:fin .4s var(--ease)}
 @keyframes fin{from{opacity:0;transform:scale(.94) translateY(10px)}to{opacity:1;transform:none}}
-.fcap{display:flex;align-items:baseline;gap:12px;margin-top:20px;text-align:center}
+.fcap{display:flex;align-items:baseline;gap:12px;margin-top:14px;text-align:center}
 .fcap b{font-size:1.22rem;letter-spacing:-.02em;color:var(--text);text-transform:capitalize}
 .fcap span{font-size:.78rem;color:var(--faint);font-family:ui-monospace,monospace}
 .fnav{position:absolute;top:50%;transform:translateY(-50%);z-index:2;
@@ -489,12 +488,19 @@ kbd{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);
 .fnav:active{transform:translateY(-50%) scale(.94)}
 .fnav.prev{left:14px}
 .fnav.next{right:14px}
+/* The horizontal scrollbar would eat into the content box and clip the bottom of
+   every thumbnail, so hide it. Paging still works via the arrows, scroll-snap,
+   touch/trackpad, and Tab (focus scrolls the thumb into view). */
 .fstrip{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 12px;
-  scrollbar-width:thin;scroll-snap-type:x proximity;scroll-behavior:smooth}
+  scrollbar-width:none;scroll-snap-type:x proximity;scroll-behavior:smooth}
+.fstrip::-webkit-scrollbar{display:none;height:0}
 .fthumb{flex:0 0 auto;width:70px;height:70px;padding:5px;border-radius:var(--r-m);cursor:pointer;
   border:1px solid var(--surface-3);background:var(--glass);scroll-snap-align:center;
-  transition:.28s var(--ease);display:grid;place-items:center}
-.fthumb img{width:100%;height:100%;object-fit:contain;transition:transform .35s var(--ease)}
+  transition:.28s var(--ease);display:flex;align-items:center;justify-content:center;overflow:hidden}
+/* The renders are 128x182, not square, so cap both axes instead of forcing
+   width/height:100% (which has no definite basis here and overflows the tile). */
+.fthumb img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;
+  transition:transform .35s var(--ease)}
 .fthumb:hover{transform:translateY(-4px);border-color:var(--edge-2);background:var(--glass-2)}
 .fthumb:hover img{transform:scale(1.09)}
 .fthumb.on{border-color:var(--pink);background:rgba(236,96,156,.14);
@@ -686,11 +692,10 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
         <path d="M27 48q5 5 10 0" stroke="#2f223e" stroke-width="3" fill="none" stroke-linecap="round"/>
         <path d="M32 9c0-4 5-5 4-1" stroke="#5fcfd6" stroke-width="3" fill="none" stroke-linecap="round"/>
       </svg>
-      <span>Onidia</span>
+      <span class="brand-txt">Onidia<em class="abbr">OmNIpresent DigItal Amigo</em></span>
     </a>
     <nav class="nav-links" id="navlinks" aria-label="Sections">
       <a href="#meet">Meet her</a>
-      <a href="#play">Live demo</a>
       <a href="#faces">Faces</a>
       <a href="#brain">The brain</a>
       <a href="#tech">Under the hood</a>
@@ -714,12 +719,11 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
 </header>
 <div class="mobile-menu" id="mmenu">
   <a href="#meet"><span>01</span>Meet her</a>
-  <a href="#play"><span>02</span>Live demo</a>
-  <a href="#faces"><span>03</span>Faces</a>
-  <a href="#brain"><span>04</span>The brain</a>
-  <a href="#tech"><span>05</span>Under the hood</a>
-  <a href="#install"><span>06</span>Install</a>
-  <a href="#contact"><span>07</span>Contact</a>
+  <a href="#faces"><span>02</span>Faces</a>
+  <a href="#brain"><span>03</span>The brain</a>
+  <a href="#tech"><span>04</span>Under the hood</a>
+  <a href="#install"><span>05</span>Install</a>
+  <a href="#contact"><span>06</span>Contact</a>
 </div>
 
 <main id="top">
@@ -730,12 +734,11 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
     <div class="hero-txt">
       <span class="eyebrow rv">Pure Go &middot; No cgo &middot; Runs on a Pi</span>
       <h1 class="h-xl rv">A tiny anime companion who <span class="grad-teal">lives on your screen.</span></h1>
-      <p class="abbr rv"><i>O</i>m<i>NI</i>present&nbsp; <i>DI</i>gital&nbsp; <i>A</i>migo</p>
       <p class="lede rv">Onidia walks along the bottom of your display, blinks, stretches, naps on schedule, and
         answers you <em>out loud</em>. Pick her up, throw her, talk to her &mdash; or let your apps talk to her
         for you. All of it in a few megabytes of Go, with an idle CPU of roughly zero.</p>
       <div class="hero-cta rv">
-        <a class="btn btn-primary" href="#play">Try her right here &darr;</a>
+        <a class="btn btn-primary" href="#faces">See every expression &darr;</a>
         <a class="btn btn-ghost" href="#install">Install in 4 seconds</a>
       </div>
       <div class="hero-note rv">
@@ -746,14 +749,27 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
       </div>
     </div>
 
-    <div class="hero-stage rv" id="hero-pet">
+    <div class="hero-stage rv" id="hero-pet" data-boop="off" tabindex="-1">
       <div class="hero-stage-top">
         <span class="tl"><i></i><i></i><i></i></span>
         <span class="lbl">onidia &mdash; <b>live canvas</b></span>
         <span class="live-pill"><i></i>live</span>
       </div>
-      <canvas id="hero-canvas" aria-label="Onidia walking about in a live canvas"></canvas>
-      <span class="hero-hint">click her to boop &middot; drag to move her</span>
+      <div class="stage-canvas">
+        <div class="fx-layer" id="fx" aria-hidden="true"></div>
+        <canvas id="stage" data-oid="stage" aria-label="Interactive Onidia desktop pet"></canvas>
+      </div>
+      <div class="play-bar">
+        <section class="pcard">
+          <h3>Expression</h3>
+          <div class="prow" data-oid="faces"></div>
+          <div class="prow small">
+            <label class="pchk"><input type="checkbox" data-oid="auto" checked> random chatter</label>
+            <label class="pchk"><input type="checkbox" data-oid="grid"> show grid</label>
+            <span class="hint">drag to move her &middot; click beside her and she walks over</span>
+          </div>
+        </section>
+      </div>
     </div>
   </div>
 </section>
@@ -830,41 +846,6 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
   </div>
 </section>
 
-<!-- ===================== LIVE DEMO (the onidia web version) ===================== -->
-<section id="play">
-  <div class="wrap">
-    <div class="sechead rv">
-      <span class="eyebrow">This is the real thing</span>
-      <h2 class="h-lg" style="margin-top:22px">Go ahead. <span class="grad-teal">Watch her live.</span></h2>
-      <p class="lede">This isn't a video. It's the actual character engine from the desktop pet, running on a
-        canvas in your browser &mdash; the same 112&times;160 authoring grid, the same sixteen faces, the same
-        36 phrases, the same physics brain. Pick an expression and she'll wear it.</p>
-    </div>
-
-    <div class="play-wrap rv" id="play-root" data-boop="off" tabindex="-1" style="position:relative">
-      <div class="fx-layer" id="fx" aria-hidden="true"></div>
-      <canvas id="stage" data-oid="stage" aria-label="Interactive Onidia desktop pet"></canvas>
-
-      <div class="play-bar">
-        <section class="pcard">
-          <h3>Expression</h3>
-          <div class="prow" data-oid="faces"></div>
-          <div class="prow small">
-            <label class="pchk"><input type="checkbox" data-oid="auto" checked> random chatter</label>
-            <label class="pchk"><input type="checkbox" data-oid="grid"> show grid</label>
-            <span class="hint">click beside her and she walks over</span>
-          </div>
-        </section>
-      </div>
-    </div>
-
-    <p class="rv" style="text-align:center;color:var(--faint);font-size:.84rem;margin-top:18px">
-      Ported 1:1 from the Go character package &mdash; palette, geometry, poses and phrases unchanged.
-      Teal twin-tails &amp; ahoge, pink dress with a frill hem, deep-plum outlines.
-    </p>
-  </div>
-</section>
-
 <!-- ===================== FACES ===================== -->
 <section id="faces">
   <div class="wrap">
@@ -873,7 +854,7 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
       <h2 class="h-lg" style="margin-top:22px">She has a face for<br><span class="grad-pink">every feeling.</span></h2>
       <p class="lede">Happy, wink, sad, thinking, anxious, angry, surprised, sleepy, fear, disgust, contempt,
         confused, skeptical, embarrassed, adore &mdash; plus her neutral smile. She picks the right one on her own
-        from what happens to her and what she's saying. Tap any face below and she'll wear it.</p>
+        from what happens to her and what she's saying. Browse the library below and tap any shot &mdash; she'll wear it.</p>
     </div>
     <div class="faces rv" id="facegrid"></div>
   </div>
@@ -1206,14 +1187,6 @@ xdg-open web/index.html</pre>
       </div>
 
       <div>
-        <a class="clink" href="https://github.com/portege/onidia" target="_blank" rel="noopener">
-          <span class="ci">&#128187;</span>
-          <span><b>The desktop pet</b><small>github.com/portege/onidia</small></span>
-          <span class="go">&rarr;</span></a>
-        <a class="clink" href="https://github.com/portege/onidia-chat" target="_blank" rel="noopener">
-          <span class="ci">&#128172;</span>
-          <span><b>The chat window</b><small>github.com/portege/onidia-chat</small></span>
-          <span class="go">&rarr;</span></a>
         <a class="clink" href="https://mas-mas.it" target="_blank" rel="noopener">
           <span class="ci">&#127968;</span>
           <span><b>Engineered by</b><small>mas-mas.it</small></span>
@@ -1222,12 +1195,6 @@ xdg-open web/index.html</pre>
           <span class="ci">&#9889;</span>
           <span><b>Built on jezek/xgb</b><small>github.com/jezek/xgb &mdash; direct X11 bindings</small></span>
           <span class="go">&rarr;</span></a>
-        <div class="card" style="margin-top:18px">
-          <h3 style="font-size:1.05rem">Want to make your own character?</h3>
-          <p style="margin:0">Start from <code>characters/_template/</code> &mdash; the guide walks through the
-            grid, the drawing layers, the expression system, the phrase list and the headless preview loop.
-            <code>make debug</code> writes sample frames; <code>make pack</code> zips it up to share.</p>
-        </div>
       </div>
     </div>
   </div>
@@ -1239,7 +1206,7 @@ xdg-open web/index.html</pre>
   <div class="wrap foot">
     <small>&copy; Onidia &mdash; a tiny anime companion for your desktop. Pure Go, no cgo, no toolkit.</small>
     <nav class="foot-links" aria-label="Footer">
-      <a href="#meet">Meet her</a><a href="#play">Live demo</a><a href="#tech">Under the hood</a>
+      <a href="#meet">Meet her</a><a href="#faces">Faces</a><a href="#tech">Under the hood</a>
       <a href="#install">Install</a><a href="#contact">Contact</a>
     </nav>
   </div>
@@ -1498,7 +1465,7 @@ track.innerHTML = html;
 /* ---------- expose a tiny bridge the pet engine hooks into ---------- */
 W.onidiaPage = {
   burst: burst,
-  face: function (name) { $$('.facecard').forEach(function (f) { f.classList.toggle('on', f.dataset.face === name); }); },
+  face: function (name) { $$('.fthumb').forEach(function (f) { f.classList.toggle('on', f.dataset.face === name); }); },
   say: function (text) { /* the engine calls this so the site's own copy can stay in sync */ }
 };
 })();
@@ -2369,7 +2336,7 @@ function drawStage(dt) {
   ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(0, gy + 0.5); ctx.lineTo(viewW, gy + 0.5); ctx.stroke();
 
-  if (showGrid.checked) {
+  if (showGrid && showGrid.checked) {
     // The 112x160 authoring grid, so you can see her real proportions.
     ctx.strokeStyle = 'rgba(165,236,239,0.10)';
     ctx.lineWidth = 1;
@@ -2451,7 +2418,7 @@ function tickBehaviour(dt) {
   }
 
   if (t < pet.bubbleUntil) return;                    // never interrupt a line
-  if (!autoChk.checked) return;                        // "random chatter" is off
+  if (!autoChk || !autoChk.checked) return;         // "random chatter" is off
 
   if (t > pet.nextChatter) {
     if (Math.random() < 0.55) {
@@ -2534,11 +2501,11 @@ function wireInput() {
   if (sendBtn) sendBtn.onclick = send;
   const boopBtn = root.querySelector('[data-oid="boop"]');
   if (boopBtn) boopBtn.onclick = () => { if (canBoop) { boop(); markActive(); } };
-  input.addEventListener('keydown', e => {
+  if (input) input.addEventListener('keydown', e => {
     e.stopPropagation();                       // typing must not fire shortcuts
     if (e.key === 'Enter') { e.preventDefault(); send(); }
   });
-  if (canBoop) {
+  if (canBoop && input) {
     root.addEventListener('keydown', e => {
       if (e.code === 'Space' && document.activeElement !== input) {
         e.preventDefault();
@@ -2547,7 +2514,7 @@ function wireInput() {
       }
     });
   }
-  autoChk.addEventListener('change', () => {
+  if (autoChk) autoChk.addEventListener('change', () => {
     // Re-arming the timer means a long "off" stretch doesn't fire a burst the
     // instant chatter is switched back on.
     pet.nextChatter = pet.t + 1.2;
@@ -2634,9 +2601,14 @@ var OID_HTML = {
 };
 function scaffold(root) {
   // Only stand in for what this mount is genuinely missing, so a mount that
-  // deliberately ships a subset (the playground shows expressions only) keeps
-  // its own real controls instead of getting hidden duplicates.
-  var missing = OID.filter(function (k) { return !root.querySelector('[data-oid="' + k + '"]'); });
+  // deliberately ships a subset (the playground is expressions-only) keeps its
+  // own real controls instead of gaining hidden duplicates. A mount that opts
+  // out of boop has no chat row either, so don't invent one for it.
+  var reduced = root.getAttribute('data-boop') === 'off';
+  var skip = reduced ? { say: 1, send: 1, boop: 1, actions: 1 } : {};
+  var missing = OID.filter(function (k) {
+    return !skip[k] && !root.querySelector('[data-oid="' + k + '"]');
+  });
   if (!missing.length) return;
   var box = D.createElement('div');
   box.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden;opacity:0;pointer-events:none';
@@ -2677,31 +2649,17 @@ function attachDrag(canvas, pet, wrap) {
   canvas.style.touchAction = 'none';
 }
 
-/* ---------- mount the hero pet (canvas only) ---------- */
-var hero = $('#hero-pet'), heroCanvas = $('#hero-canvas'), heroPet = null;
-if (hero && heroCanvas) {
+/* ---------- mount the pet: one canvas, in the hero, with real controls ----------
+   There used to be two mounts (a canvas-only hero pet plus a separate
+   playground). The playground now *is* the hero, so there is exactly one. */
+var hero = $('#hero-pet'), stage = $('#stage'), pet = null;
+if (hero && stage) {
   scaffold(hero);
   try {
-    heroPet = mountOnidia(hero, heroCanvas);
-    attachDrag(heroCanvas, heroPet.pet, hero);
-    var hauto = hero.querySelector('#auto');
-    if (hauto) hauto.checked = true;           // she keeps herself busy in the hero
-    // Belt and braces for engines without inert support: the scaffold's real
-    // descendants are built by mountOnidia, so sweep them after it has run.
-    hero.querySelectorAll('button,input,select,textarea,a[href]')
-      .forEach(function (el) { el.tabIndex = -1; });
+    pet = mountOnidia(hero, stage);
+    attachDrag(stage, pet.pet, hero);
+    hero.addEventListener('pointerdown', function () { hero.focus({ preventScroll: true }); });
   } catch (e) { console.warn('hero pet unavailable:', e); }
-}
-
-/* ---------- mount the playground pet (full controls) ---------- */
-var playRoot = $('#play-root'), playCanvas = $('#stage'), pet = null;
-if (playRoot && playCanvas) {
-  scaffold(playRoot);
-  try {
-    pet = mountOnidia(playRoot, playCanvas);
-    attachDrag(playCanvas, pet.pet, playRoot);
-    playRoot.addEventListener('pointerdown', function () { playRoot.focus({ preventScroll: true }); });
-  } catch (e) { console.warn('playground pet unavailable:', e); }
 }
 
 /* ==========================================================================
@@ -2733,13 +2691,15 @@ if (lib) {
   lib.innerHTML =
     '<div class="fstage">' +
       '<button class="fnav prev" type="button" data-nav="-1" aria-label="Previous expression">&#8249;</button>' +
-      '<img id="fbig" alt="" width="180" height="180">' +
+      '<img id="fc-big" alt="" width="180" height="180">' +
       '<button class="fnav next" type="button" data-nav="1" aria-label="Next expression">&#8250;</button>' +
-      '<div class="fcap"><b id="fname"></b><span id="fpos"></span></div>' +
+      '<div class="fcap"><b id="fc-name"></b><span id="fc-pos"></span></div>' +
     '</div>' +
     '<div class="fstrip" role="tablist" aria-label="All sixteen expressions"></div>';
 
-  var big = $('#fbig', lib), fname = $('#fname', lib), fpos = $('#fpos', lib);
+  /* Namespaced ids: a bare #fname collides with the contact form's name input,
+     which both duplicates an id and hijacks its <label for>. */
+  var big = $('#fc-big', lib), fname = $('#fc-name', lib), fpos = $('#fc-pos', lib);
   var strip = $('.fstrip', lib);
   strip.innerHTML = FACES.map(function (name, i) {
     return '<button class="fthumb" type="button" role="tab" data-i="' + i + '" data-face="' + name +
@@ -2759,8 +2719,9 @@ if (lib) {
       b.classList.toggle('on', k === cur);
       b.setAttribute('aria-selected', k === cur ? 'true' : 'false');
     });
+    // scrollIntoView is absent in some non-browser DOMs; the selection still works.
     var t = strip.children[cur];
-    if (t) t.scrollIntoView({ block: 'nearest', inline: 'center' });
+    if (t && t.scrollIntoView) t.scrollIntoView({ block: 'nearest', inline: 'center' });
   }
   function wear(name) {
     if (!pet) return;
@@ -2810,7 +2771,7 @@ $$('.chip[data-ac]').forEach(function (b) {
     if (!pet) return;
     var a = b.dataset.ac;
     pet.pet.exprForced = false;
-    if (a === 'walk') { pet.setAction('walk', 6); pet.pet.dir = pet.pet.x < playCanvas.clientWidth / 2 ? 1 : -1; }
+    if (a === 'walk') { pet.setAction('walk', 6); pet.pet.dir = pet.pet.x < stage.clientWidth / 2 ? 1 : -1; }
     else if (a === 'sleep') { pet.setAction('sleep', 7); pet.setFace('sleepy', 7); }
     else pet.setAction(a, 3.2);
   });
