@@ -380,7 +380,52 @@ kbd{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);
 /* the stage-canvas wrapper keeps the FX layer aligned to the canvas box, so
    burst() centres particles on her and not on the whole window frame */
 .stage-canvas{position:relative}
-#stage{display:block;width:100%;height:clamp(300px,46vh,440px);cursor:pointer}
+/* The Raspberry Pi desktop she stands on. The engine clears its canvas to
+   transparent every frame, so this is what she is standing on rather than
+   something painted over it. z-index is explicit on every layer because the
+   canvas is not positioned by default and a positioned sibling would paint
+   straight over her. */
+.stage-bg{position:absolute;inset:0;width:100%;height:100%;z-index:0;display:block;pointer-events:none}
+#stage{position:relative;z-index:2;display:block;width:100%;height:clamp(300px,46vh,440px);cursor:pointer}
+/* The open window and the LXDE taskbar are real elements rather than drawn
+   into the SVG: the wallpaper is sliced and therefore cropped on narrow and
+   wide windows alike, and a window that loses its left edge to the crop looks
+   broken. Percentages here fit whatever shape the canvas ends up. */
+.stage-win{position:absolute;left:6%;top:7%;width:56%;height:72%;z-index:1;
+  display:flex;flex-direction:column;border-radius:8px;overflow:hidden;
+  background:#0e1117;border:1px solid rgba(255,255,255,.1);pointer-events:none;
+  box-shadow:0 18px 40px rgba(0,0,0,.5)}
+.stage-win-hd{flex:0 0 auto;display:flex;align-items:center;height:26px;padding:0 10px;
+  background:linear-gradient(180deg,#2b3550,#1b2338);border-bottom:1px solid rgba(255,255,255,.07);
+  font-size:.68rem;color:#cdd6e6}
+.stage-win-btns{margin-left:auto;display:inline-flex;align-items:center;gap:9px}
+.stage-win-btns i{display:block;width:9px;height:9px;border:1px solid #8d9ab4;border-radius:2px}
+.stage-win-btns i:nth-child(1){height:2px;border:none;border-radius:1px;margin-top:3px}
+.stage-win-btns i:nth-child(3){position:relative;border:none}
+.stage-win-btns i:nth-child(3)::before,.stage-win-btns i:nth-child(3)::after{
+  content:"";position:absolute;left:0;right:0;top:50%;height:1.5px;
+  background:#8d9ab4;transform:rotate(45deg)}
+.stage-win-btns i:nth-child(3)::after{transform:rotate(-45deg)}
+.stage-term{flex:1 1 auto;margin:0;padding:10px 12px;overflow:hidden;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;line-height:1.7;
+  color:#e6edf3;white-space:pre}
+.stage-term .pr{color:#5fcfd6}
+.stage-term .dm{color:#7d8aa3}
+.stage-term .pk{color:#ec609c}
+.stage-term .cu{color:#c8d3e2}
+.stage-panel{position:absolute;left:0;right:0;bottom:0;z-index:3;height:26px;
+  display:flex;align-items:center;gap:10px;padding:0 10px;
+  font-size:.68rem;color:#b9c4d8;pointer-events:none;
+  background:linear-gradient(180deg,#2b3550,#1b2338);
+  border-top:1px solid rgba(255,255,255,.09);
+  box-shadow:0 -6px 18px rgba(0,0,0,.28)}
+.stage-panel .sp-menu,.stage-panel .sp-task{display:inline-flex;align-items:center;gap:6px;
+  padding:2px 9px;border-radius:4px;background:rgba(255,255,255,.07);white-space:nowrap}
+.stage-panel .sp-task{background:rgba(95,207,214,.16);color:var(--teal-tx)}
+.stage-panel .sp-logo{width:9px;height:9px;border-radius:50%;
+  background:radial-gradient(circle at 34% 34%,#e2407a,#a81545 62%,transparent 64%)}
+.stage-panel .sp-right{margin-left:auto;display:inline-flex;align-items:center;gap:8px;color:#8d9ab4}
+.stage-panel .sp-ico{width:11px;height:8px;border-radius:2px;background:#6b7891;opacity:.75}
 @media(max-width:1000px){
   .hero-grid{grid-template-columns:1fr;gap:48px}
   section{padding:88px 0}
@@ -579,6 +624,40 @@ kbd{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);
 .codeblock pre .k{color:var(--pink-tx)}
 .codeblock pre .s{color:var(--teal-tx)}
 .codeblock pre .p{color:var(--teal)}
+/* ---------- the machine it was written for ----------
+   A panel rather than another card row: this is the one place on the page
+   that names the actual target hardware and what the app does with it.
+   Two columns on desktop (the claim | the proof), one when it has to be.
+   .fitem's dark fill is reused for the fact chips deliberately, so they
+   read as the same family of thing as the file list below them. */
+.pihw{margin-top:64px;border-radius:var(--r-m);border:1px solid var(--surface-3);
+  background:var(--glass);padding:34px 34px 30px}
+.pihw-in{display:grid;grid-template-columns:1fr 1fr;gap:34px;align-items:start}
+/* min-width:0 on the items, or the <pre>'s min-content (the longest code
+   line, ~583px) becomes the track's automatic minimum and the whole panel
+   overflows its own padding below ~1150px instead of the pre scrolling. */
+.pihw-in>*{min-width:0}
+.pihw-in>p, .pihw-in>div>p{color:var(--muted);margin:0 0 14px;line-height:1.72}
+.pihw-in p:last-child{margin-bottom:0}
+.pihw-in p b{color:var(--text);font-weight:600}
+.pihw-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(116px,1fr));gap:12px;margin-top:24px}
+.pihw-fact{border-radius:var(--r-s);padding:14px;background:rgba(0,0,0,.3);
+  border:1px solid var(--surface-3)}
+.pihw-fact b{display:block;font-size:1.14rem;font-weight:800;letter-spacing:-.01em;margin-bottom:5px}
+.pihw-fact small{color:var(--faint);font-size:.68rem;letter-spacing:.05em;
+  display:block;line-height:1.5}
+.pihw .codeblock{margin-top:0}
+.pihw-note{margin-top:16px;padding:14px 16px;border-radius:var(--r-s);
+  font-size:.83rem;line-height:1.65;background:rgba(95,207,214,.1);
+  border:1px solid rgba(95,207,214,.28);color:var(--muted)}
+.pihw-note b{color:var(--teal-tx);font-weight:600}
+/* 1080 and not 640: between ~940 and ~1080 the two columns get too narrow for
+   the eyebrow pill to stay on one line, so it folds the panel first. */
+@media(max-width:1080px){.pihw-in{grid-template-columns:1fr;gap:26px}.pihw{padding:26px 22px 22px}}
+/* Below ~560 there is no room for the pill at 12px/.18em tracking, and a
+   two-line 999px-radius pill looks like a mistake. Tighten, don't reword. */
+@media(max-width:560px){.pihw .eyebrow{font-size:11px;letter-spacing:.1em;padding:7px 13px}
+  .pihw-facts{grid-template-columns:repeat(2,1fr)}}
 .reqs{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-top:22px}
 .req{display:flex;gap:12px;align-items:flex-start;padding:16px 18px;border-radius:var(--r-s);
   background:var(--glass);border:1px solid var(--surface-3)}
@@ -694,7 +773,7 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
     <nav class="nav-links" id="navlinks" aria-label="Sections">
       <a href="#meet">Meet her</a>
       <a href="#brain">The brain</a>
-      <a href="#tech">Under the hood</a>
+      <a href="#tech">Nerd start from here</a>
       <a href="#install">Install</a>
       <a href="#contact">Contact</a>
     </nav>
@@ -716,7 +795,7 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
 <div class="mobile-menu" id="mmenu">
   <a href="#meet"><span>01</span>Meet her</a>
   <a href="#brain"><span>02</span>The brain</a>
-  <a href="#tech"><span>03</span>Under the hood</a>
+  <a href="#tech"><span>03</span>Nerd start from here</a>
   <a href="#install"><span>04</span>Install</a>
   <a href="#contact"><span>05</span>Contact</a>
 </div>
@@ -751,8 +830,77 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
         <span class="live-pill"><i></i>live</span>
       </div>
       <div class="stage-canvas">
+        <!-- The pet stands on a Raspberry Pi desktop: an LXDE panel along the
+             bottom and one terminal window open behind her. Drawn rather than
+             screenshotted - no image bytes in a page that already inlines four,
+             and it borrows the page palette so it reads as part of the design.
+
+             Only the wallpaper is SVG. It uses preserveAspectRatio=slice, which
+             crops the sides hard once the stage gets narrow - and a slice crop
+             will happily eat the edge of anything you can recognise. The window
+             and the panel are real elements sized in %, so they fit whatever
+             shape the canvas turns out to be. The engine clears its canvas to
+             transparent every frame (ctx.clearRect), so all of this shows
+             through untouched. -->
+        <svg class="stage-bg" viewBox="0 0 720 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <defs>
+            <linearGradient id="rpi-wall" x1="0" y1="0" x2=".35" y2="1">
+              <stop offset="0" stop-color="#1b2c4a"/>
+              <stop offset=".55" stop-color="#132033"/>
+              <stop offset="1" stop-color="#0b1320"/>
+            </linearGradient>
+            <radialGradient id="rpi-glow" cx=".62" cy=".86" r=".55">
+              <stop offset="0" stop-color="#5fcfd6" stop-opacity=".22"/>
+              <stop offset="1" stop-color="#5fcfd6" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <rect width="720" height="400" fill="url(#rpi-wall)"/>
+          <rect width="720" height="400" fill="url(#rpi-glow)"/>
+          <!-- A soft raspberry mark, far enough back to read as wallpaper
+               texture. The real logo is a licensed mark, so this is a cluster
+               in its colours rather than a copy of it. The stem and leaves go
+               UP, the way a raspberry actually grows - pointing them down
+               turned the whole thing into an atom. Parked right of centre,
+               where the slice crop is least likely to take it. -->
+          <g opacity=".13" transform="translate(548,120) scale(3.4)" fill="none" stroke-width="2.2">
+            <g fill="#c51a4a" stroke="none" opacity=".85">
+              <circle cx="0" cy="-5" r="3.4"/><circle cx="-6" cy="-1" r="3.4"/>
+              <circle cx="6" cy="-1" r="3.4"/><circle cx="-3" cy="4" r="3.4"/>
+              <circle cx="3" cy="4" r="3.4"/><circle cx="0" cy="3" r="2.6"/>
+            </g>
+            <g stroke="#2fa84f" stroke-linecap="round">
+              <path d="M0 -10v-5"/><path d="M-4 -12l-4-3"/><path d="M4 -12l4-3"/>
+            </g>
+            <g stroke="#3b7dd8" stroke-linecap="round" opacity=".9">
+              <path d="M-10 -8l-3-3"/><path d="M10 -8l3-3"/>
+            </g>
+          </g>
+        </svg>
+
+        <!-- One open window. LXDE puts min / maximise / close on the RIGHT of
+             the title bar, which is what anyone who has used a Raspberry Pi
+             Desktop recognises at a glance. -->
+        <div class="stage-win" aria-hidden="true">
+          <div class="stage-win-hd">Terminal<span class="stage-win-btns"><i></i><i></i><i></i></span></div>
+<pre class="stage-term"><span class="pr">pi@rpi</span><span class="dm">:~$</span> ./onidia &amp;
+<span class="dm">[pet] open · 112x160 · 0% cpu</span>
+
+<span class="pr">pi@rpi</span><span class="dm">:~$</span> echo "haya!" \
+  &gt; /tmp/desktop-pet.say
+<span class="pk">haya!</span>
+
+<span class="pr">pi@rpi</span><span class="dm">:~$</span> <span class="cu">█</span></pre>
+        </div>
+
         <div class="fx-layer" id="fx" aria-hidden="true"></div>
         <canvas id="stage" data-oid="stage" aria-label="Interactive Onidia desktop pet"></canvas>
+
+        <!-- The LXDE taskbar along the bottom. She stands on it. -->
+        <div class="stage-panel" aria-hidden="true">
+          <span class="sp-menu"><i class="sp-logo"></i>Menu</span>
+          <span class="sp-task">Terminal</span>
+          <span class="sp-right"><i class="sp-ico"></i><i class="sp-ico"></i><i class="sp-ico"></i>14:32</span>
+        </div>
       </div>
       <div class="play-bar">
         <section class="pcard">
@@ -812,7 +960,10 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
       </article>
     </div>
 
-    <div class="grid g3" style="margin-top:18px">
+    <!-- Two cards, not three: "Light as air" is gone from this section (it made
+         the row a lonely wide pair against a full row above). The no-toolkit
+         argument already leads the tech section, so nothing is lost. -->
+    <div class="grid g2" style="margin-top:18px">
       <article class="card rv">
         <i class="glow"></i>
         <div class="ico">&#128187;</div>
@@ -828,70 +979,6 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
         <p>Onidia is the teal-haired chibi girl. Kama is the boy in the red hoodie. Both have their own
           palette, art and phrase list, selectable at launch. And because a character is just a Go package,
           making your own is a weekend, not a rewrite.</p>
-      </article>
-      <article class="card rv">
-        <i class="glow"></i>
-        <div class="ico">&#9889;</div>
-        <h3>Light as air</h3>
-        <p>No Electron. No Qt. No GTK. No cgo. Onidia talks to the X server directly over the wire protocol
-          and draws every pixel of herself in code. That's why she costs a few megabytes of RAM and
-          essentially nothing while sitting idle.</p>
-      </article>
-    </div>
-  </div>
-</section>
-
-<!-- ===================== FEATURES: EVENTS & ACTIONS ===================== -->
-<section id="events">
-  <div class="wrap">
-    <div class="sechead rv">
-      <span class="eyebrow">Celebrations &amp; performances</span>
-      <h2 class="h-lg" style="margin-top:22px">Tap a button.<br><span class="grad-teal">Watch her react.</span></h2>
-      <p class="lede">These are the real event and action names the desktop pet understands &mdash; trigger any
-        of them and the pet above will do the same thing, up on your screen.</p>
-    </div>
-
-    <div class="grid g2">
-      <article class="card rv">
-        <i class="glow"></i>
-        <div class="ico">&#127881;</div>
-        <h3>Events &mdash; pure cosmetics</h3>
-        <p>Short overlays that never drag her around. Any process can fire one through the command pipe or
-          <code>petctl</code>, and the AI can pick one for her mid-sentence.</p>
-        <div class="chips" data-kind="event">
-          <button class="chip hot" data-ev="love">&#10084; love<span class="k">hearts</span></button>
-          <button class="chip hot" data-ev="idea">&#128161; idea<span class="k">bulb</span></button>
-          <button class="chip hot" data-ev="celebration">&#127881; party<span class="k">confetti</span></button>
-          <button class="chip hot" data-ev="peace">&#9996; peace<span class="k">vsign</span></button>
-          <button class="chip hot" data-ev="sleep">&#128164; sleep<span class="k">zzz</span></button>
-          <button class="chip hot" data-ev="halloween">&#127875; witch<span class="k">halloween</span></button>
-          <button class="chip hot" data-ev="matrix">&#128451; matrix<span class="k">code rain</span></button>
-          <button class="chip hot" data-ev="magic">&#127913; magic<span class="k">vanish</span></button>
-          <button class="chip hot" data-ev="robot">&#129302; robot<span class="k">suit up</span></button>
-          <button class="chip" data-ev="disappear">poof out<span class="k">disappear</span></button>
-          <button class="chip" data-ev="appear">poof in<span class="k">appear</span></button>
-        </div>
-      </article>
-
-      <article class="card rv">
-        <i class="glow"></i>
-        <div class="ico">&#129396;</div>
-        <h3>Actions &mdash; she performs them</h3>
-        <p>Actions drive her whole pose, so she keeps doing them even while walking &mdash; skipping rope
-          becomes skipping <em>along</em>. One at a time; re-triggering restarts. The desktop pet ships these
-          and more; the ones below are what this canvas port shows.</p>
-        <div class="chips" data-kind="action">
-          <button class="chip" data-ac="wave">&#128075; wave</button>
-          <button class="chip" data-ac="peace">&#9996; peace</button>
-          <button class="chip" data-ac="dance">&#129323; dance<span class="k">disco</span></button>
-          <button class="chip" data-ac="sleep">&#128164; nap</button>
-          <button class="chip" data-ac="walk">&#128690; walk</button>
-          <button class="chip" data-ac="happy">&#9786; cheer</button>
-        </div>
-        <p style="margin:22px 0 0;font-size:.82rem;color:var(--dim)">
-          Also in the Go build: <b>skip, juggle, eat, work, guitar, sneeze, 6-7, basketball, drive, kitten</b>,
-          plus the <b>ride</b> skateboard and the <b>chute</b> parachute.
-        </p>
       </article>
     </div>
   </div>
@@ -974,7 +1061,7 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
 <section id="tech">
   <div class="wrap">
     <div class="sechead rv">
-      <span class="eyebrow">Under the hood</span>
+      <span class="eyebrow">Nerd start from here</span>
       <h2 class="h-lg" style="margin-top:22px">No toolkit.<br><span class="grad-teal">No cgo. Just Go and X11.</span></h2>
       <p class="lede">Most desktop toys drag in a GUI framework measured in hundreds of megabytes. This one
         doesn't. It speaks the X11 wire protocol directly, and every pixel of Onidia is drawn by code at runtime.</p>
@@ -1001,6 +1088,50 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
       <div class="stat"><b class="grad-pink">0</b><small>CGO DEPENDENCIES</small></div>
       <div class="stat"><b class="grad-teal">112&times;160</b><small>AUTHORING GRID</small></div>
       <div class="stat"><b class="grad-teal">5&times;7</b><small>BITMAP FONT</small></div>
+    </div>
+
+    <!-- The one place on the page that names the actual target hardware and
+         what the app does with it. Claim on the left, proof on the right. -->
+    <div class="pihw rv">
+      <div class="pihw-in">
+        <div>
+          <span class="eyebrow">Written, designed and tested on a Pi 5</span>
+          <h3 class="h-md" style="margin:18px 0 16px">Sixty-four bits, end to end.</h3>
+          <p>Onidia and chat-app are pure Go, so a build is a single static <code>arm64</code>
+            binary &mdash; nothing to cross-compile on the Pi, nothing to install beside it. The
+            release artifacts are exactly that: an <code>arm64</code> .deb and an
+            <code>aarch64</code> tarball. A Raspberry Pi 5 is what they were written against,
+            designed around and tested on.</p>
+          <p>The more interesting half is what that Pi can be <b>as</b> the machine. On a
+            <b>AI HAT+ 2</b> &mdash; the Hailo-10H board, 40 TOPS of INT4 inference and 8 GB of RAM
+            living on the card itself &mdash; Hailo's <code>hailo-ollama</code> speaks the very same
+            ollama <code>/api/chat</code> dialect <code>chat-app</code> already speaks to the network.
+            Point the provider at localhost and the model stops being someone else's computer.</p>
+          <div class="pihw-facts">
+            <div class="pihw-fact"><b class="grad-teal">arm64</b><small>BUILD TARGET</small></div>
+            <div class="pihw-fact"><b class="grad-pink">40 TOPS</b><small>INT4 INFERENCE</small></div>
+            <div class="pihw-fact"><b class="grad-teal">8 GB</b><small>ON-BOARD MODEL RAM</small></div>
+            <div class="pihw-fact"><b class="grad-pink">0 B</b><small>LEAVES THE PI</small></div>
+          </div>
+        </div>
+        <div>
+          <div class="codeblock">
+            <div class="cbar"><b>private by default</b><button class="copy" data-copy="#cb-hw">copy</button></div>
+<pre id="cb-hw"><span class="c"># Hailo's ollama-compatible server. Listens on :8000.</span>
+hailo-ollama
+
+<span class="c"># 8000 is already the default - this is the whole switch:</span>
+./chat-app -provider ollama -model <span class="s">qwen2:1.5b</span>
+
+<span class="c"># Qwen2 1.5B, Llama 3.2 1B, Qwen2.5-Coder, DeepSeek-R1</span>
+curl localhost:8000/api/tags</pre>
+          </div>
+          <div class="pihw-note"><b>Nothing leaves the Pi.</b> No key, no account, no request to a
+            vendor you cannot audit &mdash; pull the network cable and it behaves identically. One
+            honest footnote: hailo-ollama rejects the <code>tools</code> field, so chat-app retires
+            tool calling after the first reply and carries on in plain text.</div>
+        </div>
+      </div>
     </div>
 
     <div class="grid g2" style="margin-top:64px;align-items:start">
@@ -1189,7 +1320,7 @@ xdg-open web/index.html</pre>
   <div class="wrap foot">
     <small>&copy; Onidia &mdash; a tiny anime companion for your desktop. Pure Go, no cgo, no toolkit.</small>
     <nav class="foot-links" aria-label="Footer">
-      <a href="#meet">Meet her</a><a href="#tech">Under the hood</a>
+      <a href="#meet">Meet her</a><a href="#tech">Nerd start from here</a>
       <a href="#install">Install</a><a href="#contact">Contact</a>
     </nav>
   </div>
@@ -2645,39 +2776,10 @@ if (hero && stage) {
 }
 
 
-/* ==========================================================================
-   Events & actions — the chips fire the site's FX over the playground and
-   ask the pet to do the matching thing
-   ========================================================================== */
-var EVENT_LINE = {
-  love: ['<3', 'happy'], idea: ['oh! an idea!', 'thinking'], celebration: ['yay!!', 'happy'],
-  peace: ['peace!', 'wink'], sleep: ['so sleepy...', 'sleepy'], halloween: ['boo!', 'surprised'],
-  matrix: ['i am the code.', 'neutral'], magic: ['abracadabra~', 'surprised'], robot: ['systems online.', 'neutral'],
-  disappear: ['catch me if you can', 'wink'], appear: ["i'm back~", 'happy']
-};
-$$('.chip[data-ev]').forEach(function (b) {
-  b.addEventListener('click', function () {
-    var ev = b.dataset.ev;
-    page.burst(ev);
-    if (pet) {
-      var l = EVENT_LINE[ev];
-      if (ev === 'sleep') pet.setAction('sleep', 5);
-      else if (ev === 'disappear' || ev === 'appear') pet.setFace(l[1], 2.2);
-      else pet.say(l[0], l[1], { life: 2.6 });
-    }
-    if (ev === 'disappear') setTimeout(function () { page.burst('appear'); if (pet) pet.say(EVENT_LINE.appear[0], EVENT_LINE.appear[1], { life: 2.4 }); }, 1500);
-  });
-});
-$$('.chip[data-ac]').forEach(function (b) {
-  b.addEventListener('click', function () {
-    if (!pet) return;
-    var a = b.dataset.ac;
-    pet.pet.exprForced = false;
-    if (a === 'walk') { pet.setAction('walk', 6); pet.pet.dir = pet.pet.x < stage.clientWidth / 2 ? 1 : -1; }
-    else if (a === 'sleep') { pet.setAction('sleep', 7); pet.setFace('sleepy', 7); }
-    else pet.setAction(a, 3.2);
-  });
-});
+/* The events/actions chip block went with the "Celebrations & performances"
+   section: those two chip rows were its only elements, so the handlers and the
+   EVENT_LINE table have nothing left to bind to. The expression picker in the
+   hero (data-oid="faces") is wired separately and is untouched. */
 })();
 </script>
 </body>
