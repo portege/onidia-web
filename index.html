@@ -656,6 +656,10 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
         <g fill="#41aeb6">
         <path d="M23.23 53.09A8 8 0 1 1 37.92 59.02L19.01 91.54A2.6 2.6 0 0 1 14.24 89.61Z"/><path d="M74.08 59.02A8 8 0 1 1 88.77 53.09L97.76 89.61A2.6 2.6 0 0 1 92.99 91.54Z"/>
         </g>
+        <!-- Tail sheen: the pet's own highlight stroke, kept for fidelity but
+             effectively invisible - it is drawn before the head disc below
+             (r=38.7 about 56,60), which covers all of it bar a sliver where the
+             far cap clears the edge by 0.021 units. Nothing renders. -->
         <g stroke="#a5ecef" stroke-width="3" stroke-linecap="round" fill="none">
         <path d="M28 62 22.46 76.14"/><path d="M84 62 89.54 76.14"/>
         </g>
