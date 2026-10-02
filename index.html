@@ -821,6 +821,30 @@ kbd{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);
    hidden fields never fill it, which is the one thing we need it to do */
 .hp{position:absolute!important;left:-9999px!important;top:auto!important;width:1px;height:1px;
   opacity:0;border:0;padding:0}
+
+/* The iframe the contact form falls back to. Hidden, but still a real focusable
+   browsing context - display:none would be fine too, except some browsers skip
+   submitting into a fully hidden frame. */
+#cpost{position:absolute;width:1px;height:1px;border:0;opacity:0;pointer-events:none;left:-9999px}
+
+/* "Message sent" confirmation. Fixed, centred low, out of the way of the
+   back-to-top button at the same time - the two never overlap. */
+.toast{position:fixed;left:50%;bottom:34px;z-index:120;transform:translate(-50%,16px);
+  opacity:0;pointer-events:none;transition:opacity .35s var(--ease),transform .35s var(--ease);
+  padding:13px 22px;border-radius:999px;font-size:.9rem;font-weight:600;
+  background:rgba(20,30,38,.92);color:var(--teal-lt);border:1px solid rgba(165,236,239,.35);
+  box-shadow:0 18px 44px -18px rgba(0,0,0,.9);backdrop-filter:blur(14px)}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.toast.err{color:#ffd6e0;border-color:rgba(255,154,170,.5)}
+:root[data-theme="light"] .toast{background:rgba(255,255,255,.96);color:#0d6a70;
+  border-color:rgba(95,207,214,.45);box-shadow:0 18px 40px -20px rgba(43,33,66,.45)}
+:root[data-theme="light"] .toast.err{color:#a01f52;border-color:rgba(236,96,156,.45)}
+@media(max-width:640px){.toast{bottom:26px;left:20px;right:20px;transform:translateY(16px);text-align:center}
+  .toast.on{transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){
+  .toast{transition:opacity .01s linear;transform:none}
+  .toast.on{transform:none}
+}
 .field label{display:block;font-size:.76rem;font-weight:700;letter-spacing:.11em;text-transform:uppercase;
   color:var(--faint);margin-bottom:8px}
 .field input,.field textarea{width:100%;background:var(--field);color:var(--text);
@@ -1525,12 +1549,6 @@ chat-app -provider bedrock</pre>
 chat-app -provider ollama -model qwen2:1.5b</pre>
           </div>
         </div>
-        <div class="card">
-          <h3>A compositor</h3>
-          <p>She's a transparent, always-on-top window, so something has to composite it. Default on every modern
-             desktop. Without one, expect a black rectangle instead of a chibi girl &mdash; the one failure that looks
-             like a bug in her rather than a missing service.</p>
-        </div>
       </div>
     </div>
 
@@ -1631,6 +1649,10 @@ chat-app -provider ollama -model qwen2:1.5b</pre>
           <button class="btn btn-pink" type="submit" style="width:100%;justify-content:center">Send message</button>
           <p class="formnote" id="fnote" role="status" aria-live="polite"></p>
         </form>
+        <!-- The fallback posts in here. An iframe cannot navigate the page, so
+             even when fetch is blocked the visitor stays put instead of being
+             dumped on Formspree's thank-you page. -->
+        <iframe name="cpost" id="cpost" title="" aria-hidden="true" tabindex="-1"></iframe>
       </div>
 
       <div>
@@ -1674,6 +1696,7 @@ chat-app -provider ollama -model qwen2:1.5b</pre>
 </footer>
 
 <button class="to-top" id="totop" aria-label="Back to top">&#8593;</button>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div class="zoom" id="zoom" role="dialog" aria-modal="true" aria-label="Screenshot preview">
   <img id="zoomimg" src="" alt=""><p id="zoomcap"></p>
 </div>
@@ -1830,6 +1853,36 @@ D.addEventListener('keydown', function (e) { if (e.key === 'Escape' && zoom.clas
 
 /* ---------- contact form: validate, then post to Formspree ---------------
 var form = $('#cform'), note = $('#fnote'), sendBtn = form.querySelector('button[type="submit"]');
+var cpost = $('#cpost');   // hidden iframe: the fallback target
+
+// A toast rather than only the inline #fnote, because "did that send?" is the
+// one thing a visitor should not have to hunt for.
+function toast(msg, kind) {
+  var t = $('#toast');
+  t.textContent = msg;
+  t.className = 'toast on ' + (kind || 'ok');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(function () { t.classList.remove('on'); }, 4200);
+}
+
+// The fallback posts into a hidden iframe. A native form.submit() would
+// navigate the visitor to Formspree's thank-you page, which is exactly what
+// this is meant to avoid - an iframe cannot navigate us, and it needs no CORS
+// and no fetch, so it still works when the JSON path cannot.
+function postToIframe() {
+  form.target = 'cpost';
+  form.submit();
+  form.target = '';
+  setTimeout(done, 900);   // the iframe never reports back; assume it landed
+}
+
+function done() {
+  sendBtn.disabled = false; sendBtn.textContent = 'Send message';
+  note.classList.remove('err'); note.classList.add('ok');
+  note.textContent = 'Thanks — that came through. She says hello back.';
+  form.reset();
+  toast('Message sent ✓');
+}
 
 form.addEventListener('submit', function (e) {
   e.preventDefault();
@@ -1838,37 +1891,41 @@ form.addEventListener('submit', function (e) {
   if (!n || !s) { note.classList.add('err'); note.textContent = 'Please add your name and a message.'; return; }
   if (m && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(m)) { note.classList.add('err'); note.textContent = 'That email address does not look right.'; return; }
 
-  note.classList.add('ok'); note.textContent = 'Sending…';
   sendBtn.disabled = true; sendBtn.textContent = 'Sending…';
 
-  // Accept: application/json is what makes Formspree answer in-place instead
-  // of redirecting to its own thank-you page, so the visitor stays here.
+  if (!window.fetch) { postToIframe(); return; }
+
+  // Accept: application json asks Formspree to answer in place rather than
+  // redirect, so this is the path that can actually tell us it worked.
   fetch(form.action, {
     method: 'POST',
     body: new FormData(form),
     headers: { 'Accept': 'application/json' }
   }).then(function (r) {
     return r.json().catch(function () { return {}; }).then(function (d) {
-      if (!r.ok) { var e = new Error(d.errors && d.errors[0] && d.errors[0].message); e.serverRejected = true; throw e; }
+      if (!r.ok) {
+        var err = new Error((d.errors && d.errors[0] && d.errors[0].message) || ('HTTP ' + r.status));
+        err.serverRejected = true;
+        throw err;
+      }
       return d;
     });
   }).then(function () {
-    note.classList.add('ok');
-    note.textContent = 'Thanks — that came through. She says hello back.';
-    form.reset();
+    done();
   }).catch(function (err) {
-    // A rejected submission is Formspree saying no (bad address, rate limit).
-    // Only a dead network falls through to a plain POST, so an actual failure
-    // never silently turns into a second send.
+    // A rejection we can read is a real "no" - show it and keep the text.
+    // Anything else (no fetch, offline, a CORS block) still sends via the
+    // iframe, so the visitor is never dumped on an error page and the
+    // message is never lost to a network wobble.
     if (err && err.serverRejected) {
-      note.classList.remove('ok'); note.classList.add('err');
-      note.textContent = 'Formspree would not take it: ' + err.message + '. Try mailto:hello@mas-mas.it?';
-    } else {
-      form.submit();
+      sendBtn.disabled = false; sendBtn.textContent = 'Send message';
+      note.classList.add('err');
+      note.textContent = 'That did not go through: ' + err.message +
+        ' — or mail hello@mas-mas.it and I will still read it.';
+      toast('Not sent — try again', 'err');
       return;
     }
-  }).then(function () {
-    sendBtn.disabled = false; sendBtn.textContent = 'Send message';
+    postToIframe();
   });
 });
 
