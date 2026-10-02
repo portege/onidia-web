@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Set up Hailo-Ollama &mdash; Onidia</title>
+<meta name="description" content="Run a local LLM on Raspberry Pi 5 with the Hailo AI HAT+ 2 and point Onidia at it.">
+<link rel="stylesheet" href="setup.css">
+</head>
+<body>
+
+<div class="topbar"><div class="wrap topbar-in">
+  <a class="brand" href="index.html">&larr; Onidia</a>
+  <nav>
+    <a href="setup-gemini.html">Gemini</a>
+    <a href="setup-bedrock.html">Bedrock</a>
+    <a href="setup-hailo-ollama.html" aria-current="page">Hailo-Ollama</a>
+    <a href="setup-typecast.html">Typecast</a>
+  </nav>
+</div></div>
+
+<section><div class="wrap">
+  <span class="eyebrow">Setup guide &middot; 03</span>
+  <h1 class="h-lg" style="margin-top:20px">Keep her <span class="grad-teal">on the Pi.</span></h1>
+  <p class="lede">With an AI HAT+ 2 attached, a language model runs on the Hailo-10H's NPU at
+    about 40 TOPS of INT4 &mdash; so she thinks fast, costs nothing per token, and never sends
+    the conversation anywhere.</p>
+  <div class="chips">
+    <span class="chip on">100% local</span>
+    <span class="chip">No API key</span>
+    <span class="chip">AI HAT+ 2 required</span>
+  </div>
+  <div class="note">
+    <b>Why this guide is short</b>
+    <p>Hailo-Ollama speaks the ordinary Ollama <code>/api/chat</code> dialect, so Onidia needs no
+      special provider &mdash; she treats it as <code>ollama</code>. The default address and model
+      in her config already match this server exactly.</p>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2 class="h-md">Install the server</h2>
+
+  <div class="step"><div class="step-n">1</div><div class="step-b">
+    <h3>Get the software</h3>
+    <p>HailoRT v5.0 or newer, and the Hailo-Ollama server on top of it. The quickest route is the
+      prebuilt Docker image from Hailo's developer zone.</p>
+    <div class="codeblock">
+      <div class="cbar"><b>where to get it</b><button class="copy" data-copy="#h1">copy link</button></div>
+<pre id="h1">https://hailo.ai/developer-zone/</pre>
+    </div>
+    <p>You need <code>unzip</code>, Docker, and the HAT+ 2 seated on the Pi's PCIe connector.
+      Check the device is visible before going further:</p>
+    <div class="codeblock">
+      <div class="cbar"><b>terminal</b><button class="copy" data-copy="#h2">copy</button></div>
+<pre id="h2">ls /dev/h1x-0    <span class="c"># the NPU device node</span></pre>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-n">2</div><div class="step-b">
+    <h3>Start it</h3>
+    <p>Loaded from the Docker image, the server runs on its own. Note the device flag and the
+      port mapping &mdash; <code>/dev/h1x-0</code> is the accelerator, and <code>8000</code> is
+      the port Onidia expects.</p>
+    <div class="codeblock">
+      <div class="cbar"><b>terminal</b><button class="copy" data-copy="#h3">copy</button></div>
+<pre id="h3">unzip hailort_<span class="s">&lt;ver&gt;</span>_docker.zip
+docker load -i hailo_docker_hailort_ub2204_<span class="s">&lt;ver&gt;</span>.tar
+
+docker run -it --rm --device /dev/h1x-0 \
+    -p 8000:8000 \
+    -v $HOME/.local/share/hailo-ollama/models/blob:/usr/share/hailo-ollama/models/blob \
+    hailo_docker_hailort_ub2204:<span class="s">&lt;ver&gt;</span></pre>
+    </div>
+    <p>Installed natively instead? The server binary is just <code>hailo-ollama</code>, and it
+      listens on the same port:</p>
+    <div class="codeblock">
+      <div class="cbar"><b>terminal</b><button class="copy" data-copy="#h4">copy</button></div>
+<pre id="h4">hailo-ollama</pre>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-n">3</div><div class="step-b">
+    <h3>Confirm it answers</h3>
+    <p>Before touching any config, make sure the server is actually up.</p>
+    <div class="codeblock">
+      <div class="cbar"><b>terminal</b><button class="copy" data-copy="#h5">copy</button></div>
+<pre id="h5">curl --silent http://localhost:8000/api/version</pre>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-n">4</div><div class="step-b">
+    <h3>Pull a model onto the NPU</h3>
+    <p>Models ship as Hailo's own compiled format, so they are downloaded rather than built.
+      <code>qwen2:1.5b</code> is the sweet spot on a Pi &mdash; fast enough to feel conversational
+      and small enough to stay smooth.</p>
+    <div class="codeblock">
+      <div class="cbar"><b>terminal</b><button class="copy" data-copy="#h6">copy</button></div>
+<pre id="h6"><span class="c"># what is available to download</span>
+curl --silent http://localhost:8000/hailo/v1/list
+
+<span class="c"># pull one (stream:true is the default and shows progress)</span>
+curl --silent http://localhost:8000/api/pull \
+     -H <span class="s">'Content-Type: application/json'</span> \
+     -d <span class="s">'{"model": "qwen2:1.5b", "stream" : true }'</span></pre>
+    </div>
+    <p>To pull everything on offer in one go:</p>
+    <div class="codeblock">
+      <div class="cbar"><b>terminal</b><button class="copy" data-copy="#h7">copy</button></div>
+<pre id="h7">curl --silent http://localhost:8000/hailo/v1/list \
+  | jq -r <span class="s">'.models[]'</span> \
+  | while read model; do
+      echo <span class="s">"Pulling $model..."</span>
+      curl --no-buffer --silent http://localhost:8000/api/pull \
+        -H <span class="s">'Content-Type: application/json'</span> \
+        -d <span class="s">"{\"model\": \"$model\", \"stream\" : true}"</span>
+    done</pre>
+    </div>
+  </div></div>
+<div class="step"><div class="step-n">5</div><div class="step-b">
+    <h3>Point Onidia at it</h3>
+    <p>No key, because there is nothing to authenticate. These two values are already the
+      defaults, so an empty section works &mdash; they are here so you can see the shape.</p>
+    <div class="file">
+      <div class="file-bar">~/.config/chat-app/chat-app.ini</div>
+<pre>provider = <mark>ollama</mark>
+
+[ollama]
+api-url = <mark>http://localhost:8000</mark>
+model   = <mark>qwen2:1.5b</mark></pre>
+    </div>
+    <div class="note warn">
+      <b>Not 11434</b>
+      <p>Plain Ollama listens on 11434; Hailo-Ollama listens on <strong>8000</strong>, and 8000
+        is what Onidia assumes when <code>api-url</code> is unset. If you are running both, set
+        the URL explicitly rather than relying on the default.</p>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-n">6</div><div class="step-b">
+    <h3>Check it, then start her</h3>
+    <div class="codeblock">
+      <div class="cbar"><b>terminal</b><button class="copy" data-copy="#h8">copy</button></div>
+<pre id="h8">chat-app -preflight warn
+
+<span class="c"># terminal 1 - the body</span>
+onidia
+
+<span class="c"># terminal 2 - the brain</span>
+chat-app</pre>
+    </div>
+  </div></div>
+</div></section>
+
+<section><div class="wrap">
+  <h2 class="h-md">Worth knowing</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>One conversation at a time</h3>
+      <p>The server handles a single request with one pending behind it. One Onidia, one
+        terminal &mdash; perfectly fine, but not built for sharing.</p>
+    </div>
+    <div class="card">
+      <h3>Language only</h3>
+      <p>Text models work. Vision-language models and text-to-image do not, and neither do LoRA
+        adapters &mdash; the NPU path is more specialised than full Ollama.</p>
+    </div>
+    <div class="card">
+      <h3>No Ollama CLI</h3>
+      <p>Use <code>curl</code> against the REST API, as above. <code>ollama run</code> will not
+        connect to this server.</p>
+    </div>
+    <div class="card">
+      <h3>Image replies still need the internet</h3>
+      <p>Image lookup uses Pixabay or Wikipedia, and <code>image-source = gemini</code> needs
+        Google. Set <code>image-source = off</code> to keep her entirely offline.</p>
+    </div>
+  </div>
+</div></section>
+
+<footer class="foot"><div class="wrap foot-in">
+  <a href="index.html">Onidia</a><span class="dot">&middot;</span>
+  <a href="setup-gemini.html">Gemini</a><span class="dot">&middot;</span>
+  <a href="setup-bedrock.html">Bedrock</a><span class="dot">&middot;</span>
+  <a href="setup-typecast.html">Next: Typecast</a>
+</div></footer>
+
+<script>
+(function(){
+  var $ = function(s){ return document.querySelector(s); };
+  var pre = function(el){ return el ? el.innerText : ''; };
+  function fallback(el, done){
+    var t = document.createElement('textarea');
+    t.value = pre(el); t.setAttribute('readonly','');
+    t.style.cssText = 'position:absolute;left:-9999px';
+    document.body.appendChild(t); t.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(t); done();
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.copy'), function(b){
+    b.addEventListener('click', function(){
+      var el = $(b.dataset.copy);
+      var done = function(){
+        b.classList.add('done'); b.textContent = 'copied';
+        setTimeout(function(){ b.classList.remove('done'); b.textContent = 'copy'; }, 1600);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(pre(el)).then(done, function(){ fallback(el, done); });
+      } else { fallback(el, done); }
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
