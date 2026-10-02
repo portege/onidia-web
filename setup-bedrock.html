@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Set up Amazon Bedrock &mdash; Onidia</title>
+<meta name="description" content="Create an IAM user, scope its permissions to Bedrock, and point Onidia at Claude with the AWS CLI.">
+<link rel="stylesheet" href="setup.css">
+</head>
+<body>
+
+<div class="topbar"><div class="wrap topbar-in">
+  <a class="brand" href="index.html">&larr; Onidia</a>
+  <nav>
+    <a href="setup-gemini.html">Gemini</a>
+    <a href="setup-bedrock.html" aria-current="page">Bedrock</a>
+    <a href="setup-hailo-ollama.html">Hailo-Ollama</a>
+    <a href="setup-typecast.html">Typecast</a>
+  </nav>
+</div></div>
+
+<section><div class="wrap">
+  <span class="eyebrow">Setup guide &middot; 02</span>
+  <h1 class="h-lg" style="margin-top:20px">Run her on <span class="grad-pink">Claude.</span></h1>
+  <p class="lede">Bedrock runs Anthropic's models on your AWS account. It costs real money per
+    token &mdash; but no key is ever written into Onidia's config, and the whole setup is five
+    commands.</p>
+  <div class="chips">
+    <span class="chip on">Claude</span>
+    <span class="chip">Pay per token</span>
+    <span class="chip">~15 minutes</span>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2 class="h-md">Before you start</h2>
+  <p class="lede" style="margin-top:0">Two things to have ready:</p>
+  <div class="grid">
+    <div class="card">
+      <h3>An AWS account</h3>
+      <p>Bedrock has to be enabled for the region you pick, and you need permission to turn it
+        on. The AWS console walks you through it.</p>
+      <div class="codeblock" style="margin-top:14px">
+        <div class="cbar"><b>console</b><button class="copy" data-copy="#b0">copy link</button></div>
+<pre id="b0">https://console.aws.amazon.com/bedrock</pre>
+      </div>
+    </div>
+    <div class="card">
+      <h3>The AWS CLI</h3>
+      <p>Only for this guide. Onidia itself never shells out to it &mdash; she reads the
+        credential files the CLI writes.</p>
+      <div class="codeblock" style="margin-top:14px">
+        <div class="cbar"><b>terminal</b><button class="copy" data-copy="#b1">copy</button></div>
+<pre id="b1">sudo apt install awscli
+aws --version</pre>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2 class="h-md">Create a user for her</h2>
+
+  <div class="step"><div class="step-n">1</div><div class="step-b">
+    <h3>Make an IAM user with no console access</h3>
+    <p>A dedicated user, so her access is separate from yours and easy to revoke later. She is
+      an application, not a person &mdash; no password, no console sign-in.</p>
+    <div class="codeblock">
+      <div class="cbar"><b>terminal</b><button class="copy" data-copy="#b2">copy</button></div>
+<pre id="b2">aws iam create-user \
+  --user-name onidia \
+  --no-password-access</pre>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-n">2</div><div class="step-b">
+    <h3>Give it an access key</h3>
+    <p>One time only. This is the only moment AWS shows you the secret &mdash; there is no way to
+      fetch it again, so copy it now.</p>
+    <div class="codeblock">
+      <div class="cbar"><b>terminal</b><button class="copy" data-copy="#b3">copy</button></div>
+<pre id="b3">aws iam create-access-key --user-name onidia</pre>
+    </div>
+    <div class="note warn">
+      <b>Save both values now</b>
+      <p>You get an <code>AccessKeyId</code> and a <code>SecretAccessKey</code>. The secret is
+        shown once and never again. Put both somewhere safe before you do anything else.</p>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-n">3</div><div class="step-b">
+    <h3>Allow Bedrock, and nothing else</h3>
+    <p>AWS ships a managed policy that covers Bedrock calls.</p>
+    <div class="codeblock">
+      <div class="cbar"><b>terminal</b><button class="copy" data-copy="#b4">copy</button></div>
+<pre id="b4">aws iam attach-user-policy \
+  --user-name onidia \
+  --policy-arn arn:aws:iam::aws:policy/AmazonBedrockFullAccess</pre>
+    </div>
+    <p>That name is broad &mdash; it covers model access in every region. If you would rather she
+      could only use one model in one region, skip the managed policy and attach a scoped one
+      instead:</p>
+    <div class="file">
+      <div class="file-bar">bedrock-scoped.json</div>
+<pre>{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": [<span class="s">"bedrock:InvokeModel"</span>, <span class="s">"bedrock:InvokeModelWithResponseStream"</span>],
+    "Resource": <span class="s">"arn:aws:bedrock:us-east-1::foundation-model/*"</span>
+  }]
+}</pre>
+    </div>
+    <div class="codeblock">
+      <div class="cbar"><b>terminal</b><button class="copy" data-copy="#b5">copy</button></div>
+<pre id="b5">aws iam create-policy \
+  --policy-name onidia-bedrock \
+  --policy-document file://bedrock-scoped.json
+
+aws iam attach-user-policy \
+  --user-name onidia \
+  --policy-arn arn:aws:iam::<mark>ACCOUNT-ID</mark>:policy/onidia-bedrock</pre>
+    </div>
+    <p>Either way, check what she ended up with:</p>
+    <div class="codeblock">
+      <div class="cbar"><b>terminal</b><button class="copy" data-copy="#b6">copy</button></div>
+<pre id="b6">aws iam list-attached-user-policies --user-name onidia</pre>
+    </div>
+  </div></div>
+<div class="step"><div class="step-n">4</div><div class="step-b">
+    <h3>Write the keys where Onidia can find them</h3>
+    <p>The AWS CLI already knows where that is &mdash; so let it write the file, rather than making
+      one by hand and getting the shape wrong.</p>
+    <div class="codeblock">
+      <div class="cbar"><b>terminal</b><button class="copy" data-copy="#b7">copy</button></div>
+<pre id="b7">aws configure set aws_access_key_id <span class="s">AKIA...</span>
+aws configure set aws_secret_access_key <span class="s">"your-secret..."</span>
+aws configure set region us-east-1
+
+<span class="c"># where that landed</span>
+cat ~/.aws/credentials
+cat ~/.aws/config</pre>
+    </div>
+    <div class="note">
+      <b>A named profile, if you use more than one</b>
+      <p>Add <code>--profile onidia</code> to those three commands and the keys go into their own
+        section instead of <code>[default]</code>. Then tell Onidia which profile to read with
+        <code>aws-profile</code>. Useful if your day job already uses the default profile.</p>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-n">5</div><div class="step-b">
+    <h3>Point her at Bedrock</h3>
+    <p>No key goes in here &mdash; only which profile and region to read.</p>
+    <div class="file">
+      <div class="file-bar">~/.config/chat-app/chat-app.ini</div>
+<pre>provider = <mark>bedrock</mark>
+
+[bedrock]
+aws-profile = <mark>default</mark>
+aws-region  = <mark>us-east-1</mark>
+model = amazon.nova-lite-v1:0</pre>
+    </div>
+    <p>Left empty, <code>aws-profile</code> and <code>aws-region</code> both fall back to the
+      defaults, so if your <code>~/.aws/config</code> is already set up you can leave those two
+      lines out entirely.</p>
+  </div></div>
+
+  <div class="step"><div class="step-n">6</div><div class="step-b">
+    <h3>Check it, then start her</h3>
+    <div class="codeblock">
+      <div class="cbar"><b>terminal</b><button class="copy" data-copy="#b8">copy</button></div>
+<pre id="b8">chat-app -preflight warn
+
+<span class="c"># terminal 1 - the body</span>
+onidia
+
+<span class="c"># terminal 2 - the brain</span>
+chat-app</pre>
+    </div>
+    <p>Preflight reports whether the credentials resolve and whether the model is actually
+      available in that region &mdash; the two things that go wrong.</p>
+  </div></div>
+</div></section>
+
+<section><div class="wrap">
+  <h2 class="h-md">Models</h2>
+  <p class="lede" style="margin-top:0">Which ones you can use depends on your region, and the
+    model has to be enabled in the Bedrock console before it will answer &mdash; access is not
+    automatic even with the right IAM policy.</p>
+  <div class="grid">
+    <div class="card">
+      <h3>The default</h3>
+      <p><code>amazon.nova-lite-v1:0</code> &mdash; small, fast, and the cheapest sensible option
+        on a Pi. Set with <code>model</code> in the config, or <code>-model</code> for one run.</p>
+    </div>
+    <div class="card">
+      <h3>Claude</h3>
+      <p>Use its Bedrock model id, for example
+        <code>anthropic.claude-3-5-sonnet-20241022-v2:0</code>. Enable it in the console first.</p>
+    </div>
+    <div class="card">
+      <h3>"model not available"</h3>
+      <p>The model has not been enabled in this region, or it does not exist there. Model access
+        is granted per region, so a model working in <code>us-east-1</code> may not exist in
+        <code>eu-central-1</code>.</p>
+    </div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2 class="h-md">If it goes wrong</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>Credentials not found</h3>
+      <p>The CLI may be writing to a different home than Onidia reads. Check with
+        <code>cat ~/.aws/credentials</code>, and that <code>aws-profile</code> matches the
+        section name in that file exactly.</p>
+    </div>
+    <div class="card">
+      <h3>AccessDenied</h3>
+      <p>The key works but the policy is missing. Confirm with
+        <code>aws iam list-attached-user-policies --user-name onidia</code>, and wait a minute
+        after attaching &mdash; IAM changes take a moment to propagate.</p>
+    </div>
+    <div class="card">
+      <h3>ExpiredToken</h3>
+      <p>The access key is older than 90 days, or was deleted. Make a new one with
+        <code>aws iam create-access-key</code>, update the file, and delete the old one.</p>
+    </div>
+    <div class="card">
+      <h3>Costs more than expected</h3>
+      <p>Add a budget alarm in the AWS billing console before you start chatting. Small models on
+        short replies are cheap; long conversations are not.</p>
+    </div>
+  </div>
+  <div class="note warn">
+    <b>Cleaning up</b>
+    <p>To revoke her access completely: detach the policy, delete the access key, then
+      <code>aws iam delete-user --user-name onidia</code>. Do it in that order &mdash; a user
+      with an attached policy cannot be deleted.</p>
+  </div>
+</div></section>
+
+<footer class="foot"><div class="wrap foot-in">
+  <a href="index.html">Onidia</a><span class="dot">&middot;</span>
+  <a href="setup-gemini.html">Gemini</a><span class="dot">&middot;</span>
+  <a href="setup-hailo-ollama.html">Next: Hailo-Ollama</a><span class="dot">&middot;</span>
+  <a href="setup-typecast.html">Typecast</a>
+</div></footer>
+
+<script>
+(function(){
+  var $ = function(s){ return document.querySelector(s); };
+  var pre = function(el){ return el ? el.innerText : ''; };
+  function fallback(el, done){
+    var t = document.createElement('textarea');
+    t.value = pre(el); t.setAttribute('readonly','');
+    t.style.cssText = 'position:absolute;left:-9999px';
+    document.body.appendChild(t); t.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(t); done();
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.copy'), function(b){
+    b.addEventListener('click', function(){
+      var el = $(b.dataset.copy);
+      var done = function(){
+        b.classList.add('done'); b.textContent = 'copied';
+        setTimeout(function(){ b.classList.remove('done'); b.textContent = 'copy'; }, 1600);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(pre(el)).then(done, function(){ fallback(el, done); });
+      } else { fallback(el, done); }
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

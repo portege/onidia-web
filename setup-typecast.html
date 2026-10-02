@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Set up Typecast voice &mdash; Onidia</title>
+<meta name="description" content="Create a Typecast account, get an API key and a voice id, and give Onidia her voice.">
+<link rel="stylesheet" href="setup.css">
+</head>
+<body>
+
+<div class="topbar"><div class="wrap topbar-in">
+  <a class="brand" href="index.html">&larr; Onidia</a>
+  <nav>
+    <a href="setup-gemini.html">Gemini</a>
+    <a href="setup-bedrock.html">Bedrock</a>
+    <a href="setup-hailo-ollama.html">Hailo-Ollama</a>
+    <a href="setup-typecast.html" aria-current="page">Typecast</a>
+  </nav>
+</div></div>
+
+<section><div class="wrap">
+  <span class="eyebrow">Setup guide &middot; 04</span>
+  <h1 class="h-lg" style="margin-top:20px">Give her a <span class="grad-pink">voice.</span></h1>
+  <p class="lede">Every reply she writes is also spoken, so her voice notes to the pet. Typecast
+    does the text-to-speech; you pick a voice and paste two identifiers.</p>
+  <div class="chips">
+    <span class="chip on">Works out of the box</span>
+    <span class="chip">Free tier available</span>
+    <span class="chip">~5 minutes</span>
+  </div>
+  <div class="note">
+    <b>You can skip this</b>
+    <p>A demo key and voice ship with the app, so she talks from the first launch. Setting up
+      your own account is about getting <em>your</em> voice and not sharing a rate limit with
+      everyone else who did not bother.</p>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2 class="h-md">Create the account</h2>
+
+  <div class="step"><div class="step-n">1</div><div class="step-b">
+    <h3>Sign up for Typecast</h3>
+    <p>Typecast builds AI voices, and the free plan covers enough characters per month for
+      ordinary chatting.</p>
+    <div class="codeblock">
+      <div class="cbar"><b>where to go</b><button class="copy" data-copy="#t1">copy link</button></div>
+<pre id="t1">https://typecast.ai</pre>
+    </div>
+    <p>Create an account, then confirm your email address &mdash; the API console is not
+      available until you have.</p>
+  </div></div>
+
+  <div class="step"><div class="step-n">2</div><div class="step-b">
+    <h3>Generate an API key</h3>
+    <p>The API console issues keys. Create one and copy it &mdash; this is the value that goes
+      in <code>tts-key</code>.</p>
+    <div class="codeblock">
+      <div class="cbar"><b>where to go</b><button class="copy" data-copy="#t2">copy link</button></div>
+<pre id="t2">https://typecast.ai/api-console</pre>
+    </div>
+    <p>Onidia calls the Typecast text-to-speech endpoint directly, so you do not need any of
+      their SDKs:</p>
+    <div class="codeblock">
+      <div class="cbar"><b>the endpoint she uses</b><button class="copy" data-copy="#t3">copy</button></div>
+<pre id="t3">https://api.typecast.ai/v1/text-to-speech</pre>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-n">3</div><div class="step-b">
+    <h3>Pick a voice</h3>
+    <p>On the voices page you can audition every voice without spending a single character of
+      your quota, then copy the one you like. The identifier is a <code>tc_</code> string
+      &mdash; that is <code>tts-voice</code>.</p>
+    <div class="codeblock">
+      <div class="cbar"><b>where to go</b><button class="copy" data-copy="#t4">copy link</button></div>
+<pre id="t4">https://typecast.ai/voices</pre>
+    </div>
+    <p>If you would rather list them from the terminal, the same catalogue is available as JSON.
+      <code>jq</code> makes it readable:</p>
+    <div class="codeblock">
+      <div class="cbar"><b>terminal</b><button class="copy" data-copy="#t5">copy</button></div>
+<pre id="t5">sudo apt install jq
+curl --silent -H <span class="s">"X-API-Key: $TYPECAST_API_KEY"</span> \
+  https://api.typecast.ai/v1/voices \
+  | jq -r <span class="s">'.[] | "\(.voice_id)  \(.name // .voice_name.eng)"'</span></pre>
+    </div>
+    <p>Choosing by ear on the voices page is far quicker than reading a JSON list. The terminal
+      version is for when you already know roughly what you want.</p>
+  </div></div>
+<div class="step"><div class="step-n">4</div><div class="step-b">
+    <h3>Put both into her config</h3>
+    <p>Two values, and this is the top-level section rather than a provider one &mdash; voice is
+      independent of which model is doing the thinking.</p>
+    <div class="file">
+      <div class="file-bar">~/.config/chat-app/chat-app.ini</div>
+<pre>tts = on
+tts-key = <mark>your-api-key</mark>
+tts-voice = <mark>tc_xxxxxxxxxxxxxxxxxxxxxxxx</mark></pre>
+    </div>
+    <p>Restart her afterwards &mdash; speech settings are read at startup, like everything else.</p>
+  </div></div>
+
+  <div class="step"><div class="step-n">5</div><div class="step-b">
+    <h3>Check she can actually play it</h3>
+    <p>This is the step people skip, and it is the one that matters most. Onidia needs a system
+      audio player on <code>PATH</code>, and if none is there she simply goes quiet &mdash; no
+      error, just a silent pet.</p>
+    <div class="codeblock">
+      <div class="cbar"><b>terminal</b><button class="copy" data-copy="#t6">copy</button></div>
+<pre id="t6">which aplay paplay ffplay
+chat-app -preflight warn</pre>
+    </div>
+    <p>All three names come back empty? Install one:</p>
+    <div class="codeblock">
+      <div class="cbar"><b>terminal</b><button class="copy" data-copy="#t7">copy</button></div>
+<pre id="t7">sudo apt install alsa-utils pulseaudio-utils</pre>
+    </div>
+  </div></div>
+</div></section>
+<section><div class="wrap">
+  <h2 class="h-md">Other ways to set it</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>Environment variable</h3>
+      <p>Beats the config file, so you can keep the key out of the file entirely.</p>
+      <div class="codeblock" style="margin-top:14px">
+        <div class="cbar"><b>terminal</b><button class="copy" data-copy="#t8">copy</button></div>
+<pre id="t8"><span class="k">export</span> TYPECAST_API_KEY=<span class="s">"your-key"</span>
+chat-app</pre>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Two flags, one run</h3>
+      <p>Handy for auditioning voices without editing anything: try one, then the next.</p>
+      <div class="codeblock" style="margin-top:14px">
+        <div class="cbar"><b>terminal</b><button class="copy" data-copy="#t9">copy</button></div>
+<pre id="t9">chat-app \
+  -tts-key <span class="s">"your-key"</span> \
+  -tts-voice <span class="s">tc_xxxxxxxx</span></pre>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Turn her voice off</h3>
+      <p>She keeps writing, she just stops speaking. Useful on a shared machine or over SSH.</p>
+      <div class="codeblock" style="margin-top:14px">
+        <div class="cbar"><b>terminal</b><button class="copy" data-copy="#ta">copy</button></div>
+<pre id="ta">chat-app -tts off</pre>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2 class="h-md">If it goes wrong</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>She types, but never speaks</h3>
+      <p>No audio player. Check <code>which aplay paplay ffplay</code> and read the startup log
+        &mdash; it says so explicitly when it cannot find one.</p>
+    </div>
+    <div class="card">
+      <h3>tts http 401</h3>
+      <p>The API key is wrong, or belongs to a different account. Typecast's console is the only
+        place it can be reissued.</p>
+    </div>
+    <div class="card">
+      <h3>tts http 403</h3>
+      <p>The key is valid but the plan does not allow API access. Confirm the account is on a
+        tier with API access enabled.</p>
+    </div>
+    <div class="card">
+      <h3>Out of characters</h3>
+      <p>Free plans have a monthly character allowance. Speech is billed per character of
+        <em>text</em>, and retries on a failed request still count &mdash; short replies help.</p>
+    </div>
+  </div>
+</div></section>
+<footer class="foot"><div class="wrap foot-in">
+  <a href="index.html">Onidia</a><span class="dot">&middot;</span>
+  <a href="setup-gemini.html">Gemini</a><span class="dot">&middot;</span>
+  <a href="setup-bedrock.html">Bedrock</a><span class="dot">&middot;</span>
+  <a href="setup-hailo-ollama.html">Hailo-Ollama</a>
+</div></footer>
+
+<script>
+(function(){
+  var $ = function(s){ return document.querySelector(s); };
+  var pre = function(el){ return el ? el.innerText : ''; };
+  function fallback(el, done){
+    var t = document.createElement('textarea');
+    t.value = pre(el); t.setAttribute('readonly','');
+    t.style.cssText = 'position:absolute;left:-9999px';
+    document.body.appendChild(t); t.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(t); done();
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.copy'), function(b){
+    b.addEventListener('click', function(){
+      var el = $(b.dataset.copy);
+      var done = function(){
+        b.classList.add('done'); b.textContent = 'copied';
+        setTimeout(function(){ b.classList.remove('done'); b.textContent = 'copy'; }, 1600);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(pre(el)).then(done, function(){ fallback(el, done); });
+      } else { fallback(el, done); }
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

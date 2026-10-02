@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Set up Gemini &mdash; Onidia</title>
+<meta name="description" content="Get a Google AI Studio key and put it in chat-app.ini so Onidia can think.">
+<link rel="stylesheet" href="setup.css">
+</head>
+<body>
+
+<div class="topbar"><div class="wrap topbar-in">
+  <a class="brand" href="index.html">&larr; Onidia</a>
+  <nav>
+    <a href="setup-gemini.html" aria-current="page">Gemini</a>
+    <a href="setup-bedrock.html">Bedrock</a>
+    <a href="setup-hailo-ollama.html">Hailo-Ollama</a>
+    <a href="setup-typecast.html">Typecast</a>
+  </nav>
+</div></div>
+
+<section><div class="wrap">
+  <span class="eyebrow">Setup guide &middot; 01</span>
+  <h1 class="h-lg" style="margin-top:20px">Give her a <span class="grad-teal">brain.</span></h1>
+  <p class="lede">Gemini is the default provider and the easiest one to start with: a free key, no
+    account to manage, no billing. Five minutes and she starts answering.</p>
+  <div class="chips">
+    <span class="chip on">Free tier</span>
+    <span class="chip">No card needed</span>
+    <span class="chip">~5 minutes</span>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2 class="h-md">The whole thing</h2>
+
+  <div class="step"><div class="step-n">1</div><div class="step-b">
+    <h3>Get the key</h3>
+    <p>Sign in with any Google account and create an API key. It appears exactly once &mdash;
+      copy it straight away or you will have to issue a new one.</p>
+    <div class="codeblock">
+      <div class="cbar"><b>where to go</b><button class="copy" data-copy="#s1">copy link</button></div>
+<pre id="s1">https://aistudio.google.com/apikey</pre>
+    </div>
+    <p>Click <strong>Create API key</strong>, choose a project (Google makes you create one if
+      you have none), then copy the key. It starts with <code>AIza</code> and is 39 characters.</p>
+  </div></div>
+
+  <div class="step"><div class="step-n">2</div><div class="step-b">
+    <h3>Open her config file</h3>
+    <p>The package put it there for you. If it does not exist yet, create the directory and
+      an empty file &mdash; the app is happy with a partial config.</p>
+    <div class="codeblock">
+      <div class="cbar"><b>terminal</b><button class="copy" data-copy="#s2">copy</button></div>
+<pre id="s2">mkdir -p ~/.config/chat-app
+nano ~/.config/chat-app/chat-app.ini</pre>
+    </div>
+    <div class="note">
+      <b>Where she looks for it</b>
+      <p>First <code>./chat-app.ini</code>, then next to the binary, then
+        <code>~/.config/chat-app/chat-app.ini</code>. On a package install the first two cannot
+        see it, so this path is the one that actually matters.</p>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-n">3</div><div class="step-b">
+    <h3>Paste the key in</h3>
+    <p>Three lines are enough. The <code>provider</code> key at the top picks which section she
+      reads, so it has to be <code>gemini</code>.</p>
+    <div class="file">
+      <div class="file-bar">~/.config/chat-app/chat-app.ini</div>
+<pre>provider = <mark>gemini</mark>
+
+[gemini]
+api-key = <mark>AIzaSy...your-key...</mark>
+model = gemini-3.6-flash
+api-url = https://generativelanguage.googleapis.com</pre>
+    </div>
+    <p>Save with <code>Ctrl-O</code>, then <code>Ctrl-X</code>.</p>
+  </div></div>
+<div class="step"><div class="step-n">4</div><div class="step-b">
+    <h3>Check it worked before you launch</h3>
+    <p>chat-app verifies the key and the whole environment before it opens a window. If anything
+      is wrong it tells you what, instead of failing mysteriously later.</p>
+    <div class="codeblock">
+      <div class="cbar"><b>terminal</b><button class="copy" data-copy="#s4">copy</button></div>
+<pre id="s4">chat-app -preflight warn</pre>
+    </div>
+    <p>Look for the Gemini line coming back green. Then start her.</p>
+  </div></div>
+
+  <div class="step"><div class="step-n">5</div><div class="step-b">
+    <h3>Start her</h3>
+    <p>The pet first &mdash; it creates the speech pipe the chat window writes into. Then the
+      brain, in a second terminal.</p>
+    <div class="codeblock">
+      <div class="cbar"><b>two terminals</b><button class="copy" data-copy="#s5">copy</button></div>
+<pre id="s5"><span class="c"># terminal 1 - the body</span>
+onidia
+
+<span class="c"># terminal 2 - the brain</span>
+chat-app</pre>
+    </div>
+  </div></div>
+</div></section>
+
+<section><div class="wrap">
+  <h2 class="h-md">If you would rather not store the key</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>Environment variable</h3>
+      <p>Export it for the session instead of writing it to disk. The env var wins over the
+        config file, so you can keep a config with no key in it at all.</p>
+      <div class="codeblock" style="margin-top:14px">
+        <div class="cbar"><b>terminal</b><button class="copy" data-copy="#s6">copy</button></div>
+<pre id="s6"><span class="k">export</span> GEMINI_API_KEY=<span class="s">"AIzaSy..."</span>
+chat-app</pre>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Make it permanent</h3>
+      <p>Append it to your shell profile so every new terminal has it. Convenient, but it means
+        the key is in a plaintext file like the config anyway.</p>
+      <div class="codeblock" style="margin-top:14px">
+        <div class="cbar"><b>terminal</b><button class="copy" data-copy="#s7">copy</button></div>
+<pre id="s7"><span class="c"># add to ~/.bashrc or ~/.zshrc</span>
+<span class="k">export</span> GEMINI_API_KEY=<span class="s">"AIzaSy..."</span></pre>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Command line only</h3>
+      <p>Good for a one-off, and it never touches a file. The flag beats both the config and the
+        environment.</p>
+      <div class="codeblock" style="margin-top:14px">
+        <div class="cbar"><b>terminal</b><button class="copy" data-copy="#s8">copy</button></div>
+<pre id="s8">chat-app -api-key <span class="s">"AIzaSy..."</span></pre>
+      </div>
+    </div>
+  </div>
+  <div class="note warn">
+    <b>Precedence, so nothing surprises you</b>
+    <p><code>-api-key</code> flag &rarr; <code>GEMINI_API_KEY</code> or <code>GOOGLE_API_KEY</code>
+      in the environment &rarr; <code>api-key</code> in the config file &rarr; built-in default.
+      First one found wins.</p>
+  </div>
+</div></section>
+<section><div class="wrap">
+  <h2 class="h-md">If it goes wrong</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>"api key not valid"</h3>
+      <p>Almost always a paste problem: a leading space, a trailing newline, or quotes included.
+        The key must be the bare 39 characters, nothing around it.</p>
+    </div>
+    <div class="card">
+      <h3>No reply, no error</h3>
+      <p>Run <code>chat-app -preflight warn</code>. It probes the real endpoint and prints the
+        status code the API returned, which is far more useful than a silent window.</p>
+    </div>
+    <div class="card">
+      <h3>Rate limited</h3>
+      <p>The free tier has a per-minute quota. A 429 in the log means you are sending faster than
+        it allows; wait a few seconds between long chats.</p>
+    </div>
+    <div class="card">
+      <h3>Still nothing</h3>
+      <p>She may be pointed at a different provider. <code>provider</code> at the top of the
+        config decides which section she reads &mdash; it must say <code>gemini</code>.</p>
+    </div>
+  </div>
+</div></section>
+
+<footer class="foot"><div class="wrap foot-in">
+  <a href="index.html">Onidia</a><span class="dot">&middot;</span>
+  <a href="setup-bedrock.html">Next: Bedrock</a><span class="dot">&middot;</span>
+  <a href="setup-hailo-ollama.html">Hailo-Ollama</a><span class="dot">&middot;</span>
+  <a href="setup-typecast.html">Typecast</a>
+</div></footer>
+
+<script>
+(function(){
+  var $ = function(s){ return document.querySelector(s); };
+  var pre = function(el){ return el ? el.innerText : ''; };
+  function fallback(el, done){
+    var t = document.createElement('textarea');
+    t.value = pre(el); t.setAttribute('readonly','');
+    t.style.cssText = 'position:absolute;left:-9999px';
+    document.body.appendChild(t); t.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(t); done();
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.copy'), function(b){
+    b.addEventListener('click', function(){
+      var el = $(b.dataset.copy);
+      var done = function(){
+        b.classList.add('done'); b.textContent = 'copied';
+        setTimeout(function(){ b.classList.remove('done'); b.textContent = 'copy'; }, 1600);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(pre(el)).then(done, function(){ fallback(el, done); });
+      } else { fallback(el, done); }
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

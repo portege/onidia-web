@@ -776,6 +776,7 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
       <a href="#tech">Nerd start from here</a>
       <a href="#install">Install</a>
       <a href="#requirements">What she needs</a>
+      <a href="#guides">Setup</a>
       <a href="#contact">Contact</a>
     </nav>
     <a class="btn btn-primary btn-sm nav-cta" href="#install">Get Onidia</a>
@@ -799,7 +800,8 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
   <a href="#tech"><span>03</span>Nerd start from here</a>
   <a href="#install"><span>04</span>Install</a>
   <a href="#requirements"><span>05</span>What she needs</a>
-  <a href="#contact"><span>06</span>Contact</a>
+  <a href="#guides"><span>06</span>Setup</a>
+  <a href="#contact"><span>07</span>Contact</a>
 </div>
 
 <main id="top">
@@ -1100,8 +1102,8 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
           <h3 class="h-md" style="margin:18px 0 16px">Sixty-four bits, end to end.</h3>
           <p>Onidia and chat-app are pure Go, so a build is a single static <code>arm64</code>
             binary &mdash; nothing to cross-compile on the Pi, nothing to install beside it. The
-            release artifacts are exactly that: an <code>arm64</code> .deb and an
-            <code>aarch64</code> tarball. A Raspberry Pi 5 is what they were written against,
+            release artifact is exactly that: one <code>arm64</code> .deb that carries both
+            halves. A Raspberry Pi 5 is what they were written against,
             designed around and tested on.</p>
           <p>The more interesting half is what that Pi can be <b>as</b> the machine. On a
             <b>AI HAT+ 2</b> &mdash; the Hailo-10H board, 40 TOPS of INT4 inference and 8 GB of RAM
@@ -1190,9 +1192,7 @@ curl localhost:8000/api/tags</pre>
 
     <div class="rv" style="margin-top:38px">
       <div class="tabs" role="tablist" aria-label="Install options">
-        <button class="tab on" role="tab" aria-selected="true" data-tab="pkg">Package</button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="tar">Tarball</button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="src">From source</button>
+        <button class="tab on" role="tab" aria-selected="true" data-tab="pkg">The package</button>
         <button class="tab" role="tab" aria-selected="false" data-tab="web">This page</button>
       </div>
 
@@ -1219,49 +1219,6 @@ chat-app -agents-list
 
 <span class="c"># ...and let any program talk to her, from anywhere</span>
 echo <span class="s">"deploy finished, great job!"</span> &gt; /tmp/desktop-pet--0.say</pre>
-        </div>
-      </div>
-
-      <div class="tabpanel" data-panel="tar" role="tabpanel">
-        <p style="color:var(--muted);margin:0 0 14px">Same app, no package manager and no root &mdash; it installs into
-          your own <code>~/.local</code>. Pick the tarball matching your board, then run <code>install.sh</code> from
-          inside the unpacked folder.</p>
-        <div class="codeblock">
-          <div class="cbar"><b>terminal</b><button class="copy" data-copy="#cb-tar">copy</button></div>
-<pre id="cb-tar"><span class="c"># aarch64 (Pi 3/4/5), armv7l (Pi Zero/1), armv6l, x86_64</span>
-ARCH=aarch64
-curl -fsSL https://onidia.babeh.com/download/onidia-linux-$ARCH-1.0.0.tar.gz | tar xz
-cd onidia-linux-$ARCH-1.0.0
-./install.sh
-
-<span class="c"># add local whisper too (pip install, a few hundred MB)</span>
-./install.sh --with-whisper
-
-<span class="c"># start the pet first, then the chat window</span>
-~/.local/bin/onidia &amp;
-~/.local/bin/chat-app</pre>
-        </div>
-      </div>
-
-      <div class="tabpanel" data-panel="src" role="tabpanel">
-        <p style="color:var(--muted);margin:0 0 14px">For hacking on her. Needs Go 1.21+, and the two repos are
-          separate Go modules.</p>
-        <div class="codeblock">
-          <div class="cbar"><b>terminal</b><button class="copy" data-copy="#cb-src">copy</button></div>
-<pre id="cb-src"><span class="c"># the body</span>
-git clone https://github.com/portege/onidia.git
-cd onidia &amp;&amp; make build &amp;&amp; make run
-
-<span class="c"># the brain</span>
-git clone https://github.com/portege/onidia-chat.git
-cd onidia-chat &amp;&amp; make build
-ollama pull qwen2:1.5b          <span class="c"># or export GEMINI_API_KEY=...</span>
-./chat-app -provider ollama -model qwen2:1.5b
-
-<span class="c"># a few flags worth knowing</span>
-./onidia -scale 1.5              <span class="c"># sprite size (0.15 - 4)</span>
-./onidia -character kama         <span class="c"># the boy in the red hoodie</span>
-./chat-app -preview              <span class="c"># render chat_ui_*.png, no display needed</span></pre>
         </div>
       </div>
 
@@ -1327,8 +1284,6 @@ python3 -m venv ~/.local/share/onidia/venv
 <span class="c"># stt = whisper</span>
 <span class="c"># stt-whisper-cmd = ~/.local/share/onidia/venv/bin/python3</span></pre>
           </div>
-          <p style="margin-top:12px;font-size:.85rem">The tarball's <code>install.sh --with-whisper</code> does all of
-             the above for you.</p>
         </div>
         <div class="card">
           <h3>Amazon Bedrock</h3>
@@ -1366,6 +1321,31 @@ chat-app -provider ollama -model qwen2:1.5b</pre>
              desktop. Without one, expect a black rectangle instead of a chibi girl &mdash; the one failure that looks
              like a bug in her rather than a missing service.</p>
         </div>
+      </div>
+    </div>
+
+    <div class="rv" style="margin-top:34px" id="guides">
+      <h3 class="h-md">Setup guides</h3>
+      <p style="color:var(--muted);margin:0 0 18px;line-height:1.68">One page per provider, each with the exact
+        commands and the exact lines for <code>chat-app.ini</code>. Only the first is needed &mdash; pick whichever
+        suits you, they are independent.</p>
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(250px,1fr))">
+        <a class="card" href="setup-gemini.html" style="display:block">
+          <h3 style="color:var(--teal-tx)">Set up Gemini &rarr;</h3>
+          <p>Free, no billing, five minutes. Get the key and paste it in.</p>
+        </a>
+        <a class="card" href="setup-bedrock.html" style="display:block">
+          <h3 style="color:var(--teal-tx)">Set up Bedrock &rarr;</h3>
+          <p>Run her on Claude. Create an IAM user, scope it, write the key with the AWS CLI.</p>
+        </a>
+        <a class="card" href="setup-hailo-ollama.html" style="display:block">
+          <h3 style="color:var(--teal-tx)">Set up Hailo-Ollama &rarr;</h3>
+          <p>With an AI HAT+ 2: run the model on the NPU, entirely on the Pi.</p>
+        </a>
+        <a class="card" href="setup-typecast.html" style="display:block">
+          <h3 style="color:var(--teal-tx)">Set up her voice &rarr;</h3>
+          <p>A Typecast account, an API key and a voice id, so every reply is spoken.</p>
+        </a>
       </div>
     </div>
   </div>
@@ -1419,7 +1399,10 @@ chat-app -provider ollama -model qwen2:1.5b</pre>
     <small>&copy; Onidia &mdash; a tiny anime companion for your desktop. Pure Go, no cgo, no toolkit.</small>
     <nav class="foot-links" aria-label="Footer">
       <a href="#meet">Meet her</a><a href="#tech">Nerd start from here</a>
-      <a href="#install">Install</a><a href="#contact">Contact</a>
+      <a href="#install">Install</a>
+      <a href="setup-gemini.html">Setup: Gemini</a><a href="setup-bedrock.html">Bedrock</a>
+      <a href="setup-hailo-ollama.html">Hailo-Ollama</a><a href="setup-typecast.html">Voice</a>
+      <a href="#contact">Contact</a>
     </nav>
   </div>
 </footer>

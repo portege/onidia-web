@@ -1,0 +1,141 @@
+/* setup.css - shared styles for the four setup guides (Gemini, Bedrock,
+   Hailo-Ollama, Typecast).
+
+   Deliberately NOT the index page's stylesheet: that one is 685 lines and most
+   of it is the chat-window and playground mocks, which a setup guide has no use
+   for. This keeps the same visual language - same plum background, same teal
+   and pink, same card / code-block / chip vocabulary - in about a fifth of the
+   size, and it is one file to edit instead of five. */
+
+:root{
+  --teal:#5fcfd6; --teal-lt:#a5ecef; --teal-dk:#41aeb6; --teal-tx:#7fdee3;
+  --pink:#ec609c; --pink-lt:#fc96c2; --pink-dk:#ba3474; --pink-tx:#f486b4;
+
+  --ink:#0f0d1a; --ink-3:#1a2136;
+  --text:#eae7f7; --muted:#a9a2c4; --faint:#8f88ad; --dim:#6f6889;
+  --edge:rgba(165,236,239,.16); --edge-2:rgba(165,236,239,.30);
+  --glass:rgba(255,255,255,.045); --glass-2:rgba(255,255,255,.075);
+
+  --grad-teal:linear-gradient(180deg,var(--teal-lt),var(--teal) 55%,var(--teal-dk));
+  --grad-pink:linear-gradient(135deg,var(--pink-lt),var(--pink) 60%,var(--pink-dk));
+
+  --r-s:14px; --r-m:20px; --r-l:26px;
+  --maxw:1180px;
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Inter,Roboto,system-ui,sans-serif;
+  background:linear-gradient(180deg,var(--ink-3),var(--ink) 320px) fixed;
+  color:var(--text); line-height:1.6; overflow-x:hidden;
+  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+}
+h1,h2,h3,h4{margin:0;line-height:1.1;letter-spacing:-.035em;font-weight:700}
+a{color:var(--teal-tx);text-decoration:none;border-bottom:1px solid transparent}
+a:hover{border-bottom-color:var(--edge-2)}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9em;
+  background:var(--glass-2);padding:2px 6px;border-radius:6px;color:var(--teal-lt)}
+p code,li code{white-space:nowrap}
+.wrap{width:100%;max-width:var(--maxw);margin:0 auto;padding:0 26px}
+section{position:relative;padding:74px 0}
+section+section{border-top:1px solid var(--edge)}
+
+.grad-teal{background:var(--grad-teal);-webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;color:transparent}
+.grad-pink{background:var(--grad-pink);-webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;color:transparent}
+.h-lg{font-size:clamp(1.9rem,4vw,3.1rem);letter-spacing:-.038em;line-height:1.06}
+.h-md{font-size:clamp(1.3rem,2.2vw,1.75rem);letter-spacing:-.03em;margin-bottom:14px}
+.lede{color:var(--muted);font-size:1.05rem;line-height:1.7;margin:18px 0 0;max-width:62ch}
+
+.eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:12px;font-weight:700;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--teal-tx);
+  padding:7px 15px;border:1px solid var(--edge);border-radius:999px;
+  background:rgba(95,207,214,.08)}
+.eyebrow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--pink);
+  box-shadow:0 0 10px var(--pink)}
+
+/* --- top bar ------------------------------------------------------------- */
+.topbar{position:sticky;top:0;z-index:20;backdrop-filter:blur(18px);
+  background:rgba(15,13,26,.72);border-bottom:1px solid var(--edge)}
+.topbar-in{display:flex;align-items:center;gap:18px;padding:14px 0}
+.brand{font-weight:700;letter-spacing:-.03em;color:var(--text);border:0;font-size:1.02rem}
+.brand:hover{border:0;color:var(--teal-tx)}
+.topbar nav{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.topbar nav a{font-size:.85rem;font-weight:600;color:var(--muted);padding:7px 13px;
+  border:1px solid var(--edge);border-radius:999px;background:var(--glass)}
+.topbar nav a:hover{color:var(--text);border-bottom-color:var(--edge)}
+.topbar nav a[aria-current]{color:#052a2e;background:var(--grad-teal);border-color:transparent}
+/* --- step blocks --------------------------------------------------------- */
+.step{display:grid;grid-template-columns:44px 1fr;gap:16px;margin-bottom:34px}
+.step-n{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;
+  font-weight:700;font-size:.95rem;color:#052a2e;background:var(--grad-teal)}
+.step-b{min-width:0}
+.step-b h3{font-size:1.16rem;letter-spacing:-.02em;margin-bottom:8px}
+.step-b p{color:var(--muted);margin:0 0 12px;line-height:1.68}
+.step-b ul{color:var(--muted);margin:0 0 12px;padding-left:20px;line-height:1.7}
+.step-b li{margin-bottom:5px}
+.step-b strong{color:var(--text);font-weight:650}
+
+/* --- code blocks --------------------------------------------------------- */
+.codeblock{border-radius:var(--r-m);border:1px solid var(--edge);overflow:hidden;
+  background:rgba(0,0,0,.30);margin:14px 0}
+.codeblock .cbar{display:flex;align-items:center;gap:10px;padding:11px 15px;
+  border-bottom:1px solid var(--edge);background:var(--glass);font-size:.74rem;
+  color:var(--faint);font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.copy{margin-left:auto;font:inherit;font-size:.72rem;font-weight:600;padding:5px 12px;
+  border-radius:999px;border:1px solid var(--edge);background:var(--glass-2);
+  color:var(--muted);cursor:pointer;transition:.25s var(--ease);letter-spacing:0;
+  text-transform:none}
+.copy:hover{background:rgba(95,207,214,.16);color:var(--text)}
+.copy.done{background:rgba(95,207,214,.24);color:var(--teal-lt)}
+pre{margin:0;padding:16px 18px;overflow-x:auto;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:.855rem;line-height:1.68;color:var(--text)}
+pre .c{color:var(--faint)}
+pre .k{color:var(--teal-tx)}
+pre .s{color:#b6e6b0}
+pre .w{color:var(--pink-tx)}
+
+/* --- cards / notes ------------------------------------------------------- */
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.card{border-radius:var(--r-m);border:1px solid var(--edge);padding:22px;
+  background:var(--glass)}
+.card h3{font-size:1.05rem;margin-bottom:9px}
+.card p{margin:0;color:var(--muted);font-size:.93rem;line-height:1.66}
+
+.note{border-radius:var(--r-m);border:1px solid var(--edge);border-left:3px solid var(--teal);
+  padding:16px 20px;background:var(--glass);margin:18px 0}
+.note.warn{border-left-color:var(--pink)}
+.note b{display:block;font-size:.88rem;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--teal-tx);margin-bottom:7px}
+.note.warn b{color:var(--pink-tx)}
+.note p{margin:0;color:var(--muted);font-size:.93rem;line-height:1.66}
+
+.chips{display:flex;gap:9px;flex-wrap:wrap;margin:16px 0 0}
+.chip{font-size:.76rem;font-weight:600;padding:6px 13px;border-radius:999px;
+  border:1px solid var(--edge);background:var(--glass-2);color:var(--muted)}
+.chip.on{color:#052a2e;background:var(--grad-teal);border-color:transparent}
+
+/* --- config file preview ------------------------------------------------- */
+.file{border-radius:var(--r-m);border:1px solid var(--edge);overflow:hidden;margin:14px 0}
+.file-bar{display:flex;align-items:center;gap:10px;padding:11px 15px;
+  border-bottom:1px solid var(--edge);background:var(--glass);
+  font-family:ui-monospace,monospace;font-size:.8rem;color:var(--faint)}
+mark{background:rgba(236,96,156,.20);color:var(--pink-lt);padding:1px 3px;border-radius:4px}
+
+/* --- footer -------------------------------------------------------------- */
+.foot{border-top:1px solid var(--edge);padding:34px 0;color:var(--faint);font-size:.86rem}
+.foot-in{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.foot .dot{opacity:.5}
+
+@media(max-width:640px){
+  .step{grid-template-columns:1fr;gap:10px}
+  .topbar nav{width:100%;margin-left:0}
+}
+@media(prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
