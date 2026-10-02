@@ -33,7 +33,7 @@
 /* ==========================================================================
    Onidia — single-page site.
    Palette is lifted straight out of the apps: the pet's palette
-   (characters/onidia/palette.go) and the chat UI's colours (chat-app/ui.go).
+   (characters/onidia/palette.go) and the chat UI's colours (onidia-chat/ui.go).
    Teal hair, plum outlines, pink dress. Nothing here is invented.
    ========================================================================== */
 :root{
@@ -1215,13 +1215,13 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
   </div>
 </section>
 
-<!-- ===================== THE BRAIN: chat-app ===================== -->
+<!-- ===================== THE BRAIN: onidia-chat ===================== -->
 <section id="brain">
   <div class="wrap">
     <div class="sechead rv">
       <span class="eyebrow">The other half</span>
       <h2 class="h-lg" style="margin-top:22px">Give her a brain<br><span class="grad-pink">and a voice.</span></h2>
-      <p class="lede">Onidia is the body. <b>chat-app</b> is the mind: a tiny chat window, also pure Go on raw
+      <p class="lede">Onidia is the body. <b>onidia-chat</b> is the mind: a tiny chat window, also pure Go on raw
         X11, that talks to a real language model &mdash; then hands every answer to the pet so she says it out
         loud with a matching expression.</p>
     </div>
@@ -1245,7 +1245,7 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
         <span class="k">you</span> <span class="s">&rsaquo; what should I do about the build?</span><br>
         <span class="c"># the model answers, tagged with a mood</span><br>
         <span class="s">bot</span> <span class="k">&rsaquo;</span> <span class="s">[happy] all green - nice one!</span><br>
-        <span class="c"># chat-app forwards it to the pet's speech pipe</span><br>
+        <span class="c"># onidia-chat forwards it to the pet's speech pipe</span><br>
         <span class="k">pet</span> <span class="arrow">&rarr;</span> <span class="s">[happy] all green - nice one!</span><br>
         <span class="c"># ...and Onidia says it, out loud, smiling</span>
       </div>
@@ -1329,7 +1329,7 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
       <div class="achain">
         <div class="abox hl"><b>You</b><small>type, or speak into the mic</small></div>
         <div class="aflex">&rarr;</div>
-        <div class="abox"><b>chat-app</b><small>pure Go, raw X11<br>UI thread never blocks</small></div>
+        <div class="abox"><b>onidia-chat</b><small>pure Go, raw X11<br>UI thread never blocks</small></div>
         <div class="aflex">&rarr;</div>
         <div class="abox"><b>The model</b><small>Gemini / Bedrock<br>Ollama / OpenRouter</small></div>
         <div class="aflex">&rarr;</div>
@@ -1355,7 +1355,7 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
         <div>
           <span class="eyebrow">Written, designed and tested on a Pi 5</span>
           <h3 class="h-md" style="margin:18px 0 16px">Sixty-four bits, end to end.</h3>
-          <p>Onidia and chat-app are pure Go, so a build is a single static <code>arm64</code>
+          <p>Onidia and onidia-chat are pure Go, so a build is a single static <code>arm64</code>
             binary &mdash; nothing to cross-compile on the Pi, nothing to install beside it. The
             release artifact is exactly that: one <code>arm64</code> .deb that carries both
             halves. A Raspberry Pi 5 is what they were written against,
@@ -1363,7 +1363,7 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
           <p>The more interesting half is what that Pi can be <b>as</b> the machine. On a
             <b>AI HAT+ 2</b> &mdash; the Hailo-10H board, 40 TOPS of INT4 inference and 8 GB of RAM
             living on the card itself &mdash; Hailo's <code>hailo-ollama</code> speaks the very same
-            ollama <code>/api/chat</code> dialect <code>chat-app</code> already speaks to the network.
+            ollama <code>/api/chat</code> dialect <code>onidia-chat</code> already speaks to the network.
             Point the provider at localhost and the model stops being someone else's computer.</p>
           <div class="pihw-facts">
             <div class="pihw-fact"><b class="grad-teal">arm64</b><small>BUILD TARGET</small></div>
@@ -1379,14 +1379,14 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
 hailo-ollama
 
 <span class="c"># 8000 is already the default - this is the whole switch:</span>
-./chat-app -provider ollama -model <span class="s">qwen2:1.5b</span>
+./onidia-chat -provider ollama -model <span class="s">qwen2:1.5b</span>
 
 <span class="c"># Qwen2 1.5B, Llama 3.2 1B, Qwen2.5-Coder, DeepSeek-R1</span>
 curl localhost:8000/api/tags</pre>
           </div>
           <div class="pihw-note"><b>Nothing leaves the Pi.</b> No key, no account, no request to a
             vendor you cannot audit &mdash; pull the network cable and it behaves identically. One
-            honest footnote: hailo-ollama rejects the <code>tools</code> field, so chat-app retires
+            honest footnote: hailo-ollama rejects the <code>tools</code> field, so onidia-chat retires
             tool calling after the first reply and carries on in plain text.</div>
         </div>
       </div>
@@ -1441,7 +1441,7 @@ curl localhost:8000/api/tags</pre>
       <p style="color:var(--faint);font-size:.86rem;margin:16px 0 0;line-height:1.65">
         <code>apt</code> rather than <code>dpkg -i</code> on purpose: it resolves the audio and PipeWire packages
         she needs in the same step. Then put your key in <code>~/.config/chat-app/chat-app.ini</code>
-        (or just <code>export GEMINI_API_KEY=...</code>), start <b>onidia</b> before <b>chat-app</b>, and she's awake.
+        (or just <code>export GEMINI_API_KEY=...</code>), start <b>onidia</b> before <b>onidia-chat</b>, and she's awake.
       </p>
     </div>
 
@@ -1458,13 +1458,13 @@ onidia
 
 <span class="c"># terminal 2 - the brain</span>
 nano ~/.config/chat-app/chat-app.ini     <span class="c"># your API key lives here</span>
-chat-app
+onidia-chat
 
 <span class="c"># not sure this machine is ready? ask her before the window opens</span>
-chat-app -preflight warn
+onidia-chat -preflight warn
 
 <span class="c"># what she can do, and what's switched off</span>
-chat-app -agents-list
+onidia-chat -agents-list
 
 <span class="c"># ...and let any program talk to her, from anywhere</span>
 echo <span class="s">"deploy finished, great job!"</span> &gt; /tmp/desktop-pet--0.say</pre>
@@ -1536,7 +1536,7 @@ aws_secret_access_key = ...
 region = eu-central-1
 
 <span class="c"># then start her with</span>
-chat-app -provider bedrock</pre>
+onidia-chat -provider bedrock</pre>
           </div>
         </div>
         <div class="card">
@@ -1546,7 +1546,7 @@ chat-app -provider bedrock</pre>
           <div class="codeblock" style="margin-top:16px">
             <div class="cbar"><b>terminal</b><button class="copy" data-copy="#cb-local">copy</button></div>
 <pre id="cb-local">ollama pull qwen2:1.5b
-chat-app -provider ollama -model qwen2:1.5b</pre>
+onidia-chat -provider ollama -model qwen2:1.5b</pre>
           </div>
         </div>
       </div>
