@@ -500,7 +500,9 @@ kbd{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);
    move. The box is unchanged - 52px square - so the cards keep their rhythm;
    only the artwork inside is adjusted. overflow:visible lets the strokes grow
    on hover without being clipped by the box, and without affecting layout. */
-.card .ico-mic,.card .ico-pic,.card .ico-plug,.card .ico-shield{color:var(--teal-tx);overflow:visible}
+.card .ico-mic,.card .ico-pic,.card .ico-plug,.card .ico-shield,
+.card .ico-win,.card .ico-talk,.card .ico-spark,.card .ico-term,.card .ico-cast{
+  color:var(--teal-tx);overflow:visible}
 .card .ico svg{width:27px;height:27px;display:block;overflow:visible;
   transition:transform .45s var(--ease)}
 .card .ico svg *{transition:opacity .45s var(--ease),transform .45s var(--ease)}
@@ -548,8 +550,46 @@ kbd{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);
   0%{opacity:0;transform:scale(.5)}
   100%{opacity:1;transform:scale(1)}
 }
+
+/* --- the five "what is it" cards ------------------------------------------ */
+/* she lives there: a bare window with her in it, and she bobs inside it */
+.ico-win .pip{transform-origin:16px 19px;opacity:.55}
+.card:hover .ico-win .pip{opacity:1;animation:winBob 1.5s var(--ease) infinite}
+@keyframes winBob{
+  0%,100%{transform:translateY(0);opacity:.6}
+  50%{transform:translateY(-1.6px);opacity:1}
+}
+/* she talks back: three dots type themselves, left to right */
+.ico-talk circle{opacity:.4}
+.card:hover .ico-talk .d1{animation:typeDot 1.2s var(--ease) infinite}
+.card:hover .ico-talk .d2{animation:typeDot 1.2s var(--ease) .18s infinite}
+.card:hover .ico-talk .d3{animation:typeDot 1.2s var(--ease) .36s infinite}
+@keyframes typeDot{
+  0%,100%{opacity:.35;transform:scale(.8)}
+  35%{opacity:1;transform:scale(1.2)}
+}
+/* she does things: three sparkles out of phase, so it never pulses in unison */
+.ico-spark path{opacity:.5;transform-box:fill-box;transform-origin:center}
+.card:hover .ico-spark .sp1{animation:spTwinkle 1.5s var(--ease) infinite}
+.card:hover .ico-spark .sp2{animation:spTwinkle 1.5s var(--ease) .3s infinite}
+.card:hover .ico-spark .sp3{animation:spTwinkle 1.5s var(--ease) .6s infinite}
+@keyframes spTwinkle{
+  0%,100%{opacity:.35;transform:scale(.7) rotate(-12deg)}
+  50%{opacity:1;transform:scale(1.15) rotate(12deg)}
+}
+/* for your tools: a shell prompt, and the caret blinks like a terminal */
+.ico-term .caret{stroke-dasharray:7 4}
+.card:hover .ico-term svg{transform:translateY(-1px)}
+.card:hover .ico-term .caret{animation:caretBlink 1s steps(1,end) infinite}
+@keyframes caretBlink{0%,49%{opacity:1}50%,100%{opacity:.15}}
+/* whichever character: the second figure slides in, the arrow nudges across */
+.ico-cast .two,.ico-cast .swap{opacity:.42;transition:.45s var(--ease)}
+.card:hover .ico-cast .two{opacity:1;transform:translateX(-1.6px)}
+.card:hover .ico-cast .swap{opacity:1;transform:translateX(1.6px)}
+
 @media(prefers-reduced-motion:reduce){
   .card:hover .ico svg *{animation:none!important}
+  .card:hover .ico-cast .two,.card:hover .ico-cast .swap{transform:none!important}
   .card .ico svg{transform:none!important}
 }
 .card h3{margin:0 0 10px;font-size:1.2rem;letter-spacing:-.025em}
@@ -667,15 +707,6 @@ kbd{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);
 /* ==========================================================================
    Install — tabs + code blocks
    ========================================================================== */
-.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:22px;padding:6px;
-  border-radius:999px;background:var(--glass);border:1px solid var(--surface-3);
-  width:fit-content;max-width:100%}
-.tab{padding:10px 20px;border-radius:999px;font-size:.88rem;font-weight:600;color:var(--muted);transition:.3s var(--ease)}
-.tab:hover{color:var(--text)}
-.tab.on{background:var(--grad-teal);color:#052a2e;box-shadow:0 8px 22px -10px rgba(95,207,214,.8)}
-.tabpanel{display:none;animation:rise .5s var(--ease)}
-.tabpanel.on{display:block}
-@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 .codeblock{position:relative;border-radius:var(--r-m);border:1px solid var(--edge);
   background:linear-gradient(180deg,rgba(0,0,0,.55),var(--field));overflow:hidden;margin-top:18px}
 .codeblock .cbar{display:flex;align-items:center;gap:10px;padding:11px 15px;
@@ -753,7 +784,27 @@ kbd{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);
   background:var(--glass);border:1px solid var(--surface-3);margin-bottom:12px;transition:.4s var(--ease)}
 .clink:hover{background:var(--glass-2);border-color:var(--edge-2);transform:translateX(7px)}
 .clink .ci{width:44px;height:44px;flex-shrink:0;border-radius:13px;display:grid;place-items:center;font-size:1.25rem;
-  background:linear-gradient(150deg,rgba(95,207,214,.2),rgba(236,96,156,.14));border:1px solid rgba(165,236,239,.2)}
+  background:linear-gradient(150deg,rgba(95,207,214,.2),rgba(236,96,156,.14));border:1px solid rgba(165,236,239,.2);
+  color:var(--teal-tx);overflow:visible}
+/* Same treatment as the cards: drawn rather than emoji, so the credit links
+   match the rest of the page instead of depending on the OS emoji font. */
+.clink .ci svg{width:24px;height:24px;display:block;overflow:visible;
+  transition:transform .45s var(--ease)}
+.clink .ci svg *{transition:opacity .45s var(--ease),transform .45s var(--ease)}
+/* engineered by: tuning sliders, each knob sliding to its other stop */
+.clink:hover .ci-eng .knob{animation:knobSlide .9s var(--ease)}
+.clink:hover .ci-eng .k1{animation-delay:0s}
+.clink:hover .ci-eng .k2{animation-delay:.1s}
+.clink:hover .ci-eng .k3{animation-delay:.2s}
+@keyframes knobSlide{0%,100%{transform:translateX(0)}50%{transform:translateX(3px)}}
+/* built on xgb: the bolt flashes once, then settles */
+.clink:hover .ci-fast .bolt{animation:boltFlash .8s var(--ease)}
+@keyframes boltFlash{
+  0%{opacity:.55}
+  35%{opacity:1;transform:scale(1.1)}
+  100%{opacity:1;transform:scale(1)}
+}
+.clink:hover .ci-fast svg{transform:scale(1.06)}
 .clink b{display:block;font-size:.95rem;margin-bottom:2px}
 .clink small{color:var(--faint);font-size:.8rem;font-family:ui-monospace,monospace;word-break:break-all}
 .clink .go{margin-left:auto;color:var(--teal);font-size:1.15rem;flex-shrink:0;transition:transform .3s}
@@ -1006,7 +1057,15 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
     <div class="grid g3">
       <article class="card rv">
         <i class="glow"></i><span class="tag">01</span>
-        <div class="ico">&#128039;</div>
+        <div class="ico ico-win">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.9"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="4.5" y="6.5" width="23" height="19" rx="3"/>
+            <path d="M4.5 11.6h23"/>
+            <circle cx="8.4" cy="9" r="1" fill="currentColor" stroke="none"/>
+            <circle cx="11.8" cy="9" r="1" fill="currentColor" stroke="none"/>
+            <circle class="pip" cx="16" cy="19" r="3.3"/>
+          </svg></div>
         <h3>She lives there</h3>
         <p>A small always-on-top window with per-pixel transparency &mdash; only Onidia and her speech cloud are
           visible. No taskbar entry, no window decorations, no desktop clutter. She walks back and forth,
@@ -1014,7 +1073,14 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
       </article>
       <article class="card rv">
         <i class="glow"></i><span class="tag">02</span>
-        <div class="ico">&#128172;</div>
+        <div class="ico ico-talk">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.9"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9.2 8.2h13.6a3 3 0 0 1 3 3v8.1a3 3 0 0 1-3 3h-6.6L9.6 26.6v-4.3H9.2a3 3 0 0 1-3-3v-8.1a3 3 0 0 1 3-3Z"/>
+            <circle class="d1" cx="12.4" cy="15.2" r="1.7" fill="currentColor" stroke="none"/>
+            <circle class="d2" cx="16" cy="15.2" r="1.7" fill="currentColor" stroke="none"/>
+            <circle class="d3" cx="19.6" cy="15.2" r="1.7" fill="currentColor" stroke="none"/>
+          </svg></div>
         <h3>She talks back</h3>
         <p>Type at her and she answers in comic speech bubbles, in her own voice, with a face that matches
           the mood of what she says. Speak into your mic and she transcribes it. Four AI backends, from a
@@ -1022,7 +1088,13 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
       </article>
       <article class="card rv">
         <i class="glow"></i><span class="tag">03</span>
-        <div class="ico">&#128640;</div>
+        <div class="ico ico-spark">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path class="sp1" d="M16 4.6 17.8 9.4 22.6 11.2 17.8 13 16 17.8 14.2 13 9.4 11.2 14.2 9.4Z"/>
+            <path class="sp2" d="M24.2 17.4 25.2 20.1 27.9 21.1 25.2 22.1 24.2 24.8 23.2 22.1 20.5 21.1 23.2 20.1Z"/>
+            <path class="sp3" d="M7.6 16.6 8.5 19 10.9 19.9 8.5 20.8 7.6 23.2 6.7 20.8 4.3 19.9 6.7 19Z"/>
+          </svg></div>
         <h3>She does things</h3>
         <p>Celebrations, confetti, hearts, a lightbulb over her head, a disco ball, a guitar, a jump rope,
           a skateboard, a hovercar, an iron-man suit-up. She naps on your schedule, reacts when you throw
@@ -1036,7 +1108,13 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
     <div class="grid g2" style="margin-top:18px">
       <article class="card rv">
         <i class="glow"></i>
-        <div class="ico">&#128187;</div>
+        <div class="ico ico-term">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.9"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="4.5" y="7.5" width="23" height="17" rx="3"/>
+            <path d="M9 13.4 12.6 17 9 20.6"/>
+            <path class="caret" d="M15.4 20.8h7.2"/>
+          </svg></div>
         <h3>For your tools, too</h3>
         <p>Any program on your machine can write one line to her speech pipe and she'll say it &mdash; a build
           finished, a deploy shipped, a server down. Build a green and she celebrates; a failure and she
@@ -1044,7 +1122,15 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
       </article>
       <article class="card rv">
         <i class="glow"></i>
-        <div class="ico">&#128187;&#65039;</div>
+        <div class="ico ico-cast">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.9"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="10.6" cy="10.4" r="3.5"/>
+            <path d="M5 25a5.6 5.6 0 0 1 11.2 0"/>
+            <circle class="two" cx="21.6" cy="10.4" r="3.5"/>
+            <path class="two" d="M16 25a5.6 5.6 0 0 1 11.2 0"/>
+            <path class="swap" d="M13.6 21.4h5.2m-1.7-1.7 1.7 1.7-1.7 1.7"/>
+          </svg></div>
         <h3>Whichever character you like</h3>
         <p>Onidia is the teal-haired chibi girl. Kama is the boy in the red hoodie. Both have their own
           palette, art and phrase list, selectable at launch. And because a character is just a Go package,
@@ -1285,17 +1371,11 @@ curl localhost:8000/api/tags</pre>
     </div>
 
     <div class="rv" style="margin-top:38px">
-      <div class="tabs" role="tablist" aria-label="Install options">
-        <button class="tab on" role="tab" aria-selected="true" data-tab="pkg">The package</button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="web">This page</button>
-      </div>
-
-      <div class="tabpanel on" data-panel="pkg" role="tabpanel">
-        <p style="color:var(--muted);margin:0 0 14px">After the one line above. Both binaries land in
-          <code>/opt/onidia/bin</code> with <code>/usr/bin</code> symlinks, and her bundled agents in
-          <code>/opt/onidia/share/agents</code>.</p>
-        <div class="codeblock">
-          <div class="cbar"><b>first launch</b><button class="copy" data-copy="#cb-pkg">copy</button></div>
+      <p style="color:var(--muted);margin:0 0 14px">After the one line above. Both binaries land in
+        <code>/opt/onidia/bin</code> with <code>/usr/bin</code> symlinks, and her bundled agents in
+        <code>/opt/onidia/share/agents</code>.</p>
+      <div class="codeblock">
+        <div class="cbar"><b>first launch</b><button class="copy" data-copy="#cb-pkg">copy</button></div>
 <pre id="cb-pkg"><span class="c"># terminal 1 - the body. It creates the speech pipe and logs it.</span>
 onidia
 <span class="s">[buddy] speech: talk to the buddy with:
@@ -1313,21 +1393,6 @@ chat-app -agents-list
 
 <span class="c"># ...and let any program talk to her, from anywhere</span>
 echo <span class="s">"deploy finished, great job!"</span> &gt; /tmp/desktop-pet--0.say</pre>
-        </div>
-      </div>
-
-      <div class="tabpanel" data-panel="web" role="tabpanel">
-        <p style="color:var(--muted);margin:0">This page is a single self-contained file &mdash; no server, no
-          build step, no dependencies. Save it and open it.</p>
-        <div class="codeblock">
-          <div class="cbar"><b>no install required</b><button class="copy" data-copy="#cb-web">copy</button></div>
-<pre id="cb-web"><span class="c"># the character engine in onidia/onidia.html runs the same</span>
-<span class="c"># way: open the file, talk to her, done.</span>
-xdg-open onidia/onidia.html
-
-<span class="c"># this page, likewise</span>
-xdg-open web/index.html</pre>
-        </div>
       </div>
     </div>
   </div>
@@ -1474,11 +1539,22 @@ chat-app -provider ollama -model qwen2:1.5b</pre>
 
       <div>
         <a class="clink" href="https://mas-mas.it" target="_blank" rel="noopener">
-          <span class="ci">&#127968;</span>
+          <span class="ci ci-eng">
+            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.9"
+                 stroke-linecap="round" aria-hidden="true">
+              <path d="M6.5 10.5h11.5M23.5 10.5h2M6.5 16h4.5M17.5 16h8.5M6.5 21.5h11.5M23.5 21.5h2"/>
+              <circle class="knob k1" cx="20.2" cy="10.5" r="2.5"/>
+              <circle class="knob k2" cx="13.2" cy="16" r="2.5"/>
+              <circle class="knob k3" cx="20.2" cy="21.5" r="2.5"/>
+            </svg></span>
           <span><b>Engineered by</b><small>mas-mas.it</small></span>
           <span class="go">&rarr;</span></a>
         <a class="clink" href="https://github.com/jezek/xgb" target="_blank" rel="noopener">
-          <span class="ci">&#9889;</span>
+          <span class="ci ci-fast">
+            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.9"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path class="bolt" d="M17.8 4.5 9.2 17.4h5.6l-1 10.1 8.8-13.1h-5.6Z"/>
+            </svg></span>
           <span><b>Built on jezek/xgb</b><small>github.com/jezek/xgb &mdash; direct X11 bindings</small></span>
           <span class="go">&rarr;</span></a>
       </div>
@@ -1622,17 +1698,6 @@ $$('.card').forEach(function (c) {
     if (g) { g.style.setProperty('--mx', (e.clientX - r.left) + 'px'); g.style.setProperty('--my', (e.clientY - r.top) + 'px'); }
   });
 });
-
-/* ---------- install tabs */
-var tabs = $$('.tab'), panels = $$('.tabpanel');
-function showTab(t) {
-  tabs.forEach(function (x) {
-    var on = x === t;
-    x.classList.toggle('on', on); x.setAttribute('aria-selected', String(on));
-  });
-  panels.forEach(function (p) { p.classList.toggle('on', p.dataset.panel === t.dataset.tab); });
-}
-tabs.forEach(function (t) { t.addEventListener('click', function () { showTab(t); }); });
 
 /* ---------- copy-to-clipboard on the code blocks */
 $$('.copy').forEach(function (b) {
