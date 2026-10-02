@@ -860,12 +860,6 @@ kbd{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);
 .clink small{color:var(--faint);font-size:.8rem;font-family:ui-monospace,monospace;word-break:break-all}
 .clink .go{margin-left:auto;color:var(--teal);font-size:1.15rem;flex-shrink:0;transition:transform .3s}
 .clink:hover .go{transform:translateX(4px)}
-footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px}
-.foot{display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap}
-.foot small{color:var(--dim);font-size:.82rem}
-.foot-links{display:flex;gap:22px;flex-wrap:wrap}
-.foot-links a{color:var(--faint);font-size:.85rem;transition:color .3s}
-.foot-links a:hover{color:var(--teal-tx)}
 
 /* misc */
 .ticker{overflow:hidden;border-block:1px solid var(--edge);padding:18px 0;
@@ -1613,7 +1607,7 @@ chat-app -provider ollama -model qwen2:1.5b</pre>
 
     <div class="contact-grid rv">
       <div class="card" style="padding:32px">
-        <form id="cform" action="https://formspree.io/f/YOUR_ID" method="POST" novalidate>
+        <form id="cform" action="https://formspree.io/f/mdekrvdp" method="POST" novalidate>
           <!-- Honeypot. Formspree treats a filled _gotcha as spam and silently
                drops it, so real visitors never see this and never have to
                solve a captcha. Kept off-screen rather than display:none,
@@ -1660,18 +1654,7 @@ chat-app -provider ollama -model qwen2:1.5b</pre>
 
 </main>
 
-<footer>
-  <div class="wrap foot">
-    <small>&copy; Onidia &mdash; a tiny anime companion for your desktop. Pure Go, no cgo, no toolkit.</small>
-    <nav class="foot-links" aria-label="Footer">
-      <a href="#meet">Meet her</a><a href="#tech">Nerd start from here</a>
-      <a href="#install">Install</a>
-      <a href="setup-gemini.html">Setup: Gemini</a><a href="setup-bedrock.html">Bedrock</a>
-      <a href="setup-hailo-ollama.html">Hailo-Ollama</a><a href="setup-typecast.html">Voice</a>
-      <a href="#contact">Contact</a>
-    </nav>
-  </div>
-</footer>
+
 
 <button class="to-top" id="totop" aria-label="Back to top">&#8593;</button>
 <div class="zoom" id="zoom" role="dialog" aria-modal="true" aria-label="Screenshot preview">
