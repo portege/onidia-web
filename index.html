@@ -817,6 +817,10 @@ kbd{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);
 .contact-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:44px;align-items:start}
 @media(max-width:940px){.contact-grid{grid-template-columns:1fr;gap:34px}}
 .field{margin-bottom:16px}
+/* the honeypot: off-screen, not display:none, and not hidden - bots that skip
+   hidden fields never fill it, which is the one thing we need it to do */
+.hp{position:absolute!important;left:-9999px!important;top:auto!important;width:1px;height:1px;
+  opacity:0;border:0;padding:0}
 .field label{display:block;font-size:.76rem;font-weight:700;letter-spacing:.11em;text-transform:uppercase;
   color:var(--faint);margin-bottom:8px}
 .field input,.field textarea{width:100%;background:var(--field);color:var(--text);
@@ -1609,12 +1613,18 @@ chat-app -provider ollama -model qwen2:1.5b</pre>
 
     <div class="contact-grid rv">
       <div class="card" style="padding:32px">
-        <form id="cform" novalidate>
+        <form id="cform" action="https://formspree.io/f/YOUR_ID" method="POST" novalidate>
+          <!-- Honeypot. Formspree treats a filled _gotcha as spam and silently
+               drops it, so real visitors never see this and never have to
+               solve a captcha. Kept off-screen rather than display:none,
+               because some bots skip hidden fields outright. -->
+          <input class="hp" type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <input type="hidden" name="_subject" value="New message from the Onidia page">
           <div class="grid g2" style="gap:16px">
             <div class="field"><label for="fname">Your name</label>
               <input id="fname" name="name" type="text" placeholder="Ada" required autocomplete="name"></div>
-            <div class="field"><label for="fmail">Email</label>
-              <input id="fmail" name="email" type="email" placeholder="you@example.com" required autocomplete="email"></div>
+            <div class="field"><label for="fmail">Email <span style="color:var(--faint);font-weight:600">(optional)</span></label>
+              <input id="fmail" name="email" type="email" placeholder="you@example.com" autocomplete="email"></div>
           </div>
           <div class="field"><label for="fmsg">Message</label>
             <textarea id="fmsg" name="message" rows="5" placeholder="Tell Onidia what she's been up to&hellip;" required></textarea></div>
@@ -1818,18 +1828,48 @@ $$('.shot').forEach(function (f) {
 zoom.addEventListener('click', closeZoom);
 D.addEventListener('keydown', function (e) { if (e.key === 'Escape' && zoom.classList.contains('open')) closeZoom(); });
 
-/* ---------- contact form: validate, then open a mailto (no backend to post to) */
-var form = $('#cform'), note = $('#fnote');
+/* ---------- contact form: validate, then post to Formspree ---------------
+var form = $('#cform'), note = $('#fnote'), sendBtn = form.querySelector('button[type="submit"]');
+
 form.addEventListener('submit', function (e) {
   e.preventDefault();
   var n = $('#fname').value.trim(), m = $('#fmail').value.trim(), s = $('#fmsg').value.trim();
   note.className = 'formnote';
   if (!n || !s) { note.classList.add('err'); note.textContent = 'Please add your name and a message.'; return; }
   if (m && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(m)) { note.classList.add('err'); note.textContent = 'That email address does not look right.'; return; }
-  var body = s + '\n\n— ' + n + (m ? ' (' + m + ')' : '');
-  W.location.href = 'mailto:hello@mas-mas.it?subject=' + encodeURIComponent('Hello Onidia') + '&body=' + encodeURIComponent(body);
-  note.classList.add('ok'); note.textContent = 'Opening your mail app… thanks for writing!';
-  form.reset();
+
+  note.classList.add('ok'); note.textContent = 'Sending…';
+  sendBtn.disabled = true; sendBtn.textContent = 'Sending…';
+
+  // Accept: application/json is what makes Formspree answer in-place instead
+  // of redirecting to its own thank-you page, so the visitor stays here.
+  fetch(form.action, {
+    method: 'POST',
+    body: new FormData(form),
+    headers: { 'Accept': 'application/json' }
+  }).then(function (r) {
+    return r.json().catch(function () { return {}; }).then(function (d) {
+      if (!r.ok) { var e = new Error(d.errors && d.errors[0] && d.errors[0].message); e.serverRejected = true; throw e; }
+      return d;
+    });
+  }).then(function () {
+    note.classList.add('ok');
+    note.textContent = 'Thanks — that came through. She says hello back.';
+    form.reset();
+  }).catch(function (err) {
+    // A rejected submission is Formspree saying no (bad address, rate limit).
+    // Only a dead network falls through to a plain POST, so an actual failure
+    // never silently turns into a second send.
+    if (err && err.serverRejected) {
+      note.classList.remove('ok'); note.classList.add('err');
+      note.textContent = 'Formspree would not take it: ' + err.message + '. Try mailto:hello@mas-mas.it?';
+    } else {
+      form.submit();
+      return;
+    }
+  }).then(function () {
+    sendBtn.disabled = false; sendBtn.textContent = 'Send message';
+  });
 });
 
 /* ==========================================================================
