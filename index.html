@@ -1484,11 +1484,15 @@ chat-app -provider ollama -model qwen2:1.5b</pre>
     </div>
 
     <div class="rv" style="margin-top:34px" id="guides">
-      <h3 class="h-md">Setup guides</h3>
-      <p style="color:var(--muted);margin:0 0 18px;line-height:1.68">One page per provider, each with the exact
-        commands and the exact lines for <code>chat-app.ini</code>. Only the first is needed &mdash; pick whichever
-        suits you, they are independent.</p>
+      <h3 class="h-md">Setup the Mind</h3>
+      <p style="color:var(--muted);margin:0 0 18px;line-height:1.68">She needs one of these to think.
+        Pick whichever suits you &mdash; they are independent, and only one is ever needed. Each guide has the
+        exact commands and the exact lines for <code>chat-app.ini</code>.</p>
       <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(250px,1fr))">
+        <a class="card" href="setup-hailo-ollama.html" style="display:block">
+          <h3 style="color:var(--teal-tx)">Set up Hailo-Ollama &rarr;</h3>
+          <p>With an AI HAT+ 2: run the model on the NPU, entirely on the Pi.</p>
+        </a>
         <a class="card" href="setup-gemini.html" style="display:block">
           <h3 style="color:var(--teal-tx)">Set up Gemini &rarr;</h3>
           <p>Free, no billing, five minutes. Get the key and paste it in.</p>
@@ -1497,13 +1501,19 @@ chat-app -provider ollama -model qwen2:1.5b</pre>
           <h3 style="color:var(--teal-tx)">Set up Bedrock &rarr;</h3>
           <p>Run her on Claude. Create an IAM user, scope it, write the key with the AWS CLI.</p>
         </a>
-        <a class="card" href="setup-hailo-ollama.html" style="display:block">
-          <h3 style="color:var(--teal-tx)">Set up Hailo-Ollama &rarr;</h3>
-          <p>With an AI HAT+ 2: run the model on the NPU, entirely on the Pi.</p>
-        </a>
-        <a class="card" href="setup-typecast.html" style="display:block">
-          <h3 style="color:var(--teal-tx)">Set up her voice &rarr;</h3>
-          <p>A Typecast account, an API key and a voice id, so every reply is spoken.</p>
+      </div>
+    </div>
+
+    <div class="rv" style="margin-top:28px">
+      <h3 class="h-md">Setup the Voice</h3>
+      <p style="color:var(--muted);margin:0 0 18px;line-height:1.68">Separately from the mind: every reply she
+        writes is also spoken, in a voice you choose. She ships with a demo one, so this is only worth doing
+        if you want her to sound like somebody in particular.</p>
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(250px,1fr))">
+        <a class="card" href="setup-typecast.html" style="display:block;grid-column:1/-1">
+          <h3 style="color:var(--teal-tx)">Set up Typecast &rarr;</h3>
+          <p>A Typecast account, an API key and a voice id, so every reply is spoken. You can audition voices
+            on their site before you spend a character of your quota.</p>
         </a>
       </div>
     </div>
