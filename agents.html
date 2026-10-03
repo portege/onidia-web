@@ -7,7 +7,7 @@
 <meta name="description" content="How agents work in Onidia, how to install, list, disable and delete them, and a walkthrough of play_song and play_movie.">
 <link rel="stylesheet" href="setup.css">
 </head>
-<body>
+<body class="has-toc">
 
 <div class="topbar"><div class="wrap topbar-in">
   <a class="brand" href="index.html">&larr; Onidia</a>
@@ -19,6 +19,23 @@
     <a href="agents.html" aria-current="page">Agents</a>
   </nav>
 </div></div>
+
+<nav class="toc" aria-label="On this page">
+  <div class="toc-in">
+    <b>On this page</b>
+    <ol>
+        <li><a href="#idea"><i></i><span>The whole idea, in one exchange</span></a></li>
+        <li><a href="#bundled"><i></i><span>What already ships with her</span></a></li>
+        <li><a href="#song"><i></i><span>Walkthrough: playing a song</span></a></li>
+        <li><a href="#video"><i></i><span>And the same for video</span></a></li>
+        <li><a href="#manage"><i></i><span>Managing your agents</span></a></li>
+        <li><a href="#write"><i></i><span>Writing your own</span></a></li>
+        <li><a href="#paths"><i></i><span>Where everything lives</span></a></li>
+        <li><a href="#trouble"><i></i><span>If it goes wrong</span></a></li>
+    </ol>
+    <div class="toc-bar" aria-hidden="true"><i></i></div>
+  </div>
+</nav>
 
 <section><div class="wrap">
   <span class="eyebrow">Agents</span>
@@ -35,7 +52,7 @@
   </div>
 </div></section>
 
-<section><div class="wrap">
+<section id="idea"><div class="wrap">
   <h2 class="h-md">The whole idea, in one exchange</h2>
   <p style="color:var(--muted);max-width:66ch;margin:0 0 20px;line-height:1.7">When you ask for
     something she cannot do alone, she calls an agent. The whole contract is one line in and one line
@@ -68,7 +85,7 @@
   </div>
 </div></section>
 
-<section><div class="wrap">
+<section id="bundled"><div class="wrap">
   <h2 class="h-md">What already ships with her</h2>
   <p style="color:var(--muted);max-width:66ch;margin:0 0 20px;line-height:1.7">Five bundled agents.
     On a package install they live in <code>/opt/onidia/share/agents</code> and are switched on
@@ -102,7 +119,7 @@
   </div>
 </div></section>
 
-<section><div class="wrap">
+<section id="song"><div class="wrap">
   <h2 class="h-md">Walkthrough: playing a song</h2>
   <p style="color:var(--muted);max-width:66ch;margin:0 0 20px;line-height:1.7">This is the whole
     <code>play_song</code> agent end to end. Nothing is hidden from the app &mdash; the lines below
@@ -182,7 +199,7 @@
   </div></div>
 </div></section>
 
-<section><div class="wrap">
+<section id="video"><div class="wrap">
   <h2 class="h-md">And the same for video</h2>
   <p style="color:var(--muted);max-width:66ch;margin:0 0 20px;line-height:1.7"><code>play_movie</code>
     is <code>play_song</code>'s twin, line for line. It searches <code>~/Videos</code> (override with
@@ -214,7 +231,7 @@
   </div>
 </div></section>
 
-<section><div class="wrap">
+<section id="manage"><div class="wrap">
   <h2 class="h-md">Managing your agents</h2>
   <p style="color:var(--muted);max-width:66ch;margin:0 0 20px;line-height:1.7">All four operations are
     modes of the binary you already have. There is no second tool to install.</p>
@@ -311,7 +328,7 @@ Switch it off instead - it keeps its files: onidia-chat -agents-disabled pet_con
   </div></div>
 </div></section>
 
-<section><div class="wrap">
+<section id="write"><div class="wrap">
   <h2 class="h-md">Writing your own</h2>
   <p style="color:var(--muted);max-width:66ch;margin:0 0 20px;line-height:1.7">A folder with an
     <code>agent.json</code> at its root. That is the entire requirement &mdash; the folder name is
@@ -408,7 +425,7 @@ onidia-chat -agents-list
   </div></div>
 </div></section>
 
-<section><div class="wrap">
+<section id="paths"><div class="wrap">
   <h2 class="h-md">Where everything lives</h2>
   <div class="kv">
     <div><b>~/.config/chat-app/agents/</b><span>Your agents. First registration wins, so one of your
@@ -433,7 +450,7 @@ onidia-chat -agents-list
   </div>
 </div></section>
 
-<section><div class="wrap">
+<section id="trouble"><div class="wrap">
   <h2 class="h-md">If it goes wrong</h2>
   <div class="grid">
     <div class="card">
@@ -505,6 +522,63 @@ onidia-chat -agents-list
       } else { fallback(el, done); }
     });
   });
+
+  /* --- floating contents: highlight the section you are reading ----------
+     IntersectionObserver rather than a scroll handler, so it costs nothing
+     while idle. rootMargin biases the "reading line" to just under the sticky
+     topbar, which is where a heading you jumped to actually lands. */
+  var links = [].slice.call(document.querySelectorAll('.toc a'));
+  if (links.length) {
+    var byId = {};
+    links.forEach(function(a){ byId[a.getAttribute('href').slice(1)] = a; });
+    var mark = function(id){
+      links.forEach(function(a){
+        var on = a === byId[id];
+        a.classList.toggle('on', on);
+        if (on) { a.setAttribute('aria-current','true'); }
+        else { a.removeAttribute('aria-current'); }
+      });
+    };
+    var seen = [];
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function(entries){
+        entries.forEach(function(e){
+          if (e.isIntersecting) { seen.push(e.target.id); }
+          else { seen = seen.filter(function(x){ return x !== e.target.id; }); }
+        });
+        /* document order, not observation order: an entry can fire for a
+           section further up while a lower one is still on screen */
+        seen.sort(function(a,b){
+          return document.getElementById(a).compareDocumentPosition(
+                 document.getElementById(b)) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+        });
+        if (seen.length) mark(seen[0]);
+      }, { rootMargin: '-84px 0px -62% 0px', threshold: 0 });
+      links.forEach(function(a){
+        var el = document.getElementById(a.getAttribute('href').slice(1));
+        if (el) io.observe(el);
+      });
+      mark(links[0].getAttribute('href').slice(1));
+    }
+
+    /* reading progress hairline: document scrolled, not the rail */
+    var bar = document.querySelector('.toc-bar i');
+    if (bar) {
+      var tick = function(){
+        var h = document.documentElement;
+        var max = h.scrollHeight - h.clientHeight;
+        var pct = max > 0 ? Math.min(1, Math.max(0, h.scrollTop / max)) : 0;
+        bar.style.height = (pct * 100).toFixed(2) + '%';
+      };
+      var raf = null;
+      window.addEventListener('scroll', function(){
+        if (raf) return;
+        raf = requestAnimationFrame(function(){ raf = null; tick(); });
+      }, { passive: true });
+      window.addEventListener('resize', tick);
+      tick();
+    }
+  }
 })();
 </script>
 

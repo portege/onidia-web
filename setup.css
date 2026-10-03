@@ -148,6 +148,44 @@ mark{background:rgba(236,96,156,.20);color:var(--pink-lt);padding:1px 3px;border
 .say.her b{color:var(--teal-tx)}
 .say.her span{color:var(--text)}
 
+/* --- floating content menu ------------------------------------------------
+   Only for pages that opt in with <body class="has-toc">. The rail is fixed to
+   the right edge, so the measure has to make room for it: at >=1240px the text
+   column narrows and sits left. The numbers are chosen so the rail cannot
+   collide with the topbar nav, which shares the same narrowed .wrap - at
+   1240px the text ends at 960 and the rail starts at 1000. Below the breakpoint
+   the rail is hidden outright rather than squeezed in: a contents list that
+   overlaps the prose is worse than no contents list, and the topbar already
+   carries the navigation. */
+.toc{display:none}
+@media(min-width:1240px){
+  body.has-toc .wrap{max-width:920px;margin-left:40px;margin-right:auto}
+  .toc{display:block;position:fixed;top:0;right:0;height:100vh;width:240px;
+    z-index:30;overflow-y:auto;overscroll-behavior:contain;
+    background:linear-gradient(180deg,rgba(15,13,26,.92),rgba(15,13,26,.82));
+    border-left:1px solid var(--edge);backdrop-filter:blur(18px)}
+  .toc-in{padding:96px 24px 40px;position:relative}
+  .toc-in>b{display:block;font-size:.7rem;font-weight:700;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--faint);margin-bottom:16px}
+  .toc ol{list-style:none;margin:0;padding:0}
+  .toc li{margin:0}
+  .toc a{display:grid;grid-template-columns:12px 1fr;gap:11px;align-items:baseline;
+    padding:7px 0;color:var(--muted);font-size:.85rem;line-height:1.45;
+    border:0;transition:color .22s var(--ease)}
+  .toc a:hover{color:var(--text);border:0}
+  .toc a i{width:6px;height:6px;border-radius:50%;background:var(--dim);
+    transform:translateY(-2px);transition:background .22s var(--ease),box-shadow .22s var(--ease)}
+  .toc a.on{color:var(--teal-lt)}
+  .toc a.on i{background:var(--teal);box-shadow:0 0 9px var(--teal)}
+  /* the sticky topbar must not cover the heading an anchor jumps to */
+  body.has-toc section{scroll-margin-top:84px}
+}
+/* reading progress, as a hairline down the rail's own edge */
+.toc-bar{position:absolute;top:96px;bottom:40px;right:0;width:2px;
+  background:var(--edge);overflow:hidden}
+.toc-bar i{position:absolute;top:0;left:0;width:100%;height:0;
+  background:var(--grad-teal)}
+
 /* --- footer -------------------------------------------------------------- */
 .foot{border-top:1px solid var(--edge);padding:34px 0;color:var(--faint);font-size:.86rem}
 .foot-in{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
