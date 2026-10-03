@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agents &mdash; Onidia</title>
+<meta name="description" content="How agents work in Onidia, how to install, list, disable and delete them, and a walkthrough of play_song and play_movie.">
+<link rel="stylesheet" href="setup.css">
+</head>
+<body>
+
+<div class="topbar"><div class="wrap topbar-in">
+  <a class="brand" href="index.html">&larr; Onidia</a>
+  <nav>
+    <a href="setup-gemini.html">Gemini</a>
+    <a href="setup-bedrock.html">Bedrock</a>
+    <a href="setup-hailo-ollama.html">Hailo-Ollama</a>
+    <a href="setup-typecast.html">Typecast</a>
+    <a href="agents.html" aria-current="page">Agents</a>
+  </nav>
+</div></div>
+
+<section><div class="wrap">
+  <span class="eyebrow">Agents</span>
+  <h1 class="h-lg" style="margin-top:20px">Teach her to <span class="grad-teal">do things.</span></h1>
+  <p class="lede">An agent is a small program in a folder that she can call. No rebuild, no plugin
+    manager, no restart-and-pray: drop the folder in, restart, and the model can use it the next
+    time you ask. Five ship with her already &mdash; including the ones that play your music and
+    make her dance while it does.</p>
+  <div class="chips">
+    <span class="chip on">Any language</span>
+    <span class="chip">Zero dependencies</span>
+    <span class="chip">~30 lines to start</span>
+    <span class="chip">Nothing to rebuild</span>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2 class="h-md">The whole idea, in one exchange</h2>
+  <p style="color:var(--muted);max-width:66ch;margin:0 0 20px;line-height:1.7">When you ask for
+    something she cannot do alone, she calls an agent. The whole contract is one line in and one line
+    out &mdash; which is why an agent can be a Python script, a shell script or a compiled binary and
+    the app does not care.</p>
+
+  <div class="card" style="max-width:720px">
+    <div class="say you"><b>You</b><span>&ldquo;play some jazz&rdquo;</span></div>
+    <div class="say her"><b>She</b><span>Picks an agent from her catalog, fills in the arguments and
+      runs it. You never name it and never see the call.</span></div>
+  </div>
+
+  <div class="codeblock">
+    <div class="cbar"><b>the wire protocol, agent-line-v1</b></div>
+<pre><span class="k">brain</span> &#8594; agent   <span class="w">RUN</span> {json object}   <span class="c">one line, validated before your code starts</span>
+
+<span class="k">agent</span> &#8594; brain   INFO &lt;text&gt;        <span class="c"># optional, repeatable. Logged, never shown to you</span>
+<span class="k">agent</span> &#8594; brain   PET action dance   <span class="c"># optional, at most one, before OK. Makes her act</span>
+<span class="k">agent</span> &#8594; brain   OK &lt;message&gt;       <span class="c"># terminal. Joins her reply</span>
+<span class="k">agent</span> &#8594; brain   ERR &lt;text&gt;        <span class="c"># terminal. Shown as the failure</span></pre>
+  </div>
+
+  <div class="note">
+    <b>Why it is this small</b>
+    <p>No sockets, no daemon, no handshake. One process per call, working directory set to the
+      agent's own folder, then it answers and exits. Anything it starts itself has to be
+      <strong>detached</strong> &mdash; she will not wait for your background job. Parameters are
+      checked <em>before</em> your code starts: a wrong type, a missing required one or an unknown
+      name means your agent is never spawned at all, and she says so instead.</p>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2 class="h-md">What already ships with her</h2>
+  <p style="color:var(--muted);max-width:66ch;margin:0 0 20px;line-height:1.7">Five bundled agents.
+    On a package install they live in <code>/opt/onidia/share/agents</code> and are switched on
+    already &mdash; you never install anything to get these.</p>
+
+  <div class="grid">
+    <div class="card">
+      <h3>play_song</h3>
+      <p>Fuzzy-matches your music folder and starts a detached player. She dances along.
+        <strong>&ldquo;play some jazz&rdquo;</strong></p>
+    </div>
+    <div class="card">
+      <h3>play_movie</h3>
+      <p>The same for video, fullscreen by default.
+        <strong>&ldquo;put on the marathon&rdquo;</strong></p>
+    </div>
+    <div class="card">
+      <h3>media_control</h3>
+      <p>Pauses, resumes or stops whatever is playing, and answers &ldquo;what's this?&rdquo; The chat
+        window's transport buttons call this same agent.</p>
+    </div>
+    <div class="card">
+      <h3>pet_control</h3>
+      <p>Drives her animation directly: expressions, overlay effects, named animations and
+        movement. <strong>&ldquo;do a happy dance&rdquo;</strong></p>
+    </div>
+    <div class="card">
+      <h3>hello_world</h3>
+      <p>The reference agent, and the one to copy when you write your own. Greets you by name.</p>
+    </div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2 class="h-md">Walkthrough: playing a song</h2>
+  <p style="color:var(--muted);max-width:66ch;margin:0 0 20px;line-height:1.7">This is the whole
+    <code>play_song</code> agent end to end. Nothing is hidden from the app &mdash; the lines below
+    are exactly what crosses the pipe.</p>
+
+  <div class="step"><div class="step-n">1</div><div class="step-b">
+    <h3>It needs two things</h3>
+    <p>Some audio files in a folder, and a player on <code>PATH</code>. It tries
+      <code>mpv</code>, <code>cvlc</code>, <code>vlc</code>, <code>ffplay</code> and takes the first
+      one it finds. The folder defaults to <code>~/Music</code>; point it elsewhere with
+      <code>music-dir</code>.</p>
+    <div class="file">
+      <div class="file-bar">~/.config/chat-app/chat-app.ini</div>
+<pre>music-dir = <mark>/mnt/pi/audio/music</mark></pre>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-n">2</div><div class="step-b">
+    <h3>Ask in plain English</h3>
+    <p>Any of these reaches it. She reads the catalog entry &mdash; the <code>description</code> in the
+      manifest &mdash; and decides when to use it, so you never have to remember a command.</p>
+    <div class="say you"><b>You</b><span>&ldquo;play some jazz&rdquo;</span></div>
+    <div class="say you"><b>You</b><span>&ldquo;put on So What&rdquo;</span></div>
+    <div class="say you"><b>You</b><span>&ldquo;shuffle something&rdquo;</span></div>
+  </div></div>
+
+  <div class="step"><div class="step-n">3</div><div class="step-b">
+    <h3>What she sends</h3>
+    <p>One line of JSON. <code>query</code> is the only parameter; leave it out and the agent picks a
+      track at random.</p>
+    <div class="codeblock">
+      <div class="cbar"><b>RUN line</b><button class="copy" data-copy="#w1">copy</button></div>
+<pre id="w1">RUN {"query":"jazz"}</pre>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-n">4</div><div class="step-b">
+    <h3>What comes back</h3>
+    <p>It walks your music folder, scores every filename against the query with a fuzzy match and
+      takes the best one. Then it starts the player <strong>detached</strong>, so the agent can exit
+      without taking the player with it, records the session so the transport buttons know which
+      process to drive, asks her to dance, and answers.</p>
+    <div class="codeblock">
+      <div class="cbar"><b>agent output</b></div>
+<pre><span class="c">INFO</span> 812 tracks in /home/pi/Music
+<span class="c">INFO</span> player: mpv --no-video --really-quiet "/home/pi/Music/Miles Davis - So What.flac"
+<span class="k">PET</span> action dance
+<span class="s">OK</span> Playing Miles Davis - So What</pre>
+    </div>
+    <p><code>INFO</code> goes to the log, <code>PET</code> makes her dance, and the
+      <code>OK</code> message is the part you actually read. That is the entire reply.</p>
+  </div></div>
+
+  <div class="step"><div class="step-n">5</div><div class="step-b">
+    <h3>When it cannot find a match</h3>
+    <p>If nothing scores above the threshold it fails loudly rather than playing something random and
+      pretending, and it hands her the closest filenames so she can offer you a choice.</p>
+    <div class="codeblock">
+      <div class="cbar"><b>no match</b></div>
+<pre><span class="w">ERR</span> no match for 'kraftwerk' (closest: Kraftwerk - Autobahn, Kraftwerk - The Mix, Radio-Activity)</pre>
+    </div>
+    <div class="note warn">
+      <b>The two failures you will actually hit</b>
+      <p><code>music folder ~/Music not found - set music-dir in chat-app.ini</code> means she has no
+        folder to search. <code>no media player found - install mpv, vlc or ffmpeg</code> means the
+        files are there but nothing can play them. Both name the exact thing to fix.</p>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-n">6</div><div class="step-b">
+    <h3>Then control it</h3>
+    <p>Ask her in words &mdash; &ldquo;pause&rdquo;, &ldquo;stop that&rdquo;, &ldquo;what's
+      playing?&rdquo; &mdash; or use the transport strip in the chat window, which calls the very same
+      <code>media_control</code> agent.</p>
+    <div class="say you"><b>You</b><span>&ldquo;pause&rdquo;</span></div>
+    <div class="say her"><b>Her</b><span>Paused.</span></div>
+  </div></div>
+</div></section>
+
+<section><div class="wrap">
+  <h2 class="h-md">And the same for video</h2>
+  <p style="color:var(--muted);max-width:66ch;margin:0 0 20px;line-height:1.7"><code>play_movie</code>
+    is <code>play_song</code>'s twin, line for line. It searches <code>~/Videos</code> (override with
+    <code>video-dir</code>) for <code>.mp4 .mkv .webm .avi .mov .m4v .wmv .flv .mpg .mpeg</code>, and it
+    has one extra parameter.</p>
+
+  <div class="kv">
+    <div><b>query</b><span>Movie title or keywords; omit it for a random pick. Same fuzzy match, same
+      0.45 threshold, same &ldquo;closest: &hellip;&rdquo; failure.</span></div>
+    <div><b>fullscreen</b><span>Defaults to <code>true</code>. Set it to <code>false</code> for a
+      windowed player &mdash; &ldquo;play X in a window&rdquo; is enough to get there.</span></div>
+  </div>
+
+  <div class="codeblock">
+    <div class="cbar"><b>RUN line &mdash; fullscreen</b><button class="copy" data-copy="#w2">copy</button></div>
+<pre id="w2">RUN {"query":"the marathon"}</pre>
+  </div>
+  <div class="codeblock">
+    <div class="cbar"><b>RUN line &mdash; windowed</b><button class="copy" data-copy="#w3">copy</button></div>
+<pre id="w3">RUN {"query":"the marathon","fullscreen":"false"}</pre>
+  </div>
+
+  <div class="note">
+    <b>One state directory, two agents</b>
+    <p>Both media agents write a small JSON session file recording the player they started, and
+      <code>media_control</code> reads it to decide which process to drive. That is why
+      <strong>&ldquo;stop&rdquo;</strong> works from her keyboard and stops the right thing, and why
+      &ldquo;what's playing?&rdquo; gets a real answer.</p>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2 class="h-md">Managing your agents</h2>
+  <p style="color:var(--muted);max-width:66ch;margin:0 0 20px;line-height:1.7">All four operations are
+    modes of the binary you already have. There is no second tool to install.</p>
+
+  <div class="step"><div class="step-n">1</div><div class="step-b">
+    <h3>List</h3>
+    <p>What is installed, where it came from, and whether it is on. Disabled and broken agents are
+      listed on purpose &mdash; a list built only from what discovery returns would make a disabled
+      agent look uninstalled, which is the exact confusion this mode exists to end.</p>
+    <div class="codeblock">
+      <div class="cbar"><b>terminal</b><button class="copy" data-copy="#m1">copy</button></div>
+<pre id="m1">onidia-chat -agents-list</pre>
+    </div>
+    <div class="codeblock">
+      <div class="cbar"><b>what it prints</b></div>
+<pre><span class="k">ID</span>               <span class="k">VERSION</span>  <span class="k">STATE</span>     <span class="k">LOCATION</span>
+play_song          1.0.0    enabled   ~/.config/chat-app/agents/play_song
+pet_control        1.0.0    disabled  /opt/onidia/share/agents/pet_control
+hello_world        1.0.0    broken    ~/.config/chat-app/agents/hello_world (exec not found)</pre>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-n">2</div><div class="step-b">
+    <h3>Install</h3>
+    <p>From a folder, a zip, a URL, or a registry id. It always installs into
+      <strong>your</strong> directory and never the packaged one &mdash; <code>/opt</code> is
+      root-owned, and a surprise <code>sudo</code> prompt because you wanted a pet behaviour would be
+      a bad afternoon.</p>
+    <div class="codeblock">
+      <div class="cbar"><b>terminal</b><button class="copy" data-copy="#m2">copy</button></div>
+<pre id="m2">onidia-chat -agents-install ~/agents/my_agent
+onidia-chat -agents-install ~/downloads/weather.zip
+onidia-chat -agents-install https://example.com/agents/tea.zip
+onidia-chat -agents-install some_registry_id</pre>
+    </div>
+    <div class="codeblock">
+      <div class="cbar"><b>what it prints</b></div>
+<pre>installed coffee -&gt; /home/pi/.config/chat-app/agents/coffee
+restart onidia-chat to load it (onidia-chat -agents-list shows it now)</pre>
+    </div>
+    <p>A bare id only goes through a registry if you configured
+      <code>agents-registry</code>. Anything containing a <code>/</code>, a <code>~</code> or ending in
+      <code>.zip</code> is treated as a path, so relative paths are safe.</p>
+  </div></div>
+
+  <div class="step"><div class="step-n">3</div><div class="step-b">
+    <h3>Disable, or delete</h3>
+    <p>Disabling keeps the files and just stops offering the agent. Deleting removes your copy. For
+      the bundled agents, disable is the <em>only</em> option.</p>
+    <div class="codeblock">
+      <div class="cbar"><b>terminal</b><button class="copy" data-copy="#m3">copy</button></div>
+<pre id="m3">onidia-chat -agents-disabled play_song,play_movie
+onidia-chat -agents-remove coffee</pre>
+    </div>
+    <div class="codeblock">
+      <div class="cbar"><b>what it prints</b></div>
+<pre>removed coffee from /home/pi/.config/chat-app/agents
+restart onidia-chat to drop it from the catalog</pre>
+    </div>
+    <div class="note warn">
+      <b>Two things that catch everyone</b>
+      <p><strong>A restart is always required.</strong> Discovery runs at startup only &mdash; there is
+        no hot reload, and both commands say so. <strong>The disable flag is per-run.</strong>
+        <code>-agents-disabled</code> on the command line applies to that one invocation and is not
+        remembered; to make it stick, put <code>agents-disabled = play_song</code> in
+        <code>chat-app.ini</code>.</p>
+    </div>
+    <div class="note">
+      <b>The bundled agents refuse to be deleted</b>
+      <p>They belong to the package, so <code>-agents-remove</code> refuses and tells you the
+        alternative. <code>apt</code> should be the only thing that removes those.</p>
+      <div class="codeblock" style="margin-top:12px">
+        <div class="cbar"><b>terminal</b></div>
+<pre>onidia-chat: pet_control belongs to the package (/opt/onidia/share/agents), not to you.
+Switch it off instead - it keeps its files: onidia-chat -agents-disabled pet_control</pre>
+      </div>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-n">4</div><div class="step-b">
+    <h3>The rest of the flags</h3>
+    <div class="kv">
+      <div><b>-agents-dir &lt;path&gt;</b><span>Scan and install somewhere other than your agents
+        directory. An explicit choice is never quietly widened to include
+        <code>/opt</code>.</span></div>
+      <div><b>-agents-off</b><span>Ignore every external agent for this run. She keeps her built-in
+        story agent and nothing else.</span></div>
+      <div><b>-agents-list / -install / -remove</b><span>All four modes print their result and exit.
+        No window is ever opened.</span></div>
+    </div>
+    <p style="margin-top:14px">Exit codes follow the same convention as the rest of the app:
+      <code>0</code> success, <code>2</code> failed &mdash; no <code>$HOME</code>, unreadable
+      registry, a bad <code>agents-key</code>, or a refused delete of a packaged agent.</p>
+  </div></div>
+</div></section>
+
+<section><div class="wrap">
+  <h2 class="h-md">Writing your own</h2>
+  <p style="color:var(--muted);max-width:66ch;margin:0 0 20px;line-height:1.7">A folder with an
+    <code>agent.json</code> at its root. That is the entire requirement &mdash; the folder name is
+    cosmetic, and any other files in there are yours to use.</p>
+
+  <div class="step"><div class="step-n">1</div><div class="step-b">
+    <h3>The manifest</h3>
+    <div class="file">
+      <div class="file-bar">~/.config/chat-app/agents/tea/agent.json</div>
+<pre>{
+  <span class="k">"id"</span>: <span class="s">"tea"</span>,
+  <span class="k">"version"</span>: <span class="s">"1.0.0"</span>,
+  <span class="k">"description"</span>: <span class="s">"Announce that the kettle is on. Use when the user mentions tea, kettle, or a hot drink."</span>,
+  <span class="k">"exec"</span>: [<span class="s">"./tea.sh"</span>],
+  <span class="k">"timeout_ms"</span>: 5000,
+  <span class="k">"params"</span>: [
+    { <span class="k">"name"</span>: <span class="s">"kind"</span>, <span class="k">"type"</span>: <span class="s">"string"</span>,
+      <span class="k">"enum"</span>: [<span class="s">"tea"</span>, <span class="s">"coffee"</span>], <span class="k">"default"</span>: <span class="s">"tea"</span>,
+      <span class="k">"description"</span>: <span class="s">"which drink"</span> }
+  ]
+}</pre>
+    </div>
+    <div class="note warn">
+      <b>Write the description for her, not for you</b>
+      <p>It is the only thing she sees. Say what the agent does <em>and when to use it</em> &mdash;
+        &ldquo;Control the desktop pet's animation&hellip; not for playing music&rdquo; is what stops
+        her reaching for the wrong one. Vague descriptions produce an agent she never calls.</p>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-n">2</div><div class="step-b">
+    <h3>The body</h3>
+    <p>Read one line, answer one line, exit. Params arrive as a JSON object on that line.</p>
+    <div class="codeblock">
+      <div class="cbar"><b>tea.sh</b><button class="copy" data-copy="#a1">copy</button></div>
+<pre id="a1"><span class="k">#!/bin/sh</span>
+<span class="c"># one RUN line in, one OK line out, then exit.</span>
+set -eu
+
+IFS= read -r line || true
+case "$line" in
+  <span class="w">RUN</span> *) payload=<span class="s">"${line#RUN }"</span> ;;
+  *) echo <span class="s">"ERR expected a RUN line"</span>; exit 1 ;;
+esac
+
+<span class="c"># pull "key":"value" out of the payload</span>
+kind=$(printf <span class="s">'%s'</span> "$payload" \
+  | sed -n <span class="s">'s/.*"kind":"\([^"]*\)".*/\1/p'</span>)
+: "${kind:=tea}"
+
+echo <span class="s">"PET action dance"</span>            <span class="c"># optional: make her act it out</span>
+echo <span class="s">"OK The kettle is on - one $kind coming"</span></pre>
+    </div>
+    <p>Remember <code>chmod +x tea.sh</code>. An agent whose <code>exec</code> cannot be resolved is
+      listed as <strong>broken</strong> rather than silently skipped.</p>
+  </div></div>
+<div class="step"><div class="step-n">3</div><div class="step-b">
+    <h3>Manifest fields</h3>
+    <div class="kv">
+      <div><b>id</b><span>Required. Lowercase, <code>^[a-z][a-z0-9_]{1,31}$</code>. This is the name
+        in the internal <code>[AGENT: id]</code> tag, so keep it short and stable.</span></div>
+      <div><b>description</b><span>Required. Shown to her as the catalog entry. Say what it does and
+        when to use it.</span></div>
+      <div><b>exec</b><span>Required. An argv array. <code>exec[0]</code> resolves relative to the agent
+        folder, as an absolute path, or as a bare name on <code>PATH</code>. The rest are static
+        arguments.</span></div>
+      <div><b>version</b><span>Free-form, shown by <code>-agents-list</code>.</span></div>
+      <div><b>protocol</b><span>Must be <code>agent-line-v1</code>, or omit it to get that
+        default.</span></div>
+      <div><b>timeout_ms</b><span>Per-run deadline. Default 15000, maximum 600000. On expiry the
+        process is killed and she reports <code>agent tea: timed out after 15000</code>.</span></div>
+      <div><b>disabled</b><span><code>true</code> skips it at discovery but keeps it on disk. Same
+        effect as listing the id in <code>agents-disabled</code>.</span></div>
+      <div><b>params</b><span>Declared arguments: <code>name</code>, <code>type</code>
+        (<code>string</code>, <code>int</code>, <code>bool</code>), <code>required</code>,
+        <code>enum</code>, <code>default</code>, <code>description</code>.</span></div>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-n">4</div><div class="step-b">
+    <h3>Install it and try it</h3>
+    <div class="codeblock">
+      <div class="cbar"><b>terminal</b><button class="copy" data-copy="#a2">copy</button></div>
+<pre id="a2">onidia-chat -agents-install ~/.config/chat-app/agents/tea
+onidia-chat -agents-list
+<span class="c"># restart her, then just ask:</span>
+<span class="c"># "put the kettle on"</span></pre>
+    </div>
+    <p>Two rules worth knowing before you write anything clever. A run answers with
+      <code>OK</code> or <code>ERR</code> and then <strong>exits</strong> &mdash; if your work takes
+      longer than the reply, spawn it detached. And at most one <code>PET</code> line is allowed,
+      before <code>OK</code>; a second one is a protocol error, because a run must not be able to
+      quietly swap its command.</p>
+  </div></div>
+</div></section>
+
+<section><div class="wrap">
+  <h2 class="h-md">Where everything lives</h2>
+  <div class="kv">
+    <div><b>~/.config/chat-app/agents/</b><span>Your agents. First registration wins, so one of your
+      own shadows a bundled agent with the same id.</span></div>
+    <div><b>/opt/onidia/share/agents/</b><span>The bundled ones, on a package install. Only read, and
+      only if your own directory does not already have that id.</span></div>
+    <div><b>chat-app.ini</b><span><code>agents-dir</code>, <code>agents-off</code>,
+      <code>agents-disabled</code>, <code>agents-registry</code>,
+      <code>agents-require-sig</code>, <code>agents-key</code>, plus <code>music-dir</code> and
+      <code>video-dir</code> for the media agents.</span></div>
+    <div><b>CHAT_APP_*</b><span>The environment handed to every agent, including
+      <code>CHAT_APP_MUSIC_DIR</code>, <code>CHAT_APP_VIDEO_DIR</code>,
+      <code>CHAT_APP_PLAYER</code> and <code>CHAT_APP_STATE_DIR</code>. Read these instead of guessing
+      paths.</span></div>
+  </div>
+  <div class="note">
+    <b>Taking only signed agents</b>
+    <p>Set <code>agents-require-sig = true</code> and an Ed25519 public key in
+      <code>agents-key</code>, and unsigned installs are refused &mdash; useful when the agents folder
+      is populated from somewhere you do not control. Registry installs can also be pinned by a
+      SHA-256 in the index.</p>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2 class="h-md">If it goes wrong</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>&ldquo;broken&rdquo; in the list</h3>
+      <p>The folder was found but something in it is wrong: <code>agent.json</code> does not parse,
+        the id is invalid, or <code>exec</code> does not resolve. The reason is printed next to the
+        location. One broken agent never stops the others from loading.</p>
+    </div>
+    <div class="card">
+      <h3>She never calls it</h3>
+      <p>Almost always the <code>description</code>. If it does not say <em>when</em> to use the
+        agent, she has no reason to reach for it. Confirm it is in the catalog with
+        <code>-agents-list</code> and not listed as disabled.</p>
+    </div>
+    <div class="card">
+      <h3>Installed, but not there</h3>
+      <p>You did not restart. Discovery is startup-only, so a running window is working from the
+        agent list it built when it launched.</p>
+    </div>
+    <div class="card">
+      <h3>&ldquo;permission denied&rdquo;</h3>
+      <p>The exec target is not executable &mdash; <code>chmod +x</code> it. Note that a bare name in
+        <code>exec</code> is looked up on <code>PATH</code>, while <code>./name</code> is resolved
+        against the agent's own folder: the dot is what makes it relative.</p>
+    </div>
+    <div class="card">
+      <h3>Music does not play</h3>
+      <p>In order: is the folder right (<code>music-dir</code>), are there audio files in it, and is
+        <code>mpv</code>, <code>vlc</code> or <code>ffplay</code> installed? She says which of the
+        three it was, in the reply or the log.</p>
+    </div>
+    <div class="card">
+      <h3>She answers, but the pet does nothing</h3>
+      <p>A <code>PET</code> line only applies if she did not already pick an animation for that reply
+        &mdash; the model's choice wins. It is also dropped when pet forwarding is off
+        (<code>-pet-pipe off</code>), and an unknown animation name is ignored on purpose.</p>
+    </div>
+  </div>
+</div></section>
+
+<footer class="foot"><div class="wrap foot-in">
+  <a href="index.html">Onidia</a><span class="dot">&middot;</span>
+  <a href="setup-gemini.html">Setup the mind</a><span class="dot">&middot;</span>
+  <a href="setup-typecast.html">Voice</a><span class="dot">&middot;</span>
+  <a href="index.html#install">Install</a>
+</div></footer>
+
+<script>
+(function(){
+  var $ = function(s){ return document.querySelector(s); };
+  var pre = function(el){ return el ? el.innerText : ''; };
+  function fallback(el, done){
+    var t = document.createElement('textarea');
+    t.value = pre(el); t.setAttribute('readonly','');
+    t.style.cssText = 'position:absolute;left:-9999px';
+    document.body.appendChild(t); t.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(t); done();
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.copy'), function(b){
+    b.addEventListener('click', function(){
+      var el = $(b.dataset.copy);
+      var done = function(){
+        b.classList.add('done'); b.textContent = 'copied';
+        setTimeout(function(){ b.classList.remove('done'); b.textContent = 'copy'; }, 1600);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(pre(el)).then(done, function(){ fallback(el, done); });
+      } else { fallback(el, done); }
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

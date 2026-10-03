@@ -1,11 +1,11 @@
-/* setup.css - shared styles for the four setup guides (Gemini, Bedrock,
-   Hailo-Ollama, Typecast).
+/* setup.css - shared styles for the guide pages (Gemini, Bedrock,
+   Hailo-Ollama, Typecast, and Agents).
 
    Deliberately NOT the index page's stylesheet: that one is 685 lines and most
-   of it is the chat-window and playground mocks, which a setup guide has no use
+   of it is the chat-window and playground mocks, which a guide has no use
    for. This keeps the same visual language - same plum background, same teal
    and pink, same card / code-block / chip vocabulary - in about a fifth of the
-   size, and it is one file to edit instead of five. */
+   size, and it is one file to edit instead of six. */
 
 :root{
   --teal:#5fcfd6; --teal-lt:#a5ecef; --teal-dk:#41aeb6; --teal-tx:#7fdee3;
@@ -127,6 +127,27 @@ pre .w{color:var(--pink-tx)}
   font-family:ui-monospace,monospace;font-size:.8rem;color:var(--faint)}
 mark{background:rgba(236,96,156,.20);color:var(--pink-lt);padding:1px 3px;border-radius:4px}
 
+/* --- key/value reference rows --------------------------------------------- */
+/* Flag and manifest-field tables. A <pre> would be the wrong shape here: these
+   are read, not copied, and the left column wants to stay monospace. */
+.kv{margin:14px 0;border:1px solid var(--edge);border-radius:var(--r-m);overflow:hidden}
+.kv>div{display:grid;grid-template-columns:minmax(130px,220px) 1fr;gap:18px;
+  padding:13px 18px;border-bottom:1px solid var(--edge);align-items:baseline}
+.kv>div:last-child{border-bottom:0}
+.kv>div:nth-child(odd){background:var(--glass)}
+.kv b{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.83rem;
+  font-weight:600;color:var(--teal-lt);overflow-wrap:anywhere}
+.kv span{color:var(--muted);font-size:.92rem;line-height:1.62;min-width:0}
+
+/* A labelled speech/exchange line: who is talking, then what they said. */
+.say{display:flex;gap:12px;align-items:baseline;margin:0 0 11px;font-size:.93rem;line-height:1.62}
+.say b{flex:0 0 84px;font-size:.72rem;font-weight:700;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--faint);text-align:right;padding-top:2px}
+.say span{color:var(--muted);min-width:0}
+.say.you b{color:var(--pink-tx)}
+.say.her b{color:var(--teal-tx)}
+.say.her span{color:var(--text)}
+
 /* --- footer -------------------------------------------------------------- */
 .foot{border-top:1px solid var(--edge);padding:34px 0;color:var(--faint);font-size:.86rem}
 .foot-in{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
@@ -135,6 +156,9 @@ mark{background:rgba(236,96,156,.20);color:var(--pink-lt);padding:1px 3px;border
 @media(max-width:640px){
   .step{grid-template-columns:1fr;gap:10px}
   .topbar nav{width:100%;margin-left:0}
+  .kv>div{grid-template-columns:1fr;gap:4px}
+  .say{flex-direction:column;gap:2px}
+  .say b{text-align:left;flex:none}
 }
 @media(prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
