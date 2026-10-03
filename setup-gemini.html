@@ -80,11 +80,11 @@ api-url = https://generativelanguage.googleapis.com</pre>
   </div></div>
 <div class="step"><div class="step-n">4</div><div class="step-b">
     <h3>Check it worked before you launch</h3>
-    <p>chat-app verifies the key and the whole environment before it opens a window. If anything
+    <p>onidia-chat verifies the key and the whole environment before it opens a window. If anything
       is wrong it tells you what, instead of failing mysteriously later.</p>
     <div class="codeblock">
       <div class="cbar"><b>terminal</b><button class="copy" data-copy="#s4">copy</button></div>
-<pre id="s4">chat-app -preflight warn</pre>
+<pre id="s4">onidia-chat -preflight warn</pre>
     </div>
     <p>Look for the Gemini line coming back green. Then start her.</p>
   </div></div>
@@ -99,7 +99,7 @@ api-url = https://generativelanguage.googleapis.com</pre>
 onidia
 
 <span class="c"># terminal 2 - the brain</span>
-chat-app</pre>
+onidia-chat</pre>
     </div>
   </div></div>
 </div></section>
@@ -114,7 +114,7 @@ chat-app</pre>
       <div class="codeblock" style="margin-top:14px">
         <div class="cbar"><b>terminal</b><button class="copy" data-copy="#s6">copy</button></div>
 <pre id="s6"><span class="k">export</span> GEMINI_API_KEY=<span class="s">"AIzaSy..."</span>
-chat-app</pre>
+onidia-chat</pre>
       </div>
     </div>
     <div class="card">
@@ -133,7 +133,7 @@ chat-app</pre>
         environment.</p>
       <div class="codeblock" style="margin-top:14px">
         <div class="cbar"><b>terminal</b><button class="copy" data-copy="#s8">copy</button></div>
-<pre id="s8">chat-app -api-key <span class="s">"AIzaSy..."</span></pre>
+<pre id="s8">onidia-chat -api-key <span class="s">"AIzaSy..."</span></pre>
       </div>
     </div>
   </div>
@@ -154,7 +154,7 @@ chat-app</pre>
     </div>
     <div class="card">
       <h3>No reply, no error</h3>
-      <p>Run <code>chat-app -preflight warn</code>. It probes the real endpoint and prints the
+      <p>Run <code>onidia-chat -preflight warn</code>. It probes the real endpoint and prints the
         status code the API returned, which is far more useful than a silent window.</p>
     </div>
     <div class="card">

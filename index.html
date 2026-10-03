@@ -33,7 +33,7 @@
 /* ==========================================================================
    Onidia — single-page site.
    Palette is lifted straight out of the apps: the pet's palette
-   (characters/onidia/palette.go) and the chat UI's colours (chat-app/ui.go).
+   (characters/onidia/palette.go) and the chat UI's colours (onidia-chat/ui.go).
    Teal hair, plum outlines, pink dress. Nothing here is invented.
    ========================================================================== */
 :root{
@@ -500,7 +500,10 @@ kbd{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);
    move. The box is unchanged - 52px square - so the cards keep their rhythm;
    only the artwork inside is adjusted. overflow:visible lets the strokes grow
    on hover without being clipped by the box, and without affecting layout. */
-.card .ico-mic,.card .ico-pic,.card .ico-plug,.card .ico-shield{color:var(--teal-tx);overflow:visible}
+.card .ico-mic,.card .ico-pic,.card .ico-plug,.card .ico-shield,
+.card .ico-win,.card .ico-talk,.card .ico-spark,.card .ico-term,.card .ico-cast,
+.card .ico-chip,.card .ico-gem,.card .ico-rock,.card .ico-wave{
+  color:var(--teal-tx);overflow:visible}
 .card .ico svg{width:27px;height:27px;display:block;overflow:visible;
   transition:transform .45s var(--ease)}
 .card .ico svg *{transition:opacity .45s var(--ease),transform .45s var(--ease)}
@@ -548,8 +551,92 @@ kbd{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);
   0%{opacity:0;transform:scale(.5)}
   100%{opacity:1;transform:scale(1)}
 }
+
+/* --- the five "what is it" cards ------------------------------------------ */
+/* she lives there: a bare window with her in it, and she bobs inside it */
+.ico-win .pip{transform-origin:16px 19px;opacity:.55}
+.card:hover .ico-win .pip{opacity:1;animation:winBob 1.5s var(--ease) infinite}
+@keyframes winBob{
+  0%,100%{transform:translateY(0);opacity:.6}
+  50%{transform:translateY(-1.6px);opacity:1}
+}
+/* she talks back: three dots type themselves, left to right */
+.ico-talk circle{opacity:.4}
+.card:hover .ico-talk .d1{animation:typeDot 1.2s var(--ease) infinite}
+.card:hover .ico-talk .d2{animation:typeDot 1.2s var(--ease) .18s infinite}
+.card:hover .ico-talk .d3{animation:typeDot 1.2s var(--ease) .36s infinite}
+@keyframes typeDot{
+  0%,100%{opacity:.35;transform:scale(.8)}
+  35%{opacity:1;transform:scale(1.2)}
+}
+/* she does things: three sparkles out of phase, so it never pulses in unison */
+.ico-spark path{opacity:.5;transform-box:fill-box;transform-origin:center}
+.card:hover .ico-spark .sp1{animation:spTwinkle 1.5s var(--ease) infinite}
+.card:hover .ico-spark .sp2{animation:spTwinkle 1.5s var(--ease) .3s infinite}
+.card:hover .ico-spark .sp3{animation:spTwinkle 1.5s var(--ease) .6s infinite}
+@keyframes spTwinkle{
+  0%,100%{opacity:.35;transform:scale(.7) rotate(-12deg)}
+  50%{opacity:1;transform:scale(1.15) rotate(12deg)}
+}
+/* for your tools: a shell prompt, and the caret blinks like a terminal */
+.ico-term .caret{stroke-dasharray:7 4}
+.card:hover .ico-term svg{transform:translateY(-1px)}
+.card:hover .ico-term .caret{animation:caretBlink 1s steps(1,end) infinite}
+@keyframes caretBlink{0%,49%{opacity:1}50%,100%{opacity:.15}}
+/* whichever character: the second figure slides in, the arrow nudges across */
+.ico-cast .two,.ico-cast .swap{opacity:.42;transition:.45s var(--ease)}
+.card:hover .ico-cast .two{opacity:1;transform:translateX(-1.6px)}
+.card:hover .ico-cast .swap{opacity:1;transform:translateX(1.6px)}
+
+/* --- the four provider marks on the setup guide cards ---------------------- */
+/* These stand in for the vendors' real logos: drawn in this page's palette
+   rather than embedded artwork, so nothing here is a trademarked asset and
+   the marks cannot drift out of step with the rest of the design. Each one is
+   themed rather than literal - a chip for the NPU, strata for Bedrock - so it
+   reads as "this is the Hailo guide" without pretending to be Hailo's mark. */
+
+/* Hailo: the AI HAT+ is an accelerator, so a chip whose die lights up */
+.ico-chip .pin{opacity:.5}
+.ico-chip .die{opacity:.35;transform-origin:16px 16px}
+.card:hover .ico-chip .pin{opacity:1}
+.card:hover .ico-chip .die{opacity:1;animation:chipPulse 1.6s var(--ease) infinite}
+@keyframes chipPulse{
+  0%,100%{transform:scale(1);opacity:.5}
+  50%{transform:scale(1.18);opacity:1}
+}
+/* Gemini: the four-point sparkle, with a smaller one trailing it */
+.ico-gem .star{transform-origin:16px 13px;opacity:.6}
+.ico-gem .s2{transform-origin:26.5px 24.7px;opacity:.4}
+.card:hover .ico-gem .star{animation:gemSpin 1.8s var(--ease) infinite}
+.card:hover .ico-gem .s2{animation:gemSpin 1.8s var(--ease) .25s infinite}
+@keyframes gemSpin{
+  0%,100%{transform:rotate(-8deg) scale(.92);opacity:.55}
+  50%{transform:rotate(8deg) scale(1.08);opacity:1}
+}
+/* Bedrock: three strata, settling downward */
+.ico-rock .lay{opacity:.85}
+.card:hover .ico-rock .l1{animation:layDrop .9s var(--ease)}
+.card:hover .ico-rock .l2{animation:layDrop .9s var(--ease) .08s}
+.card:hover .ico-rock .l3{animation:layDrop .9s var(--ease) .16s}
+@keyframes layDrop{
+  0%{transform:translateY(0);opacity:.45}
+  50%{transform:translateY(2px);opacity:1}
+  100%{transform:translateY(0);opacity:.85}
+}
+/* Typecast: a waveform, each bar a different height and out of phase */
+.ico-wave .bar{fill:currentColor;stroke:none;transform-box:fill-box;transform-origin:center}
+.card:hover .ico-wave .b1{animation:waveBar .95s var(--ease) infinite}
+.card:hover .ico-wave .b2{animation:waveBar .95s var(--ease) .12s infinite}
+.card:hover .ico-wave .b3{animation:waveBar .95s var(--ease) .24s infinite}
+.card:hover .ico-wave .b4{animation:waveBar .95s var(--ease) .36s infinite}
+@keyframes waveBar{
+  0%,100%{transform:scaleY(.55);opacity:.5}
+  50%{transform:scaleY(1.05);opacity:1}
+}
+
 @media(prefers-reduced-motion:reduce){
   .card:hover .ico svg *{animation:none!important}
+  .card:hover .ico-cast .two,.card:hover .ico-cast .swap{transform:none!important}
   .card .ico svg{transform:none!important}
 }
 .card h3{margin:0 0 10px;font-size:1.2rem;letter-spacing:-.025em}
@@ -667,15 +754,6 @@ kbd{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);
 /* ==========================================================================
    Install — tabs + code blocks
    ========================================================================== */
-.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:22px;padding:6px;
-  border-radius:999px;background:var(--glass);border:1px solid var(--surface-3);
-  width:fit-content;max-width:100%}
-.tab{padding:10px 20px;border-radius:999px;font-size:.88rem;font-weight:600;color:var(--muted);transition:.3s var(--ease)}
-.tab:hover{color:var(--text)}
-.tab.on{background:var(--grad-teal);color:#052a2e;box-shadow:0 8px 22px -10px rgba(95,207,214,.8)}
-.tabpanel{display:none;animation:rise .5s var(--ease)}
-.tabpanel.on{display:block}
-@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 .codeblock{position:relative;border-radius:var(--r-m);border:1px solid var(--edge);
   background:linear-gradient(180deg,rgba(0,0,0,.55),var(--field));overflow:hidden;margin-top:18px}
 .codeblock .cbar{display:flex;align-items:center;gap:10px;padding:11px 15px;
@@ -739,6 +817,34 @@ kbd{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);
 .contact-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:44px;align-items:start}
 @media(max-width:940px){.contact-grid{grid-template-columns:1fr;gap:34px}}
 .field{margin-bottom:16px}
+/* the honeypot: off-screen, not display:none, and not hidden - bots that skip
+   hidden fields never fill it, which is the one thing we need it to do */
+.hp{position:absolute!important;left:-9999px!important;top:auto!important;width:1px;height:1px;
+  opacity:0;border:0;padding:0}
+
+/* The iframe the contact form falls back to. Hidden, but still a real focusable
+   browsing context - display:none would be fine too, except some browsers skip
+   submitting into a fully hidden frame. */
+#cpost{position:absolute;width:1px;height:1px;border:0;opacity:0;pointer-events:none;left:-9999px}
+
+/* "Message sent" confirmation. Fixed, centred low, out of the way of the
+   back-to-top button at the same time - the two never overlap. */
+.toast{position:fixed;left:50%;bottom:34px;z-index:120;transform:translate(-50%,16px);
+  opacity:0;pointer-events:none;transition:opacity .35s var(--ease),transform .35s var(--ease);
+  padding:13px 22px;border-radius:999px;font-size:.9rem;font-weight:600;
+  background:rgba(20,30,38,.92);color:var(--teal-lt);border:1px solid rgba(165,236,239,.35);
+  box-shadow:0 18px 44px -18px rgba(0,0,0,.9);backdrop-filter:blur(14px)}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.toast.err{color:#ffd6e0;border-color:rgba(255,154,170,.5)}
+:root[data-theme="light"] .toast{background:rgba(255,255,255,.96);color:#0d6a70;
+  border-color:rgba(95,207,214,.45);box-shadow:0 18px 40px -20px rgba(43,33,66,.45)}
+:root[data-theme="light"] .toast.err{color:#a01f52;border-color:rgba(236,96,156,.45)}
+@media(max-width:640px){.toast{bottom:26px;left:20px;right:20px;transform:translateY(16px);text-align:center}
+  .toast.on{transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){
+  .toast{transition:opacity .01s linear;transform:none}
+  .toast.on{transform:none}
+}
 .field label{display:block;font-size:.76rem;font-weight:700;letter-spacing:.11em;text-transform:uppercase;
   color:var(--faint);margin-bottom:8px}
 .field input,.field textarea{width:100%;background:var(--field);color:var(--text);
@@ -753,7 +859,27 @@ kbd{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);
   background:var(--glass);border:1px solid var(--surface-3);margin-bottom:12px;transition:.4s var(--ease)}
 .clink:hover{background:var(--glass-2);border-color:var(--edge-2);transform:translateX(7px)}
 .clink .ci{width:44px;height:44px;flex-shrink:0;border-radius:13px;display:grid;place-items:center;font-size:1.25rem;
-  background:linear-gradient(150deg,rgba(95,207,214,.2),rgba(236,96,156,.14));border:1px solid rgba(165,236,239,.2)}
+  background:linear-gradient(150deg,rgba(95,207,214,.2),rgba(236,96,156,.14));border:1px solid rgba(165,236,239,.2);
+  color:var(--teal-tx);overflow:visible}
+/* Same treatment as the cards: drawn rather than emoji, so the credit links
+   match the rest of the page instead of depending on the OS emoji font. */
+.clink .ci svg{width:24px;height:24px;display:block;overflow:visible;
+  transition:transform .45s var(--ease)}
+.clink .ci svg *{transition:opacity .45s var(--ease),transform .45s var(--ease)}
+/* engineered by: tuning sliders, each knob sliding to its other stop */
+.clink:hover .ci-eng .knob{animation:knobSlide .9s var(--ease)}
+.clink:hover .ci-eng .k1{animation-delay:0s}
+.clink:hover .ci-eng .k2{animation-delay:.1s}
+.clink:hover .ci-eng .k3{animation-delay:.2s}
+@keyframes knobSlide{0%,100%{transform:translateX(0)}50%{transform:translateX(3px)}}
+/* built on xgb: the bolt flashes once, then settles */
+.clink:hover .ci-fast .bolt{animation:boltFlash .8s var(--ease)}
+@keyframes boltFlash{
+  0%{opacity:.55}
+  35%{opacity:1;transform:scale(1.1)}
+  100%{opacity:1;transform:scale(1)}
+}
+.clink:hover .ci-fast svg{transform:scale(1.06)}
 .clink b{display:block;font-size:.95rem;margin-bottom:2px}
 .clink small{color:var(--faint);font-size:.8rem;font-family:ui-monospace,monospace;word-break:break-all}
 .clink .go{margin-left:auto;color:var(--teal);font-size:1.15rem;flex-shrink:0;transition:transform .3s}
@@ -1006,7 +1132,15 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
     <div class="grid g3">
       <article class="card rv">
         <i class="glow"></i><span class="tag">01</span>
-        <div class="ico">&#128039;</div>
+        <div class="ico ico-win">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.9"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="4.5" y="6.5" width="23" height="19" rx="3"/>
+            <path d="M4.5 11.6h23"/>
+            <circle cx="8.4" cy="9" r="1" fill="currentColor" stroke="none"/>
+            <circle cx="11.8" cy="9" r="1" fill="currentColor" stroke="none"/>
+            <circle class="pip" cx="16" cy="19" r="3.3"/>
+          </svg></div>
         <h3>She lives there</h3>
         <p>A small always-on-top window with per-pixel transparency &mdash; only Onidia and her speech cloud are
           visible. No taskbar entry, no window decorations, no desktop clutter. She walks back and forth,
@@ -1014,7 +1148,14 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
       </article>
       <article class="card rv">
         <i class="glow"></i><span class="tag">02</span>
-        <div class="ico">&#128172;</div>
+        <div class="ico ico-talk">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.9"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9.2 8.2h13.6a3 3 0 0 1 3 3v8.1a3 3 0 0 1-3 3h-6.6L9.6 26.6v-4.3H9.2a3 3 0 0 1-3-3v-8.1a3 3 0 0 1 3-3Z"/>
+            <circle class="d1" cx="12.4" cy="15.2" r="1.7" fill="currentColor" stroke="none"/>
+            <circle class="d2" cx="16" cy="15.2" r="1.7" fill="currentColor" stroke="none"/>
+            <circle class="d3" cx="19.6" cy="15.2" r="1.7" fill="currentColor" stroke="none"/>
+          </svg></div>
         <h3>She talks back</h3>
         <p>Type at her and she answers in comic speech bubbles, in her own voice, with a face that matches
           the mood of what she says. Speak into your mic and she transcribes it. Four AI backends, from a
@@ -1022,7 +1163,13 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
       </article>
       <article class="card rv">
         <i class="glow"></i><span class="tag">03</span>
-        <div class="ico">&#128640;</div>
+        <div class="ico ico-spark">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path class="sp1" d="M16 4.6 17.8 9.4 22.6 11.2 17.8 13 16 17.8 14.2 13 9.4 11.2 14.2 9.4Z"/>
+            <path class="sp2" d="M24.2 17.4 25.2 20.1 27.9 21.1 25.2 22.1 24.2 24.8 23.2 22.1 20.5 21.1 23.2 20.1Z"/>
+            <path class="sp3" d="M7.6 16.6 8.5 19 10.9 19.9 8.5 20.8 7.6 23.2 6.7 20.8 4.3 19.9 6.7 19Z"/>
+          </svg></div>
         <h3>She does things</h3>
         <p>Celebrations, confetti, hearts, a lightbulb over her head, a disco ball, a guitar, a jump rope,
           a skateboard, a hovercar, an iron-man suit-up. She naps on your schedule, reacts when you throw
@@ -1036,7 +1183,13 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
     <div class="grid g2" style="margin-top:18px">
       <article class="card rv">
         <i class="glow"></i>
-        <div class="ico">&#128187;</div>
+        <div class="ico ico-term">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.9"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="4.5" y="7.5" width="23" height="17" rx="3"/>
+            <path d="M9 13.4 12.6 17 9 20.6"/>
+            <path class="caret" d="M15.4 20.8h7.2"/>
+          </svg></div>
         <h3>For your tools, too</h3>
         <p>Any program on your machine can write one line to her speech pipe and she'll say it &mdash; a build
           finished, a deploy shipped, a server down. Build a green and she celebrates; a failure and she
@@ -1044,7 +1197,15 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
       </article>
       <article class="card rv">
         <i class="glow"></i>
-        <div class="ico">&#128187;&#65039;</div>
+        <div class="ico ico-cast">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.9"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="10.6" cy="10.4" r="3.5"/>
+            <path d="M5 25a5.6 5.6 0 0 1 11.2 0"/>
+            <circle class="two" cx="21.6" cy="10.4" r="3.5"/>
+            <path class="two" d="M16 25a5.6 5.6 0 0 1 11.2 0"/>
+            <path class="swap" d="M13.6 21.4h5.2m-1.7-1.7 1.7 1.7-1.7 1.7"/>
+          </svg></div>
         <h3>Whichever character you like</h3>
         <p>Onidia is the teal-haired chibi girl. Kama is the boy in the red hoodie. Both have their own
           palette, art and phrase list, selectable at launch. And because a character is just a Go package,
@@ -1054,13 +1215,13 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
   </div>
 </section>
 
-<!-- ===================== THE BRAIN: chat-app ===================== -->
+<!-- ===================== THE BRAIN: onidia-chat ===================== -->
 <section id="brain">
   <div class="wrap">
     <div class="sechead rv">
       <span class="eyebrow">The other half</span>
       <h2 class="h-lg" style="margin-top:22px">Give her a brain<br><span class="grad-pink">and a voice.</span></h2>
-      <p class="lede">Onidia is the body. <b>chat-app</b> is the mind: a tiny chat window, also pure Go on raw
+      <p class="lede">Onidia is the body. <b>onidia-chat</b> is the mind: a tiny chat window, also pure Go on raw
         X11, that talks to a real language model &mdash; then hands every answer to the pet so she says it out
         loud with a matching expression.</p>
     </div>
@@ -1084,7 +1245,7 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
         <span class="k">you</span> <span class="s">&rsaquo; what should I do about the build?</span><br>
         <span class="c"># the model answers, tagged with a mood</span><br>
         <span class="s">bot</span> <span class="k">&rsaquo;</span> <span class="s">[happy] all green - nice one!</span><br>
-        <span class="c"># chat-app forwards it to the pet's speech pipe</span><br>
+        <span class="c"># onidia-chat forwards it to the pet's speech pipe</span><br>
         <span class="k">pet</span> <span class="arrow">&rarr;</span> <span class="s">[happy] all green - nice one!</span><br>
         <span class="c"># ...and Onidia says it, out loud, smiling</span>
       </div>
@@ -1168,7 +1329,7 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
       <div class="achain">
         <div class="abox hl"><b>You</b><small>type, or speak into the mic</small></div>
         <div class="aflex">&rarr;</div>
-        <div class="abox"><b>chat-app</b><small>pure Go, raw X11<br>UI thread never blocks</small></div>
+        <div class="abox"><b>onidia-chat</b><small>pure Go, raw X11<br>UI thread never blocks</small></div>
         <div class="aflex">&rarr;</div>
         <div class="abox"><b>The model</b><small>Gemini / Bedrock<br>Ollama / OpenRouter</small></div>
         <div class="aflex">&rarr;</div>
@@ -1194,7 +1355,7 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
         <div>
           <span class="eyebrow">Written, designed and tested on a Pi 5</span>
           <h3 class="h-md" style="margin:18px 0 16px">Sixty-four bits, end to end.</h3>
-          <p>Onidia and chat-app are pure Go, so a build is a single static <code>arm64</code>
+          <p>Onidia and onidia-chat are pure Go, so a build is a single static <code>arm64</code>
             binary &mdash; nothing to cross-compile on the Pi, nothing to install beside it. The
             release artifact is exactly that: one <code>arm64</code> .deb that carries both
             halves. A Raspberry Pi 5 is what they were written against,
@@ -1202,7 +1363,7 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
           <p>The more interesting half is what that Pi can be <b>as</b> the machine. On a
             <b>AI HAT+ 2</b> &mdash; the Hailo-10H board, 40 TOPS of INT4 inference and 8 GB of RAM
             living on the card itself &mdash; Hailo's <code>hailo-ollama</code> speaks the very same
-            ollama <code>/api/chat</code> dialect <code>chat-app</code> already speaks to the network.
+            ollama <code>/api/chat</code> dialect <code>onidia-chat</code> already speaks to the network.
             Point the provider at localhost and the model stops being someone else's computer.</p>
           <div class="pihw-facts">
             <div class="pihw-fact"><b class="grad-teal">arm64</b><small>BUILD TARGET</small></div>
@@ -1218,14 +1379,14 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
 hailo-ollama
 
 <span class="c"># 8000 is already the default - this is the whole switch:</span>
-./chat-app -provider ollama -model <span class="s">qwen2:1.5b</span>
+./onidia-chat -provider ollama -model <span class="s">qwen2:1.5b</span>
 
 <span class="c"># Qwen2 1.5B, Llama 3.2 1B, Qwen2.5-Coder, DeepSeek-R1</span>
 curl localhost:8000/api/tags</pre>
           </div>
           <div class="pihw-note"><b>Nothing leaves the Pi.</b> No key, no account, no request to a
             vendor you cannot audit &mdash; pull the network cable and it behaves identically. One
-            honest footnote: hailo-ollama rejects the <code>tools</code> field, so chat-app retires
+            honest footnote: hailo-ollama rejects the <code>tools</code> field, so onidia-chat retires
             tool calling after the first reply and carries on in plain text.</div>
         </div>
       </div>
@@ -1280,22 +1441,16 @@ curl localhost:8000/api/tags</pre>
       <p style="color:var(--faint);font-size:.86rem;margin:16px 0 0;line-height:1.65">
         <code>apt</code> rather than <code>dpkg -i</code> on purpose: it resolves the audio and PipeWire packages
         she needs in the same step. Then put your key in <code>~/.config/chat-app/chat-app.ini</code>
-        (or just <code>export GEMINI_API_KEY=...</code>), start <b>onidia</b> before <b>chat-app</b>, and she's awake.
+        (or just <code>export GEMINI_API_KEY=...</code>), start <b>onidia</b> before <b>onidia-chat</b>, and she's awake.
       </p>
     </div>
 
     <div class="rv" style="margin-top:38px">
-      <div class="tabs" role="tablist" aria-label="Install options">
-        <button class="tab on" role="tab" aria-selected="true" data-tab="pkg">The package</button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="web">This page</button>
-      </div>
-
-      <div class="tabpanel on" data-panel="pkg" role="tabpanel">
-        <p style="color:var(--muted);margin:0 0 14px">After the one line above. Both binaries land in
-          <code>/opt/onidia/bin</code> with <code>/usr/bin</code> symlinks, and her bundled agents in
-          <code>/opt/onidia/share/agents</code>.</p>
-        <div class="codeblock">
-          <div class="cbar"><b>first launch</b><button class="copy" data-copy="#cb-pkg">copy</button></div>
+      <p style="color:var(--muted);margin:0 0 14px">After the one line above. Both binaries land in
+        <code>/opt/onidia/bin</code> with <code>/usr/bin</code> symlinks, and her bundled agents in
+        <code>/opt/onidia/share/agents</code>.</p>
+      <div class="codeblock">
+        <div class="cbar"><b>first launch</b><button class="copy" data-copy="#cb-pkg">copy</button></div>
 <pre id="cb-pkg"><span class="c"># terminal 1 - the body. It creates the speech pipe and logs it.</span>
 onidia
 <span class="s">[buddy] speech: talk to the buddy with:
@@ -1303,31 +1458,16 @@ onidia
 
 <span class="c"># terminal 2 - the brain</span>
 nano ~/.config/chat-app/chat-app.ini     <span class="c"># your API key lives here</span>
-chat-app
+onidia-chat
 
 <span class="c"># not sure this machine is ready? ask her before the window opens</span>
-chat-app -preflight warn
+onidia-chat -preflight warn
 
 <span class="c"># what she can do, and what's switched off</span>
-chat-app -agents-list
+onidia-chat -agents-list
 
 <span class="c"># ...and let any program talk to her, from anywhere</span>
 echo <span class="s">"deploy finished, great job!"</span> &gt; /tmp/desktop-pet--0.say</pre>
-        </div>
-      </div>
-
-      <div class="tabpanel" data-panel="web" role="tabpanel">
-        <p style="color:var(--muted);margin:0">This page is a single self-contained file &mdash; no server, no
-          build step, no dependencies. Save it and open it.</p>
-        <div class="codeblock">
-          <div class="cbar"><b>no install required</b><button class="copy" data-copy="#cb-web">copy</button></div>
-<pre id="cb-web"><span class="c"># the character engine in onidia/onidia.html runs the same</span>
-<span class="c"># way: open the file, talk to her, done.</span>
-xdg-open onidia/onidia.html
-
-<span class="c"># this page, likewise</span>
-xdg-open web/index.html</pre>
-        </div>
       </div>
     </div>
   </div>
@@ -1396,7 +1536,7 @@ aws_secret_access_key = ...
 region = eu-central-1
 
 <span class="c"># then start her with</span>
-chat-app -provider bedrock</pre>
+onidia-chat -provider bedrock</pre>
           </div>
         </div>
         <div class="card">
@@ -1406,39 +1546,72 @@ chat-app -provider bedrock</pre>
           <div class="codeblock" style="margin-top:16px">
             <div class="cbar"><b>terminal</b><button class="copy" data-copy="#cb-local">copy</button></div>
 <pre id="cb-local">ollama pull qwen2:1.5b
-chat-app -provider ollama -model qwen2:1.5b</pre>
+onidia-chat -provider ollama -model qwen2:1.5b</pre>
           </div>
-        </div>
-        <div class="card">
-          <h3>A compositor</h3>
-          <p>She's a transparent, always-on-top window, so something has to composite it. Default on every modern
-             desktop. Without one, expect a black rectangle instead of a chibi girl &mdash; the one failure that looks
-             like a bug in her rather than a missing service.</p>
         </div>
       </div>
     </div>
 
     <div class="rv" style="margin-top:34px" id="guides">
-      <h3 class="h-md">Setup guides</h3>
-      <p style="color:var(--muted);margin:0 0 18px;line-height:1.68">One page per provider, each with the exact
-        commands and the exact lines for <code>chat-app.ini</code>. Only the first is needed &mdash; pick whichever
-        suits you, they are independent.</p>
+      <h3 class="h-md">Setup the Mind</h3>
+      <p style="color:var(--muted);margin:0 0 18px;line-height:1.68">She needs one of these to think.
+        Pick whichever suits you &mdash; they are independent, and only one is ever needed. Each guide has the
+        exact commands and the exact lines for <code>chat-app.ini</code>.</p>
       <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(250px,1fr))">
+        <a class="card" href="setup-hailo-ollama.html" style="display:block">
+          <div class="ico ico-chip">
+            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="9.5" y="9.5" width="13" height="13" rx="2.6"/>
+              <rect class="die" x="13.2" y="13.2" width="5.6" height="5.6" rx="1.2"/>
+              <path class="pin" d="M12.5 9.5V5.5M16 9.5V5.5M19.5 9.5V5.5M12.5 22.5V26.5M16 22.5V26.5M19.5 22.5V26.5"/>
+              <path class="pin" d="M9.5 12.5H5.5M9.5 16H5.5M9.5 19.5H5.5M22.5 12.5H26.5M22.5 16H26.5M22.5 19.5H26.5"/>
+            </svg></div>
+          <h3 style="color:var(--teal-tx)">Hailo-Ollama &rarr;</h3>
+          <p>With an AI HAT+ 2: run the model on the NPU, entirely on the Pi.</p>
+        </a>
         <a class="card" href="setup-gemini.html" style="display:block">
-          <h3 style="color:var(--teal-tx)">Set up Gemini &rarr;</h3>
+          <div class="ico ico-gem">
+            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path class="star" d="M16 4c.95 5.1 3.9 8.05 9 9-5.1.95-8.05 3.9-9 9-.95-5.1-3.9-8.05-9-9 5.1-.95 8.05-3.9 9-9Z"/>
+              <path class="star s2" d="M24.6 20.8c.4 2.2 1.7 3.5 3.9 3.9-2.2.4-3.5 1.7-3.9 3.9-.4-2.2-1.7-3.5-3.9-3.9 2.2-.4 3.5-1.7 3.9-3.9Z"/>
+            </svg></div>
+          <h3 style="color:var(--teal-tx)">Gemini &rarr;</h3>
           <p>Free, no billing, five minutes. Get the key and paste it in.</p>
         </a>
         <a class="card" href="setup-bedrock.html" style="display:block">
-          <h3 style="color:var(--teal-tx)">Set up Bedrock &rarr;</h3>
+          <div class="ico ico-rock">
+            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path class="lay l1" d="M16 5.6 26.6 11 16 16.4 5.4 11Z"/>
+              <path class="lay l2" d="M5.4 16 16 21.4 26.6 16"/>
+              <path class="lay l3" d="M5.4 21 16 26.4 26.6 21"/>
+            </svg></div>
+          <h3 style="color:var(--teal-tx)">Bedrock &rarr;</h3>
           <p>Run her on Claude. Create an IAM user, scope it, write the key with the AWS CLI.</p>
         </a>
-        <a class="card" href="setup-hailo-ollama.html" style="display:block">
-          <h3 style="color:var(--teal-tx)">Set up Hailo-Ollama &rarr;</h3>
-          <p>With an AI HAT+ 2: run the model on the NPU, entirely on the Pi.</p>
-        </a>
-        <a class="card" href="setup-typecast.html" style="display:block">
-          <h3 style="color:var(--teal-tx)">Set up her voice &rarr;</h3>
-          <p>A Typecast account, an API key and a voice id, so every reply is spoken.</p>
+      </div>
+    </div>
+
+    <div class="rv" style="margin-top:28px">
+      <h3 class="h-md">Setup the Voice</h3>
+      <p style="color:var(--muted);margin:0 0 18px;line-height:1.68">Separately from the mind: every reply she
+        writes is also spoken, in a voice you choose. She ships with a demo one, so this is only worth doing
+        if you want her to sound like somebody in particular.</p>
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(250px,1fr))">
+        <a class="card" href="setup-typecast.html" style="display:block;grid-column:1/-1">
+          <div class="ico ico-wave">
+            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect class="bar b1" x="5" y="12.6" width="2.8" height="6.8" rx="1.4"/>
+              <rect class="bar b2" x="10.4" y="8.4" width="2.8" height="15.2" rx="1.4"/>
+              <rect class="bar b3" x="15.8" y="4.6" width="2.8" height="22.8" rx="1.4"/>
+              <rect class="bar b4" x="21.2" y="9.6" width="2.8" height="12.8" rx="1.4"/>
+            </svg></div>
+          <h3 style="color:var(--teal-tx)">Set up Typecast &rarr;</h3>
+          <p>A Typecast account, an API key and a voice id, so every reply is spoken. You can audition voices
+            on their site before you spend a character of your quota.</p>
         </a>
       </div>
     </div>
@@ -1458,27 +1631,48 @@ chat-app -provider ollama -model qwen2:1.5b</pre>
 
     <div class="contact-grid rv">
       <div class="card" style="padding:32px">
-        <form id="cform" novalidate>
+        <form id="cform" action="https://formspree.io/f/mdekrvdp" method="POST" novalidate>
+          <!-- Honeypot. Formspree treats a filled _gotcha as spam and silently
+               drops it, so real visitors never see this and never have to
+               solve a captcha. Kept off-screen rather than display:none,
+               because some bots skip hidden fields outright. -->
+          <input class="hp" type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <input type="hidden" name="_subject" value="New message from the Onidia page">
           <div class="grid g2" style="gap:16px">
             <div class="field"><label for="fname">Your name</label>
               <input id="fname" name="name" type="text" placeholder="Ada" required autocomplete="name"></div>
-            <div class="field"><label for="fmail">Email</label>
-              <input id="fmail" name="email" type="email" placeholder="you@example.com" required autocomplete="email"></div>
+            <div class="field"><label for="fmail">Email <span style="color:var(--faint);font-weight:600">(optional)</span></label>
+              <input id="fmail" name="email" type="email" placeholder="you@example.com" autocomplete="email"></div>
           </div>
           <div class="field"><label for="fmsg">Message</label>
             <textarea id="fmsg" name="message" rows="5" placeholder="Tell Onidia what she's been up to&hellip;" required></textarea></div>
           <button class="btn btn-pink" type="submit" style="width:100%;justify-content:center">Send message</button>
           <p class="formnote" id="fnote" role="status" aria-live="polite"></p>
         </form>
+        <!-- The fallback posts in here. An iframe cannot navigate the page, so
+             even when fetch is blocked the visitor stays put instead of being
+             dumped on Formspree's thank-you page. -->
+        <iframe name="cpost" id="cpost" title="" aria-hidden="true" tabindex="-1"></iframe>
       </div>
 
       <div>
         <a class="clink" href="https://mas-mas.it" target="_blank" rel="noopener">
-          <span class="ci">&#127968;</span>
+          <span class="ci ci-eng">
+            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.9"
+                 stroke-linecap="round" aria-hidden="true">
+              <path d="M6.5 10.5h11.5M23.5 10.5h2M6.5 16h4.5M17.5 16h8.5M6.5 21.5h11.5M23.5 21.5h2"/>
+              <circle class="knob k1" cx="20.2" cy="10.5" r="2.5"/>
+              <circle class="knob k2" cx="13.2" cy="16" r="2.5"/>
+              <circle class="knob k3" cx="20.2" cy="21.5" r="2.5"/>
+            </svg></span>
           <span><b>Engineered by</b><small>mas-mas.it</small></span>
           <span class="go">&rarr;</span></a>
         <a class="clink" href="https://github.com/jezek/xgb" target="_blank" rel="noopener">
-          <span class="ci">&#9889;</span>
+          <span class="ci ci-fast">
+            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.9"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path class="bolt" d="M17.8 4.5 9.2 17.4h5.6l-1 10.1 8.8-13.1h-5.6Z"/>
+            </svg></span>
           <span><b>Built on jezek/xgb</b><small>github.com/jezek/xgb &mdash; direct X11 bindings</small></span>
           <span class="go">&rarr;</span></a>
       </div>
@@ -1502,6 +1696,7 @@ chat-app -provider ollama -model qwen2:1.5b</pre>
 </footer>
 
 <button class="to-top" id="totop" aria-label="Back to top">&#8593;</button>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div class="zoom" id="zoom" role="dialog" aria-modal="true" aria-label="Screenshot preview">
   <img id="zoomimg" src="" alt=""><p id="zoomcap"></p>
 </div>
@@ -1623,17 +1818,6 @@ $$('.card').forEach(function (c) {
   });
 });
 
-/* ---------- install tabs */
-var tabs = $$('.tab'), panels = $$('.tabpanel');
-function showTab(t) {
-  tabs.forEach(function (x) {
-    var on = x === t;
-    x.classList.toggle('on', on); x.setAttribute('aria-selected', String(on));
-  });
-  panels.forEach(function (p) { p.classList.toggle('on', p.dataset.panel === t.dataset.tab); });
-}
-tabs.forEach(function (t) { t.addEventListener('click', function () { showTab(t); }); });
-
 /* ---------- copy-to-clipboard on the code blocks */
 $$('.copy').forEach(function (b) {
   b.addEventListener('click', function () {
@@ -1667,18 +1851,82 @@ $$('.shot').forEach(function (f) {
 zoom.addEventListener('click', closeZoom);
 D.addEventListener('keydown', function (e) { if (e.key === 'Escape' && zoom.classList.contains('open')) closeZoom(); });
 
-/* ---------- contact form: validate, then open a mailto (no backend to post to) */
-var form = $('#cform'), note = $('#fnote');
+/* ---------- contact form: validate, then post to Formspree ---------------
+var form = $('#cform'), note = $('#fnote'), sendBtn = form.querySelector('button[type="submit"]');
+var cpost = $('#cpost');   // hidden iframe: the fallback target
+
+// A toast rather than only the inline #fnote, because "did that send?" is the
+// one thing a visitor should not have to hunt for.
+function toast(msg, kind) {
+  var t = $('#toast');
+  t.textContent = msg;
+  t.className = 'toast on ' + (kind || 'ok');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(function () { t.classList.remove('on'); }, 4200);
+}
+
+// The fallback posts into a hidden iframe. A native form.submit() would
+// navigate the visitor to Formspree's thank-you page, which is exactly what
+// this is meant to avoid - an iframe cannot navigate us, and it needs no CORS
+// and no fetch, so it still works when the JSON path cannot.
+function postToIframe() {
+  form.target = 'cpost';
+  form.submit();
+  form.target = '';
+  setTimeout(done, 900);   // the iframe never reports back; assume it landed
+}
+
+function done() {
+  sendBtn.disabled = false; sendBtn.textContent = 'Send message';
+  note.classList.remove('err'); note.classList.add('ok');
+  note.textContent = 'Thanks — that came through. She says hello back.';
+  form.reset();
+  toast('Message sent ✓');
+}
+
 form.addEventListener('submit', function (e) {
   e.preventDefault();
   var n = $('#fname').value.trim(), m = $('#fmail').value.trim(), s = $('#fmsg').value.trim();
   note.className = 'formnote';
   if (!n || !s) { note.classList.add('err'); note.textContent = 'Please add your name and a message.'; return; }
   if (m && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(m)) { note.classList.add('err'); note.textContent = 'That email address does not look right.'; return; }
-  var body = s + '\n\n— ' + n + (m ? ' (' + m + ')' : '');
-  W.location.href = 'mailto:hello@mas-mas.it?subject=' + encodeURIComponent('Hello Onidia') + '&body=' + encodeURIComponent(body);
-  note.classList.add('ok'); note.textContent = 'Opening your mail app… thanks for writing!';
-  form.reset();
+
+  sendBtn.disabled = true; sendBtn.textContent = 'Sending…';
+
+  if (!window.fetch) { postToIframe(); return; }
+
+  // Accept: application json asks Formspree to answer in place rather than
+  // redirect, so this is the path that can actually tell us it worked.
+  fetch(form.action, {
+    method: 'POST',
+    body: new FormData(form),
+    headers: { 'Accept': 'application/json' }
+  }).then(function (r) {
+    return r.json().catch(function () { return {}; }).then(function (d) {
+      if (!r.ok) {
+        var err = new Error((d.errors && d.errors[0] && d.errors[0].message) || ('HTTP ' + r.status));
+        err.serverRejected = true;
+        throw err;
+      }
+      return d;
+    });
+  }).then(function () {
+    done();
+  }).catch(function (err) {
+    // A rejection we can read is a real "no" - show it and keep the text.
+    // Anything else (no fetch, offline, a CORS block) still sends via the
+    // iframe, so the visitor is never dumped on an error page and the
+    // message is never lost to a network wobble.
+    if (err && err.serverRejected) {
+      sendBtn.disabled = false; sendBtn.textContent = 'Send message';
+      note.classList.add('err');
+      note.textContent = 'That did not go through: ' + err.message +
+        ' — or mail hello@mas-mas.it and I will still read it.';
+      toast('Not sent — try again', 'err');
+      return;
+    }
+    postToIframe();
+  });
 });
 
 /* ==========================================================================
