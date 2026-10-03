@@ -106,6 +106,12 @@ pre .w{color:var(--pink-tx)}
   background:var(--glass)}
 .card h3{font-size:1.05rem;margin-bottom:9px}
 .card p{margin:0;color:var(--muted);font-size:.93rem;line-height:1.66}
+/* A card that is a link. The global `a` rule paints every link teal, which is
+   right for an inline link and wrong for a whole card, so colour is taken back
+   here and the hover signal is the border instead. */
+a.card{display:block;color:inherit;text-decoration:none;border-bottom:1px solid var(--edge)}
+a.card:hover{border-bottom-color:var(--edge-2);background:var(--glass-2)}
+a.card h3{color:var(--teal-tx)}
 
 .note{border-radius:var(--r-m);border:1px solid var(--edge);border-left:3px solid var(--teal);
   padding:16px 20px;background:var(--glass);margin:18px 0}

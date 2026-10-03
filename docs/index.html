@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Documentation &mdash; Onidia</title>
+<meta name="description" content="Every Onidia guide: set up her mind with Ollama, Gemini or Bedrock, give her a voice with Typecast, and teach her to do things with agents.">
+<link rel="stylesheet" href="setup.css">
+</head>
+<body>
+
+<div class="topbar"><div class="wrap topbar-in">
+  <a class="brand" href="../index.html">&larr; Onidia</a>
+  <nav>
+    <a href="setup-gemini.html">Gemini</a>
+    <a href="setup-bedrock.html">Bedrock</a>
+    <a href="setup-hailo-ollama.html">Hailo-Ollama</a>
+    <a href="setup-typecast.html">Typecast</a>
+    <a href="agents.html">Agents</a>
+  </nav>
+</div></div>
+
+<section><div class="wrap">
+  <span class="eyebrow">Documentation</span>
+  <h1 class="h-lg" style="margin-top:20px">All of it, <span class="grad-teal">in one place.</span></h1>
+  <p class="lede">Five guides, grouped by what each one sets up. They are independent, so start
+    wherever you like: give her a mind, add a voice if you want her to sound like somebody in
+    particular, and teach her to do things whenever you feel like it.</p>
+  <div class="chips">
+    <span class="chip on">5 guides</span>
+    <span class="chip">Mind &middot; voice &middot; agents</span>
+    <span class="chip">Start anywhere</span>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2 class="h-md">Setup the Mind</h2>
+  <p class="lede" style="margin-top:0">How to set up the AI model. She needs one of these to think
+    &mdash; pick whichever suits you. They do not combine: one provider, one set of keys.</p>
+  <div class="grid" style="margin-top:20px">
+    <a class="card" href="setup-hailo-ollama.html">
+      <h3>Hailo-Ollama &rarr;</h3>
+      <p>With an AI HAT+ 2 attached, the model runs on the NPU entirely on the Pi. Nothing leaves
+        the machine and nothing costs per token.</p>
+      <div class="chips">
+        <span class="chip on">100% local</span>
+        <span class="chip">No API key</span>
+        <span class="chip">AI HAT+ 2</span>
+      </div>
+    </a>
+    <a class="card" href="setup-gemini.html">
+      <h3>Gemini &rarr;</h3>
+      <p>The default and the easiest to start with: a free key, no account to manage, no billing.
+        Five minutes and she starts answering.</p>
+      <div class="chips">
+        <span class="chip on">Free tier</span>
+        <span class="chip">No card needed</span>
+        <span class="chip">~5 minutes</span>
+      </div>
+    </a>
+    <a class="card" href="setup-bedrock.html">
+      <h3>Bedrock &rarr;</h3>
+      <p>Run her on Claude. It costs real money per token, but no key is ever written into her
+        config and the whole setup is five commands.</p>
+      <div class="chips">
+        <span class="chip on">Claude</span>
+        <span class="chip">Pay per token</span>
+        <span class="chip">~15 minutes</span>
+      </div>
+    </a>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2 class="h-md">Setup the Voice</h2>
+  <p class="lede" style="margin-top:0">How to set up text to speech. Separately from the mind: every
+    reply she writes is also spoken.</p>
+  <div class="grid" style="margin-top:20px">
+    <a class="card" href="setup-typecast.html">
+      <h3>Typecast &rarr;</h3>
+      <p>A Typecast account, an API key and a voice id, so every reply is spoken. You can audition
+        voices on their site before you spend a character of your quota.</p>
+      <div class="chips">
+        <span class="chip on">Works out of the box</span>
+        <span class="chip">Free tier available</span>
+        <span class="chip">~5 minutes</span>
+      </div>
+    </a>
+  </div>
+  <div class="note">
+    <b>You can skip this one</b>
+    <p>A demo key and voice ship with the app, so she talks from the first launch. Setting up your
+      own account is about getting <em>your</em> voice and not sharing a rate limit with everybody
+      else on the free tier.</p>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2 class="h-md">Agents</h2>
+  <p class="lede" style="margin-top:0">About agents &mdash; what they are and how to control them.
+    Not setup, exactly, but the same family of job.</p>
+  <div class="grid" style="margin-top:20px">
+    <a class="card" href="agents.html">
+      <h3>Agents &rarr;</h3>
+      <p>Drop a folder in and she can do new things: play your music, control the pet, or run a
+        script you wrote. Any language, no rebuild, and no second tool &mdash; you install, list and
+        delete them from the one binary.</p>
+      <div class="chips">
+        <span class="chip on">Any language</span>
+        <span class="chip">Zero dependencies</span>
+        <span class="chip">Nothing to rebuild</span>
+      </div>
+    </a>
+  </div>
+  <div class="note">
+    <b>Five agents already ship with her</b>
+    <p>Including the ones that play music and video from your own folders and make the pet dance
+      along. The guide explains the contract, so writing your own is about thirty lines.</p>
+  </div>
+</div></section>
+
+<footer class="foot"><div class="wrap foot-in">
+  <a href="../index.html">Onidia</a><span class="dot">&middot;</span>
+  <a href="../index.html#install">Install</a><span class="dot">&middot;</span>
+  <a href="setup-gemini.html">Gemini</a><span class="dot">&middot;</span>
+  <a href="setup-typecast.html">Voice</a><span class="dot">&middot;</span>
+  <a href="agents.html">Agents</a>
+</div></footer>
+
+</body>
+</html>
