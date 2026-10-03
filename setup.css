@@ -149,17 +149,23 @@ mark{background:rgba(236,96,156,.20);color:var(--pink-lt);padding:1px 3px;border
 .say.her span{color:var(--text)}
 
 /* --- floating content menu ------------------------------------------------
-   Only for pages that opt in with <body class="has-toc">. The rail is fixed to
-   the right edge, so the measure has to make room for it: at >=1240px the text
-   column narrows and sits left. The numbers are chosen so the rail cannot
-   collide with the topbar nav, which shares the same narrowed .wrap - at
-   1240px the text ends at 960 and the rail starts at 1000. Below the breakpoint
-   the rail is hidden outright rather than squeezed in: a contents list that
-   overlaps the prose is worse than no contents list, and the topbar already
-   carries the navigation. */
+   Only for pages that opt in with <body class="has-toc">.
+
+   A right-hand rail and a centred column cannot both have the full width, so
+   the rail's column is reserved on the body as padding and the text is then
+   centred in what is left. Reserving it as padding rather than nudging the
+   .wrap is what keeps the rail's own column out of the centring: the rail is
+   position:fixed, so it sits against the viewport edge while the content
+   centres in the remaining space - the same way index.html centres in the
+   full width.
+
+   Only at >=1240px. Below that the rail is display:none rather than squeezed
+   in: a contents list overlapping the prose is worse than no contents list,
+   and the topbar already carries the navigation. */
 .toc{display:none}
 @media(min-width:1240px){
-  body.has-toc .wrap{max-width:920px;margin-left:40px;margin-right:auto}
+  body.has-toc{padding-right:240px}
+  body.has-toc .wrap{max-width:920px;margin-left:auto;margin-right:auto}
   .toc{display:block;position:fixed;top:0;right:0;height:100vh;width:240px;
     z-index:30;overflow-y:auto;overscroll-behavior:contain;
     background:linear-gradient(180deg,rgba(15,13,26,.92),rgba(15,13,26,.82));
