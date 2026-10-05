@@ -6,11 +6,16 @@
 # one-liner has to guess it. Guessing wrong either fails to install or, worse,
 # hands apt a package it cannot execute. This script asks dpkg instead.
 #
-# Detection is `dpkg --print-architecture`, NOT `uname -m`, and the difference
-# matters on Raspberry Pi: a 64-bit kernel running 32-bit userland (the usual
-# Pi OS today) reports aarch64 from uname but armhf from dpkg, and the .deb has
-# to be the armhf one. dpkg is also the exact vocabulary used to match a
-# package, so whatever we pick here is what apt would have picked itself.
+# Detection asks `dpkg --print-architecture` first, because that is the exact
+# vocabulary used to match a package - whatever we pick here is what apt would
+# have picked itself. It matters on Raspberry Pi: a 64-bit kernel running
+# 32-bit userland (the usual Pi OS today) reports aarch64 from uname but armhf
+# from dpkg, and the .deb has to be the armhf one.
+#
+# There is exactly one place uname overrides dpkg, and it is the whole reason
+# armel exists: Raspberry Pi OS is "armhf" on EVERY 32-bit board, including the
+# ARMv6 ones (the original Pi Zero / Pi 1). On those dpkg cannot tell you what
+# the CPU is and uname can, so armv6l wins and we take the armel package.
 #
 # The armel/armhf split is equally not cosmetic - see packaging/mkdeb.sh:
 # Debian's armhf requires ARMv7 + VFPv3, so a GOARM=6 build (Pi Zero, Pi 1)
@@ -37,7 +42,13 @@
 #   ONIDIA_VERSION  pin a version instead of resolving the newest one
 set -eu
 
-API="${ONIDIA_API:-https://api.github.com/repos/portege/onidia-web/releases/latest}"
+# The release LIST, deliberately not .../releases/latest. That endpoint only
+# ever answers with the newest release that is NOT a prerelease, and returns
+# 404 when they all are - which is how "no Onidia package published for armhf"
+# was reported while the armhf .deb sat on the only release we had, flagged
+# prerelease. The plain list includes prereleases and still puts the newest
+# release first.
+API="${ONIDIA_API:-https://api.github.com/repos/portege/onidia-web/releases}"
 REPO="${ONIDIA_REPO:-https://onidia.babeh.com/download/apt}"
 DRYRUN=0
 ARCHONLY=0
@@ -105,16 +116,31 @@ fetch_to() {
 # 1. which architecture is this, in the words the .deb filenames use?
 # ---------------------------------------------------------------------------
 detect_arch() {
+	m=$(uname -m 2>/dev/null || echo unknown)
+
 	if have dpkg; then
 		a=$(dpkg --print-architecture 2>/dev/null || echo '')
 		case "$a" in
-			amd64|arm64|armhf|armel|i386) printf '%s\n' "$a"; return 0 ;;
+			amd64|arm64|armel|i386) printf '%s\n' "$a"; return 0 ;;
+			armhf)
+				# dpkg says "armhf" on every 32-bit Raspberry Pi OS, and that
+				# includes the ARMv6 boards: the OS is armhf, the CPU is not.
+				# The armhf package is a GOARM=7 build and dies with SIGILL on a
+				# BCM2835, so on an ARMv6 CPU uname outranks the userland and we
+				# take armel. Same rule as `make deb TARGET=` and the Makefile's
+				# "uname -m on the TARGET decides: armv6l -> armel".
+				# An aarch64 kernel with 32-bit userland does NOT land here, so
+				# that still correctly resolves to armhf.
+				case "$m" in
+					armv6l|armv5*) echo armel; return 0 ;;
+				esac
+				printf '%s\n' "$a"; return 0 ;;
 		esac
 	fi
 
 	# No dpkg, or an architecture we have no build for. Fall back to uname,
 	# using the same mapping as packaging/mkdeb.sh.
-	case "$(uname -m 2>/dev/null || echo unknown)" in
+	case "$m" in
 		x86_64|amd64)        echo amd64 ;;
 		aarch64|arm64)       echo arm64 ;;
 		armv7l|armhf)        echo armhf ;;
@@ -168,24 +194,34 @@ INDEX="$REPO/dists/stable/main/binary-$ARCH/Packages"
 # version and we do not know it until we ask; the API is how you ask. No token
 # needed - unauthenticated is 60 requests an hour per IP, which is plenty for
 # one install per person.
+#
+# $API is the release LIST rather than .../releases/latest - see where it is
+# set, and the note there on why "latest" 404s for a prerelease-only repo.
 resolve_github() {
 	json=$(fetch "$API") || return 1
 	[ -n "$json" ] || return 1
 
 	# The API quotes every value, so this needs no JSON parser and no jq.
-	tag=$(printf '%s\n' "$json" \
-		| grep -o '"tag_name": *"[^"]*"' \
-		| head -n1 | sed 's/^.*"\(.*\)"$/\1/')
-	[ -n "$tag" ] || return 1
-	version=${tag#v}        # tags read v1.0.0, filenames read 1.0.0
-
+	#
 	# Only this architecture's asset. Matching _<arch>.deb is exact, so an
-	# armhf search cannot be satisfied by an arm64 file or the reverse.
+	# armhf search cannot be satisfied by an arm64 file or the reverse. The
+	# list is newest release first, so head -n1 is the newest release that
+	# actually carries this architecture - a newer one that shipped without
+	# armhf no longer hides the older one that has it.
 	url=$(printf '%s\n' "$json" \
 		| grep -o '"browser_download_url": *"[^"]*"' \
-		| grep "onidia_${version}_${ARCH}\.deb" \
+		| grep "onidia_.*_${ARCH}\.deb" \
 		| head -n1 | sed 's/^.*: *"//; s/"$//')
 	[ -n "$url" ] || return 1
+
+	# The version comes out of the filename (onidia_1.0.0_armhf.deb) rather
+	# than out of tag_name, so the tag and the asset cannot disagree, and a
+	# tag that does not read as a version cannot break the match. Tags read
+	# v1.0.0 while filenames read 1.0.0; this sidesteps the difference.
+	name=${url##*/}
+	version=${name#onidia_}
+	version=${version%_${ARCH}.deb}
+	[ -n "$version" ] || return 1
 
 	printf '%s %s\n' "$version" "$url"
 }
@@ -277,6 +313,18 @@ got=$(dpkg-deb -f "$DEB" Architecture)
 [ "$got" = "$ARCH" ] || die "downloaded a $got package but this machine is $ARCH.
        The repository is serving the wrong file - please report it."
 
+# The filename is where the version came from, and it is what we print and what
+# apt compares against next time, so the package has to agree with it. Asking
+# the artifact replaces the old tag-versus-filename cross-check, which cannot
+# survive the move off releases/latest, and is a better check anyway: it is the
+# thing being installed answering, not a string beside it. 1.0.0-2 is still the
+# upstream 1.0.0, hence the strip.
+gotv=$(dpkg-deb -f "$DEB" Version 2>/dev/null || echo '')
+upstream=${gotv%%-*}
+[ "$upstream" = "$VERSION" ] || die "the package claims version $gotv but its filename says $VERSION.
+       $URL
+       The upload went wrong - please report it."
+
 # ---------------------------------------------------------------------------
 # 4. install
 #
@@ -292,10 +340,47 @@ else
 	die "need root to install; re-run it with sudo"
 fi
 
+# The architecture apt/dpkg think they are, which can differ from $ARCH: on an
+# ARMv6 Pi Zero, Raspberry Pi OS calls itself armhf while detect_arch knows the
+# CPU is ARMv6 and asks for armel (see detect_arch).
+sysarch=$(dpkg --print-architecture 2>/dev/null || echo '')
+
 say "onidia: installing"
-# shellcheck disable=SC2086  # SUDO is deliberately empty or one word
-# shellcheck disable=SC2086  # "$DEB" must stay quoted, APT is a single word
-$SUDO "$APT" install -y "$DEB" || die "apt install failed"
+if [ "$ARCH" = "$sysarch" ]; then
+	# shellcheck disable=SC2086  # SUDO is deliberately empty or one word
+	# shellcheck disable=SC2086  # "$DEB" must stay quoted, APT is a single word
+	$SUDO "$APT" install -y "$DEB" || die "apt install failed"
+else
+	# A package for a Debian architecture this system has not enabled. dpkg
+	# refuses it outright ("package architecture (armel) does not match
+	# system (armhf)"), and apt inherits the same objection - which would
+	# leave the Pi Zero with no way to install anything, armel being the only
+	# build its CPU can execute.
+	#
+	# Forcing it is safe here and nowhere else, because of exactly what this
+	# package is: a statically linked Go binary with an EMPTY Depends (check
+	# with `dpkg-deb -f onidia_<ver>_<arch>.deb Depends`) - no ABI, no shared
+	# library, nothing for dpkg to match against the system architecture.
+	say "onidia: this system reports $sysarch, the package is $ARCH - forcing it"
+	# shellcheck disable=SC2086  # SUDO is deliberately empty or one word
+	$SUDO dpkg -i --force-architecture "$DEB" \
+		|| die "could not install the $ARCH package on this $sysarch system"
+
+	# dpkg does not act on Recommends, and apt would only look for them under
+	# the package's own architecture, where they do not exist. They are plain
+	# package names though (alsa-utils, python3, ...), so install them for the
+	# system we actually have. Optional either way: a miss only turns a
+	# feature off. 'a | b, c' -> first alternative of each group -> 'a c'.
+	extras=$(dpkg-deb -f "$DEB" Recommends 2>/dev/null || true)
+	extras=$(printf '%s\n' "$extras" | tr ',' '\n' \
+		| sed 's/^[[:space:]]*//; s/[[:space:]]*|.*//' | grep -v '^$' \
+		| tr '\n' ' ')
+	if [ -n "$extras" ]; then
+		# shellcheck disable=SC2086  # extras is deliberately an unquoted list
+		$SUDO "$APT" install -y $extras \
+			|| say "onidia: NOTE - optional packages skipped; features above are off"
+	fi
+fi
 
 say ""
 say "onidia: installed. Two more things and she is awake:"
