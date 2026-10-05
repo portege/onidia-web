@@ -1462,7 +1462,9 @@ curl -fsSL https://onidia.babeh.com/install.sh | sh -s -- --arch      <span clas
         she needs in the same step. One thing is left for you: the package installs her config to
         <code>/opt/onidia/share/chat-app.ini</code> rather than into your home, so it can never end up
         root-owned and uneditable. Copy it across, add your key, start <b>onidia</b> before
-        <b>onidia-chat</b>, and she's awake.
+        <b>onidia-chat</b>, and she's awake. Both programs read that one file &mdash; the pet
+        resolves it exactly as the window does &mdash; so the sleep window and busy window in
+        there reach her too.
       </p>
     </div>
 

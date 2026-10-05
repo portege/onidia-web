@@ -268,6 +268,12 @@ stt-device = hw:2,0</pre>
     <div class="say you"><b>1am</b><span>&ldquo;are you still up?&rdquo;</span></div>
     <div class="say her"><b>She</b><span>Inside her sleep time: half-asleep and briefly annoyed
       about it, rather than bright and chatty at one in the morning.</span></div>
+    <div class="note">
+      <b>One file, both programs</b>
+      <p>Sleep time and busy time are saved to <code>~/.config/chat-app/chat-app.ini</code>, and
+        <b>onidia</b> the pet looks in exactly the same places for it as the window does. You set
+        it once, and both halves of her obey it.</p>
+    </div>
   </div></div>
 
   <div class="step"><div class="step-n">4</div><div class="step-b">
@@ -303,6 +309,8 @@ stt-device = hw:2,0</pre>
     <p><strong>Save</strong> writes your choices into <code>~/.config/chat-app/chat-app.ini</code>,
       so they survive a restart. <strong>Cancel</strong> throws the whole panel away and leaves the
       previous settings untouched.</p>
+    <p><b>onidia</b> the pet reads that same file, so a change made here is a change made for
+      both of them.</p>
   </div>
 </div></section>
 

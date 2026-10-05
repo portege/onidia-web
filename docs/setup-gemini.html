@@ -58,9 +58,11 @@ nano ~/.config/chat-app/chat-app.ini</pre>
     </div>
     <div class="note">
       <b>Where she looks for it</b>
-      <p>First <code>./chat-app.ini</code>, then next to the binary, then
+      <p>First <code>./chat-app.ini</code>, then the file next to the running binary, then
         <code>~/.config/chat-app/chat-app.ini</code>. On a package install the first two cannot
         see it, so this path is the one that actually matters.</p>
+      <p>Both programs walk exactly that list. <b>onidia</b> the pet reads the same file as
+        <b>onidia-chat</b>, so a sleep window or busy window set here reaches her too.</p>
     </div>
   </div></div>
 
