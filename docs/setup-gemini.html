@@ -56,6 +56,14 @@
 <pre id="s2">mkdir -p ~/.config/chat-app
 nano ~/.config/chat-app/chat-app.ini</pre>
     </div>
+    <!-- The three-path order below is a CONTRACT, not prose: it is what
+         onidia-chat/internal/confpath.Candidates() implements and what
+         onidia/sleep.go's configCandidates() has to copy verbatim, because
+         those two are separate Go modules and cannot share the code. This
+         comment, that function and that copy are the only three places the
+         list is written down - change one, change all three. The tests that
+         pin it are confpath's TestDefaultFallsBackToUserConfig and onidia's
+         TestConfigCandidatesMatchChatWindow. -->
     <div class="note">
       <b>Where she looks for it</b>
       <p>First <code>./chat-app.ini</code>, then the file next to the running binary, then

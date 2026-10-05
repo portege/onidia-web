@@ -268,6 +268,11 @@ stt-device = hw:2,0</pre>
     <div class="say you"><b>1am</b><span>&ldquo;are you still up?&rdquo;</span></div>
     <div class="say her"><b>She</b><span>Inside her sleep time: half-asleep and briefly annoyed
       about it, rather than bright and chatty at one in the morning.</span></div>
+    <!-- "Exactly the same places" below means the three steps documented in
+         setup-gemini.html under "Where she looks for it" - the order
+         confpath.Candidates() implements and onidia/sleep.go's
+         configCandidates() copies. Read the CONTRACT comment there before
+         changing what either program reads. -->
     <div class="note">
       <b>One file, both programs</b>
       <p>Sleep time and busy time are saved to <code>~/.config/chat-app/chat-app.ini</code>, and
