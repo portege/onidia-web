@@ -37,7 +37,13 @@
 #   ONIDIA_VERSION  pin a version instead of resolving the newest one
 set -eu
 
-API="${ONIDIA_API:-https://api.github.com/repos/portege/onidia-web/releases/latest}"
+# The release LIST, deliberately not .../releases/latest. That endpoint only
+# ever answers with the newest release that is NOT a prerelease, and returns
+# 404 when they all are - which is how "no Onidia package published for armhf"
+# was reported while the armhf .deb sat on the only release we had, flagged
+# prerelease. The plain list includes prereleases and still puts the newest
+# release first.
+API="${ONIDIA_API:-https://api.github.com/repos/portege/onidia-web/releases}"
 REPO="${ONIDIA_REPO:-https://onidia.babeh.com/download/apt}"
 DRYRUN=0
 ARCHONLY=0
@@ -168,24 +174,34 @@ INDEX="$REPO/dists/stable/main/binary-$ARCH/Packages"
 # version and we do not know it until we ask; the API is how you ask. No token
 # needed - unauthenticated is 60 requests an hour per IP, which is plenty for
 # one install per person.
+#
+# $API is the release LIST rather than .../releases/latest - see where it is
+# set, and the note there on why "latest" 404s for a prerelease-only repo.
 resolve_github() {
 	json=$(fetch "$API") || return 1
 	[ -n "$json" ] || return 1
 
 	# The API quotes every value, so this needs no JSON parser and no jq.
-	tag=$(printf '%s\n' "$json" \
-		| grep -o '"tag_name": *"[^"]*"' \
-		| head -n1 | sed 's/^.*"\(.*\)"$/\1/')
-	[ -n "$tag" ] || return 1
-	version=${tag#v}        # tags read v1.0.0, filenames read 1.0.0
-
+	#
 	# Only this architecture's asset. Matching _<arch>.deb is exact, so an
-	# armhf search cannot be satisfied by an arm64 file or the reverse.
+	# armhf search cannot be satisfied by an arm64 file or the reverse. The
+	# list is newest release first, so head -n1 is the newest release that
+	# actually carries this architecture - a newer one that shipped without
+	# armhf no longer hides the older one that has it.
 	url=$(printf '%s\n' "$json" \
 		| grep -o '"browser_download_url": *"[^"]*"' \
-		| grep "onidia_${version}_${ARCH}\.deb" \
+		| grep "onidia_.*_${ARCH}\.deb" \
 		| head -n1 | sed 's/^.*: *"//; s/"$//')
 	[ -n "$url" ] || return 1
+
+	# The version comes out of the filename (onidia_1.0.0_armhf.deb) rather
+	# than out of tag_name, so the tag and the asset cannot disagree, and a
+	# tag that does not read as a version cannot break the match. Tags read
+	# v1.0.0 while filenames read 1.0.0; this sidesteps the difference.
+	name=${url##*/}
+	version=${name#onidia_}
+	version=${version%_${ARCH}.deb}
+	[ -n "$version" ] || return 1
 
 	printf '%s %s\n' "$version" "$url"
 }
@@ -276,6 +292,18 @@ fi
 got=$(dpkg-deb -f "$DEB" Architecture)
 [ "$got" = "$ARCH" ] || die "downloaded a $got package but this machine is $ARCH.
        The repository is serving the wrong file - please report it."
+
+# The filename is where the version came from, and it is what we print and what
+# apt compares against next time, so the package has to agree with it. Asking
+# the artifact replaces the old tag-versus-filename cross-check, which cannot
+# survive the move off releases/latest, and is a better check anyway: it is the
+# thing being installed answering, not a string beside it. 1.0.0-2 is still the
+# upstream 1.0.0, hence the strip.
+gotv=$(dpkg-deb -f "$DEB" Version 2>/dev/null || echo '')
+upstream=${gotv%%-*}
+[ "$upstream" = "$VERSION" ] || die "the package claims version $gotv but its filename says $VERSION.
+       $URL
+       The upload went wrong - please report it."
 
 # ---------------------------------------------------------------------------
 # 4. install
