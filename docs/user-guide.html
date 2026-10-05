@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>User Guide &mdash; Onidia</title>
+<meta name="description" content="How to start and stop Onidia, talk to her by voice, set her up, read the conversation back, swap in Kama, and report a bug to the engineer.">
+<link rel="stylesheet" href="setup.css">
+</head>
+<body>
+
+<div class="topbar"><div class="wrap topbar-in">
+  <a class="brand" href="../index.html">&larr; Onidia</a>
+  <nav>
+    <a href="user-guide.html">User guide</a>
+    <a href="setup-gemini.html">Gemini</a>
+    <a href="setup-bedrock.html">Bedrock</a>
+    <a href="setup-hailo-ollama.html">Hailo-Ollama</a>
+    <a href="setup-typecast.html">Typecast</a>
+    <a href="agents.html">Agents</a>
+  </nav>
+</div></div>
+
+<section><div class="wrap">
+  <span class="eyebrow">User guide</span>
+  <h1 class="h-lg" style="margin-top:20px">How to actually <span class="grad-teal">use her.</span></h1>
+  <p class="lede">The setup guides get her thinking. This one is the part afterwards: how to start
+    her, how to put her away, how to talk instead of type, what the settings really do, and where
+    your conversation goes. If Onidia is already talking to you, you can stop reading this.</p>
+  <div class="chips">
+    <span class="chip on">No setup required</span>
+    <span class="chip">Covers both apps</span>
+    <span class="chip">~5 minutes</span>
+  </div>
+</div></section>
+
+<nav class="toc" aria-label="On this page">
+  <div class="toc-in">
+    <b>On this page</b>
+    <ol>
+        <li><a href="#start"><i></i><span>Opening the chat window</span></a></li>
+        <li><a href="#pet"><i></i><span>Bringing Onidia on screen</span></a></li>
+        <li><a href="#quit"><i></i><span>Sending her away</span></a></li>
+        <li><a href="#voice"><i></i><span>Talking instead of typing</span></a></li>
+        <li><a href="#settings"><i></i><span>Settings, field by field</span></a></li>
+        <li><a href="#history"><i></i><span>The conversation &amp; your privacy</span></a></li>
+        <li><a href="#kama"><i></i><span>Kama, the other character</span></a></li>
+        <li><a href="#feedback"><i></i><span>Telling Boyke what you think</span></a></li>
+    </ol>
+    <div class="toc-bar" aria-hidden="true"><i></i></div>
+  </div>
+</nav>
+
+<section id="start"><div class="wrap">
+  <h2 class="h-md">Opening the chat window</h2>
+  <p class="lede" style="margin-top:0">Onidia is two programs. <b>Onidia Chat</b> is the window you
+    talk to her in; <b>Onidia</b> is the little character who lives on your desktop. Start with the
+    window &mdash; it is the one that checks your keys and tells you when something is wrong.</p>
+
+  <div class="step"><div class="step-n">1</div><div class="step-b">
+    <h3>From the start menu</h3>
+    <p>Open the applications menu and go to <strong>Internet</strong>. Chat clients live there
+      alongside browsers and mail, which is why she is filed under it rather than under Games.</p>
+    <div class="note">
+      <b>She is listed as &ldquo;Onidia Chat&rdquo;</b>
+      <p>That is the window. The character on your desktop is a separate entry called
+        <strong>Onidia</strong>, under Games &mdash; see the next section.</p>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-n">2</div><div class="step-b">
+    <h3>From a terminal</h3>
+    <div class="codeblock">
+      <div class="cbar"><b>terminal</b><button class="copy" data-copy="#g1">copy</button></div>
+<pre id="g1">onidia-chat</pre>
+    </div>
+    <p>Both programs are installed into your PATH, so they work from any directory and you never
+      need the full path. No Onidia yet? The <a href="../index.html#install">install section</a>
+      has a one-liner that works out which build your machine needs.</p>
+    <p>One thing the installer deliberately does <em>not</em> do for you: put her config where she
+      looks for it. The package installs it to <code>/opt/onidia/share/chat-app.ini</code> and leaves
+      your home alone, because a file written there by <code>apt</code> would be root-owned and you
+      could not edit your own key afterwards. So once, before the first launch:</p>
+    <div class="codeblock">
+      <div class="cbar"><b>terminal</b><button class="copy" data-copy="#g0">copy</button></div>
+<pre id="g0">mkdir -p ~/.config/chat-app
+cp -n /opt/onidia/share/chat-app.ini ~/.config/chat-app/   <span class="c"># -n never overwrites yours</span></pre>
+    </div>
+    <p>Skip it if you use environment variables instead of the file, and
+      <a href="setup-gemini.html">a setup guide</a> for the provider you picked will usually write
+      it for you.</p>
+  </div></div>
+
+  <div class="step"><div class="step-n">3</div><div class="step-b">
+    <h3>First launch</h3>
+    <p>She checks the environment before the window opens and tells you plainly what is missing
+      rather than failing mysteriously later. If she has nothing to think with yet, you will be sent
+      to one of the setup guides &mdash; <a href="setup-gemini.html">Gemini</a> is the five-minute
+      option. Once she is wired up, she greets you once when the window opens.</p>
+    <div class="note">
+<section id="pet"><div class="wrap">
+  <h2 class="h-md">Bringing Onidia on screen</h2>
+  <p class="lede" style="margin-top:0">She is the small anime character who sits on your desktop and
+    reacts to what she says. Three ways to start her; they all do exactly the same thing.</p>
+
+  <div class="step"><div class="step-n">1</div><div class="step-b">
+    <h3>The Haiya! button &mdash; the usual way</h3>
+    <p>There is a pill in the header of the chat window that says <strong>Haiya!</strong> Click it
+      and she appears on your desktop.</p>
+    <div class="note">
+      <b>Its colour tells you what it will do</b>
+      <p><b>Teal</b> means she is not running and the button will bring her on screen. <b>Pink</b>
+        means she is already running and the same button will send her away. Nothing is ambiguous,
+        and there is only ever one of her &mdash; you do not get two Onidias, you get one appearing
+        and then leaving.</p>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-n">2</div><div class="step-b">
+    <h3>From the start menu</h3>
+    <p><strong>Games &rarr; Onidia.</strong> She is a companion, not a utility, so that is where the
+      menu puts her.</p>
+  </div></div>
+
+  <div class="step"><div class="step-n">3</div><div class="step-b">
+    <h3>From a terminal</h3>
+    <div class="codeblock">
+      <div class="cbar"><b>terminal</b><button class="copy" data-copy="#g2">copy</button></div>
+<pre id="g2">onidia</pre>
+    </div>
+    <p>If you are starting both by hand, start <b>her first</b>. She creates the little speech pipe
+      that the chat window writes into, so the window has something to talk to.</p>
+  </div></div>
+</div></section>
+
+<section id="quit"><div class="wrap">
+  <h2 class="h-md">Sending her away</h2>
+  <p class="lede" style="margin-top:0">She never vanishes abruptly. She says goodbye, waves and
+    poofs out &mdash; both ways out do that, so whichever you pick she leaves politely.</p>
+
+  <div class="grid">
+    <div class="card">
+      <h3>The Haiya! button</h3>
+      <p>While she is running the button is <strong>pink</strong>. Click it and she picks a farewell,
+        waves and disappears. The button goes back to teal, ready to bring her on screen again.</p>
+    </div>
+    <div class="card">
+      <h3>Right-click the character</h3>
+      <p>Right-click her on the desktop and she poofs out and closes. The quickest way to clear her
+        when the chat window is behind something else.</p>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>Started her from a terminal?</b>
+    <p>Press <strong>Ctrl-C</strong> in that terminal. It is the plainest exit of the three, and
+      unlike the other two it skips the goodbye.</p>
+  </div>
+
+  <div class="note warn">
+    <b>Closing the chat window does not close her</b>
+<section id="voice"><div class="wrap">
+  <h2 class="h-md">Talking instead of typing</h2>
+  <p class="lede" style="margin-top:0">A microphone button sits in the input bar, to the left of the
+    box where you type. It is only drawn when speech input is switched on, so if you cannot see it
+    that is the reason &mdash; not a bug.</p>
+
+  <div class="step"><div class="step-n">1</div><div class="step-b">
+    <h3>Using it</h3>
+    <div class="say you"><b>You</b><span>Click the microphone and start talking</span></div>
+    <div class="say her"><b>She</b><span>Records while you speak, stops when you stop, and drops the
+      words into the input box for you to check before sending.</span></div>
+    <p>Two settings in the gear menu make that faster. <strong>Auto stop</strong> ends the take when
+      you stop talking, so you never have to find the button again. <strong>Auto submit</strong>
+      sends it the moment transcription finishes, turning the whole thing into a conversation with no
+      typing at all.</p>
+  </div></div>
+
+  <div class="step"><div class="step-n">2</div><div class="step-b">
+    <h3>What it needs</h3>
+    <p>Two things, both outside Onidia: a way to record, and something to do the recognising.</p>
+    <div class="codeblock">
+      <div class="cbar"><b>terminal</b><button class="copy" data-copy="#g3">copy</button></div>
+<pre id="g3">sudo apt install pipewire-bin alsa-utils pulseaudio-utils</pre>
+    </div>
+    <p>She looks for a recorder in this order and takes the first one it finds:
+      <code>pw-record</code>, <code>parecord</code>, <code>arecord</code>, <code>ffmpeg</code>.
+      Those three packages cover the first three &mdash; <code>pipewire-bin</code> for
+      <code>pw-record</code>, <code>pulseaudio-utils</code> for <code>parecord</code>,
+      <code>alsa-utils</code> for <code>arecord</code> &mdash; and any one of them is enough on its
+      own. Add <code>ffmpeg</code> only if you would rather she used that.</p>
+  </div></div>
+
+  <div class="step"><div class="step-n">3</div><div class="step-b">
+    <h3>Choosing what does the listening</h3>
+    <p>Set <code>stt</code> in your config file to one of three backends.</p>
+    <div class="codeblock">
+      <div class="cbar"><b>config</b><button class="copy" data-copy="#g4">copy</button></div>
+<pre id="g4">stt = whisper
+
+# and, only if you have more than one microphone:
+stt-device = hw:2,0</pre>
+    </div>
+    <p><b>transcribe</b> is the default. It uses Amazon Transcribe, which is quick and accurate but
+      needs AWS credentials allowed to call <code>transcribe:StartStreamTranscription</code>.
+      <b>whisper</b> runs the recognition on the Pi itself, so nothing is sent anywhere and there is
+      no bill &mdash; slower on a Pi, but private. <b>off</b> takes the microphone button away
+      again.</p>
+    <div class="note">
+      <b>More than one microphone?</b>
+      <p>Leave <code>stt-device</code> empty and she uses the system default. Fill it in with a
+        PipeWire node name for <code>pw-record</code> or <code>parecord</code>, or an ALSA device
+        such as <code>hw:2,0</code> for <code>arecord</code> and <code>ffmpeg</code>.</p>
+    </div>
+  </div></div>
+</div></section>
+
+
+    <p>The two are independent. If you close the window while she is still on your desktop, she stays
+      there. Send her away with one of the two methods above.</p>
+  </div>
+</div></section>
+
+
+      <b>She only greets you when she is awake</b>
+<section id="settings"><div class="wrap">
+  <h2 class="h-md">Settings, field by field</h2>
+  <p class="lede" style="margin-top:0">The gear in the chat window header. Everything below is
+    optional &mdash; the defaults are sensible &mdash; but these are the dials you are meant to
+    turn.</p>
+
+  <figure class="shot">
+    <img src="statics/img/settings.png" alt="The Onidia settings dialog, showing name, character age, sleep time, busy time and the checkboxes.">
+    <figcaption>The settings dialog, exactly as it appears in the window.</figcaption>
+  </figure>
+
+  <div class="step"><div class="step-n">1</div><div class="step-b">
+    <h3>Name</h3>
+    <p>What she calls herself. It replaces the name in her persona, so she signs her replies as
+      that. Clearing the field does not erase the name she already had &mdash; it goes back to
+      whatever her prompt originally said.</p>
+  </div></div>
+
+  <div class="step"><div class="step-n">2</div><div class="step-b">
+    <h3>Character age</h3>
+    <p>A dropdown from <strong>7 to 13</strong>, starting on 10. She is told her age and keeps her
+      replies age-appropriate, which is the single easiest way to change how much she talks down to
+      you.</p>
+  </div></div>
+
+  <div class="step"><div class="step-n">3</div><div class="step-b">
+    <h3>Sleep time and busy time</h3>
+    <p>Both are a <strong>from</strong> and a <strong>to</strong>, to the quarter hour, and both
+      understand windows that run past midnight &mdash; set sleep to 22:00&nbsp;&rarr;&nbsp;07:00
+      and it means what it looks like.</p>
+    <div class="grid">
+      <div class="card">
+        <h3>Sleep time</h3>
+        <p>She is told the schedule, so a message that lands inside those hours catches her sleepy
+          and half-asleep. It also stops her greeting you at startup while she is asleep.</p>
+      </div>
+      <div class="card">
+        <h3>Busy time</h3>
+        <p>Keeps unprompted messages from interrupting her. She will not break off to greet you
+          while she is in the middle of something.</p>
+      </div>
+    </div>
+    <div class="say you"><b>1am</b><span>&ldquo;are you still up?&rdquo;</span></div>
+    <div class="say her"><b>She</b><span>Inside her sleep time: half-asleep and briefly annoyed
+      about it, rather than bright and chatty at one in the morning.</span></div>
+    <!-- "Exactly the same places" below means the three steps documented in
+         setup-gemini.html under "Where she looks for it" - the order
+         confpath.Candidates() implements and onidia/sleep.go's
+         configCandidates() copies. Read the CONTRACT comment there before
+         changing what either program reads. -->
+    <div class="note">
+      <b>One file, both programs</b>
+      <p>Sleep time and busy time are saved to <code>~/.config/chat-app/chat-app.ini</code>, and
+        <b>onidia</b> the pet looks in exactly the same places for it as the window does. You set
+        it once, and both halves of her obey it.</p>
+    </div>
+  </div></div>
+
+  <div class="step"><div class="step-n">4</div><div class="step-b">
+    <h3>Character: Onidia or Kama</h3>
+    <p>Which of the two she appears as. It takes effect the next time she is launched, so save the
+      settings and then use the Haiya! button (or right-click her away first). See
+      <a href="#kama">Kama</a> below.</p>
+  </div></div>
+
+  <div class="step"><div class="step-n">5</div><div class="step-b">
+    <h3>The five checkboxes</h3>
+    <p><strong>Mute speech</strong> stops her saying anything out loud while still showing every
+      reply as text. <strong>Thinking bubble</strong> shows that she is working instead of leaving
+      you at a blank box. <strong>Auto submit</strong> and <strong>Auto stop</strong> belong to the
+      microphone and are explained under <a href="#voice">talking instead of typing</a>.</p>
+  </div></div>
+
+  <div class="step"><div class="step-n">6</div><div class="step-b">
+    <h3>Demo mode</h3>
+    <p>Off by default, and the difference is big. Off means she is <strong>planted</strong>: she
+      stays where she is and only reacts when you speak to her. On means she <strong>roams and
+      chatters</strong> &mdash; she wanders the desktop and starts conversations on her own.</p>
+    <div class="note">
+      <b>Good for showing her off</b>
+      <p>Demo mode is the entertaining one. Turn it on, leave her alone, and go and do something
+        else. Just know she will use the provider while she does, so it costs tokens while you
+        are not watching.</p>
+    </div>
+  </div></div>
+
+  <div class="note">
+    <b>Save and Cancel</b>
+    <p><strong>Save</strong> writes your choices into <code>~/.config/chat-app/chat-app.ini</code>,
+      so they survive a restart. <strong>Cancel</strong> throws the whole panel away and leaves the
+      previous settings untouched.</p>
+    <p><b>onidia</b> the pet reads that same file, so a change made here is a change made for
+      both of them.</p>
+  </div>
+</div></section>
+
+
+      <p>If you start her inside her own sleep time or busy time, the greeting is skipped on
+        purpose and the window just opens quietly. That is not a failure.</p>
+    </div>
+  </div></div>
+</div></section>
+
+<section id="history"><div class="wrap">
+  <h2 class="h-md">The conversation &amp; your privacy</h2>
+  <p class="lede" style="margin-top:0">Reading back what you said, and what she said &mdash; and
+    what happens to it afterwards.</p>
+
+  <div class="step"><div class="step-n">1</div><div class="step-b">
+    <h3>Opening and closing the conversation</h3>
+    <p>The <strong>+</strong> button in the header opens the conversation. It turns into
+      <strong>&minus;</strong> and folds it away again, which is handy when you want the character
+      on your desktop but not a window of chat over it.</p>
+  </div></div>
+
+  <figure class="shot">
+    <img src="statics/img/conversation.png" alt="A conversation in the Onidia chat window, with messages from you and from Onidia.">
+    <figcaption>What the conversation looks like once it gets going.</figcaption>
+  </figure>
+
+  <div class="step"><div class="step-n">2</div><div class="step-b">
+    <h3>It is not stored anywhere</h3>
+    <p>This is worth being precise about, because &ldquo;no history&rdquo; is easy to say and easy to
+      get wrong. The truth is:</p>
+    <div class="note">
+      <b>On the Pi: nothing</b>
+      <p>The conversation lives in the chat window's memory for as long as the window is open. There
+        is no transcript file, no database and no upload. The only file Onidia writes is her own
+        settings file, <code>~/.config/chat-app/chat-app.ini</code>. Close the window and the
+        conversation is gone &mdash; there is nothing to reopen, because nothing was kept.</p>
+    </div>
+    <div class="note warn">
+      <b>But she does send it somewhere to think</b>
+      <p>That is unavoidable: every message you send goes to whichever provider you configured
+        &mdash; Google, Amazon, or your local Ollama. What we do not do is keep a copy. Choose
+        <a href="setup-hailo-ollama.html">Hailo-Ollama</a> if you want that conversation to stay on
+        the machine entirely.</p>
+    </div>
+    <p>One practical consequence: the whole conversation from the current session is sent along with
+      each new message, so she really does remember what you said earlier in the same session. A
+      very long chat costs more, and eventually a chat that runs past the model&rsquo;s context will
+      have to start over. Opening a fresh window is the equivalent of a fresh start.</p>
+  </div></div>
+</div></section>
+
+<section id="kama"><div class="wrap">
+  <h2 class="h-md">Kama, the other character</h2>
+  <p class="lede" style="margin-top:0">Onidia is not the only one. <strong>Kama</strong> is the boy
+    in the red hoodie &mdash; the same application, the same mind and the same settings, with a
+    different character on screen.</p>
+
+  <figure class="shot">
+    <div class="shot-ph">
+      <span><b>Kama</b>
+      Screenshot not added yet.<br>
+      Drop the image here as <code>statics/img/kama.png</code> and this box disappears.</span>
+    </div>
+    <figcaption>Placeholder &mdash; drop <code>statics/img/kama.png</code> into this folder to
+      replace it.</figcaption>
+  </figure>
+
+  <div class="step"><div class="step-n">1</div><div class="step-b">
+    <h3>Switching to him</h3>
+    <p>Open the gear menu, pick <strong>Kama</strong> in the CHARACTER row, and save. The next time
+      she is launched you get him instead &mdash; so if Onidia is on screen, right-click her away
+      first, then press the Haiya! button again.</p>
+  </div></div>
+
+  <div class="step"><div class="step-n">2</div><div class="step-b">
+    <h3>Or straight from a terminal</h3>
+    <div class="codeblock">
+      <div class="cbar"><b>terminal</b><button class="copy" data-copy="#g5">copy</button></div>
+<pre id="g5">onidia -character kama</pre>
+    </div>
+    <p>The Haiya! button follows whatever you last chose in the settings, so launching him by hand
+      does not change the button &mdash; set it in the gear menu if you want the switch to stick.</p>
+  </div></div>
+</div></section>
+
+<section id="feedback"><div class="wrap">
+  <h2 class="h-md">Telling Boyke what you think</h2>
+  <p class="lede" style="margin-top:0">Onidia is made by one engineer, <strong>Boyke</strong>, and he
+    would rather hear from you than not. Bugs, ideas, something she said that was brilliant or
+    something she did that was not &mdash; all of it welcome.</p>
+
+  <div class="step"><div class="step-n">1</div><div class="step-b">
+    <h3>Use the form</h3>
+    <p>Scroll to the contact form at the bottom of the <a href="../index.html#contact">main
+      page</a> and send it from there. It goes straight to him, and the page confirms it in the
+      corner as soon as it is away.</p>
+  </div></div>
+
+  <div class="step"><div class="step-n">2</div><div class="step-b">
+    <h3>Make a bug report worth reading</h3>
+    <p>Three things turn &ldquo;it broke&rdquo; into something he can actually fix:</p>
+    <div class="say you"><b>1</b><span>What you did, and what you expected instead.</span></div>
+    <div class="say you"><b>2</b><span>What she did, as close to word for word as you can.</span></div>
+    <div class="say you"><b>3</b><span>The output of the preflight check, pasted in full.</span></div>
+    <div class="codeblock">
+      <div class="cbar"><b>terminal</b><button class="copy" data-copy="#g6">copy</button></div>
+<pre id="g6">onidia-chat -preflight warn</pre>
+    </div>
+    <p>That check reads your config and prints what is and is not working &mdash; which provider you
+      are on, whether the key resolves, whether a recorder exists for the microphone. Most reports
+      get answered faster with it attached.</p>
+  </div></div>
+</div></section>
+
+<footer class="foot"><div class="wrap foot-in">
+  <a href="../index.html">Onidia</a><span class="dot">&middot;</span>
+  <a href="setup-gemini.html">Gemini</a><span class="dot">&middot;</span>
+  <a href="setup-typecast.html">Voice</a><span class="dot">&middot;</span>
+  <a href="agents.html">Agents</a><span class="dot">&middot;</span>
+  <a href="user-guide.html">User guide</a>
+</div></footer>
+
+<script>
+(function(){
+  var $ = function(s){ return document.querySelector(s); };
+  var pre = function(el){ return el ? el.innerText : ''; };
+  function fallback(el, done){
+    var t = document.createElement('textarea');
+    t.value = pre(el); t.setAttribute('readonly','');
+    t.style.cssText = 'position:absolute;left:-9999px';
+    document.body.appendChild(t); t.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(t); done();
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.copy'), function(b){
+    b.addEventListener('click', function(){
+      var el = $(b.dataset.copy);
+      var done = function(){
+        b.classList.add('done'); b.textContent = 'copied';
+        setTimeout(function(){ b.classList.remove('done'); b.textContent = 'copy'; }, 1600);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(pre(el)).then(done, function(){ fallback(el, done); });
+      } else { fallback(el, done); }
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

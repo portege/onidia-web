@@ -1,11 +1,11 @@
-/* setup.css - shared styles for the four setup guides (Gemini, Bedrock,
-   Hailo-Ollama, Typecast).
+/* setup.css - shared styles for the guide pages (Gemini, Bedrock,
+   Hailo-Ollama, Typecast, and Agents).
 
    Deliberately NOT the index page's stylesheet: that one is 685 lines and most
-   of it is the chat-window and playground mocks, which a setup guide has no use
+   of it is the chat-window and playground mocks, which a guide has no use
    for. This keeps the same visual language - same plum background, same teal
    and pink, same card / code-block / chip vocabulary - in about a fifth of the
-   size, and it is one file to edit instead of five. */
+   size, and it is one file to edit instead of six. */
 
 :root{
   --teal:#5fcfd6; --teal-lt:#a5ecef; --teal-dk:#41aeb6; --teal-tx:#7fdee3;
@@ -100,12 +100,35 @@ pre .k{color:var(--teal-tx)}
 pre .s{color:#b6e6b0}
 pre .w{color:var(--pink-tx)}
 
+/* --- screenshots ---------------------------------------------------------- */
+/* A real screenshot from the running app, as a figure: the image inside the
+   same rounded, edged box as a code block, with a caption underneath. Kept
+   narrow (the app window is portrait-ish) so it reads as a picture of the
+   window rather than a banner. The .shot-ph class is for the placeholder used
+   until a real capture exists - it keeps the reserved space so the page does
+   not reflow when the real file drops in. */
+.shot{margin:20px 0;max-width:420px}
+.shot img{display:block;width:100%;height:auto;border-radius:var(--r-m);
+  border:1px solid var(--edge-2);background:var(--glass)}
+.shot figcaption{margin-top:9px;font-size:.8rem;color:var(--faint);line-height:1.6}
+.shot-ph{display:grid;place-items:center;min-height:260px;padding:24px;text-align:center;
+  border:1px dashed var(--edge-2);border-radius:var(--r-m);background:var(--glass);
+  font-size:.85rem;color:var(--faint);line-height:1.7}
+.shot-ph b{display:block;color:var(--muted);font-size:.95rem;margin-bottom:6px}
+
+
 /* --- cards / notes ------------------------------------------------------- */
 .grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
 .card{border-radius:var(--r-m);border:1px solid var(--edge);padding:22px;
   background:var(--glass)}
 .card h3{font-size:1.05rem;margin-bottom:9px}
 .card p{margin:0;color:var(--muted);font-size:.93rem;line-height:1.66}
+/* A card that is a link. The global `a` rule paints every link teal, which is
+   right for an inline link and wrong for a whole card, so colour is taken back
+   here and the hover signal is the border instead. */
+a.card{display:block;color:inherit;text-decoration:none;border-bottom:1px solid var(--edge)}
+a.card:hover{border-bottom-color:var(--edge-2);background:var(--glass-2)}
+a.card h3{color:var(--teal-tx)}
 
 .note{border-radius:var(--r-m);border:1px solid var(--edge);border-left:3px solid var(--teal);
   padding:16px 20px;background:var(--glass);margin:18px 0}
@@ -127,6 +150,71 @@ pre .w{color:var(--pink-tx)}
   font-family:ui-monospace,monospace;font-size:.8rem;color:var(--faint)}
 mark{background:rgba(236,96,156,.20);color:var(--pink-lt);padding:1px 3px;border-radius:4px}
 
+/* --- key/value reference rows --------------------------------------------- */
+/* Flag and manifest-field tables. A <pre> would be the wrong shape here: these
+   are read, not copied, and the left column wants to stay monospace. */
+.kv{margin:14px 0;border:1px solid var(--edge);border-radius:var(--r-m);overflow:hidden}
+.kv>div{display:grid;grid-template-columns:minmax(130px,220px) 1fr;gap:18px;
+  padding:13px 18px;border-bottom:1px solid var(--edge);align-items:baseline}
+.kv>div:last-child{border-bottom:0}
+.kv>div:nth-child(odd){background:var(--glass)}
+.kv b{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.83rem;
+  font-weight:600;color:var(--teal-lt);overflow-wrap:anywhere}
+.kv span{color:var(--muted);font-size:.92rem;line-height:1.62;min-width:0}
+
+/* A labelled speech/exchange line: who is talking, then what they said. */
+.say{display:flex;gap:12px;align-items:baseline;margin:0 0 11px;font-size:.93rem;line-height:1.62}
+.say b{flex:0 0 84px;font-size:.72rem;font-weight:700;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--faint);text-align:right;padding-top:2px}
+.say span{color:var(--muted);min-width:0}
+.say.you b{color:var(--pink-tx)}
+.say.her b{color:var(--teal-tx)}
+.say.her span{color:var(--text)}
+
+/* --- floating content menu ------------------------------------------------
+   Only for pages that opt in with <body class="has-toc">.
+
+   A right-hand rail and a centred column cannot both have the full width, so
+   the rail's column is reserved on the body as padding and the text is then
+   centred in what is left. Reserving it as padding rather than nudging the
+   .wrap is what keeps the rail's own column out of the centring: the rail is
+   position:fixed, so it sits against the viewport edge while the content
+   centres in the remaining space - the same way index.html centres in the
+   full width.
+
+   Only at >=1240px. Below that the rail is display:none rather than squeezed
+   in: a contents list overlapping the prose is worse than no contents list,
+   and the topbar already carries the navigation. */
+.toc{display:none}
+@media(min-width:1240px){
+  body.has-toc{padding-right:240px}
+  body.has-toc .wrap{max-width:920px;margin-left:auto;margin-right:auto}
+  .toc{display:block;position:fixed;top:0;right:0;height:100vh;width:240px;
+    z-index:30;overflow-y:auto;overscroll-behavior:contain;
+    background:linear-gradient(180deg,rgba(15,13,26,.92),rgba(15,13,26,.82));
+    border-left:1px solid var(--edge);backdrop-filter:blur(18px)}
+  .toc-in{padding:96px 24px 40px;position:relative}
+  .toc-in>b{display:block;font-size:.7rem;font-weight:700;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--faint);margin-bottom:16px}
+  .toc ol{list-style:none;margin:0;padding:0}
+  .toc li{margin:0}
+  .toc a{display:grid;grid-template-columns:12px 1fr;gap:11px;align-items:baseline;
+    padding:7px 0;color:var(--muted);font-size:.85rem;line-height:1.45;
+    border:0;transition:color .22s var(--ease)}
+  .toc a:hover{color:var(--text);border:0}
+  .toc a i{width:6px;height:6px;border-radius:50%;background:var(--dim);
+    transform:translateY(-2px);transition:background .22s var(--ease),box-shadow .22s var(--ease)}
+  .toc a.on{color:var(--teal-lt)}
+  .toc a.on i{background:var(--teal);box-shadow:0 0 9px var(--teal)}
+  /* the sticky topbar must not cover the heading an anchor jumps to */
+  body.has-toc section{scroll-margin-top:84px}
+}
+/* reading progress, as a hairline down the rail's own edge */
+.toc-bar{position:absolute;top:96px;bottom:40px;right:0;width:2px;
+  background:var(--edge);overflow:hidden}
+.toc-bar i{position:absolute;top:0;left:0;width:100%;height:0;
+  background:var(--grad-teal)}
+
 /* --- footer -------------------------------------------------------------- */
 .foot{border-top:1px solid var(--edge);padding:34px 0;color:var(--faint);font-size:.86rem}
 .foot-in{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
@@ -135,6 +223,9 @@ mark{background:rgba(236,96,156,.20);color:var(--pink-lt);padding:1px 3px;border
 @media(max-width:640px){
   .step{grid-template-columns:1fr;gap:10px}
   .topbar nav{width:100%;margin-left:0}
+  .kv>div{grid-template-columns:1fr;gap:4px}
+  .say{flex-direction:column;gap:2px}
+  .say b{text-align:left;flex:none}
 }
 @media(prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important;scroll-behavior:auto!important}

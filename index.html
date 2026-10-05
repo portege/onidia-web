@@ -1436,12 +1436,35 @@ curl localhost:8000/api/tags</pre>
     <div class="rv">
       <div class="codeblock">
         <div class="cbar"><b>one line &mdash; debian, ubuntu, raspberry pi os</b><button class="copy" data-copy="#cb-oneline">copy</button></div>
-<pre id="cb-oneline">curl -fsSL https://onidia.babeh.com/download/ondia.deb -o /tmp/onidia.deb &amp;&amp; sudo apt install -y /tmp/onidia.deb</pre>
+<pre id="cb-oneline">curl -fsSL https://onidia.babeh.com/install.sh | sh</pre>
       </div>
       <p style="color:var(--faint);font-size:.86rem;margin:16px 0 0;line-height:1.65">
+        The script asks <code>dpkg</code> what this machine actually is, fetches the build that
+        matches &mdash; <code>arm64</code>, <code>amd64</code>, <code>armhf</code>, <code>armel</code> or
+        <code>i386</code> &mdash; checks that what came back really is a package and really is for your
+        CPU, then hands it to <code>apt</code>. You never pick a filename, so you cannot pick the wrong one.
+      </p>
+      <p style="color:var(--faint);font-size:.86rem;margin:10px 0 0;line-height:1.65">
+        It asks <code>dpkg</code>, not <code>uname</code>, and on a Raspberry Pi that difference is the
+        whole ballgame: 64-bit kernel with 32-bit userland (normal on Pi OS) says
+        <code>aarch64</code> to <code>uname</code> but <code>armhf</code> to <code>dpkg</code>, and
+        <code>armhf</code> is the one you want.
+      </p>
+
+      <div class="codeblock" style="margin-top:16px">
+        <div class="cbar"><b>look before you leap</b><button class="copy" data-copy="#cb-dry">copy</button></div>
+<pre id="cb-dry">curl -fsSL https://onidia.babeh.com/install.sh | sh -s -- --dry-run   <span class="c"># what it would fetch</span>
+curl -fsSL https://onidia.babeh.com/install.sh | sh -s -- --arch      <span class="c"># just print the architecture</span></pre>
+      </div>
+
+      <p style="color:var(--faint);font-size:.86rem;margin:16px 0 0;line-height:1.65">
         <code>apt</code> rather than <code>dpkg -i</code> on purpose: it resolves the audio and PipeWire packages
-        she needs in the same step. Then put your key in <code>~/.config/chat-app/chat-app.ini</code>
-        (or just <code>export GEMINI_API_KEY=...</code>), start <b>onidia</b> before <b>onidia-chat</b>, and she's awake.
+        she needs in the same step. One thing is left for you: the package installs her config to
+        <code>/opt/onidia/share/chat-app.ini</code> rather than into your home, so it can never end up
+        root-owned and uneditable. Copy it across, add your key, start <b>onidia</b> before
+        <b>onidia-chat</b>, and she's awake. Both programs read that one file &mdash; the pet
+        resolves it exactly as the window does &mdash; so the sleep window and busy window in
+        there reach her too.
       </p>
     </div>
 
@@ -1457,6 +1480,8 @@ onidia
   echo "hello buddy!" &gt; /tmp/desktop-pet--0.say</span>
 
 <span class="c"># terminal 2 - the brain</span>
+mkdir -p ~/.config/chat-app
+cp -n /opt/onidia/share/chat-app.ini ~/.config/chat-app/   <span class="c"># -n: never clobber yours</span>
 nano ~/.config/chat-app/chat-app.ini     <span class="c"># your API key lives here</span>
 onidia-chat
 
@@ -1556,9 +1581,10 @@ onidia-chat -provider ollama -model qwen2:1.5b</pre>
       <h3 class="h-md">Setup the Mind</h3>
       <p style="color:var(--muted);margin:0 0 18px;line-height:1.68">She needs one of these to think.
         Pick whichever suits you &mdash; they are independent, and only one is ever needed. Each guide has the
-        exact commands and the exact lines for <code>chat-app.ini</code>.</p>
+        exact commands and the exact lines for <code>chat-app.ini</code>.
+        <a href="docs/index.html" style="color:var(--teal-tx)">All five guides in one list &rarr;</a></p>
       <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(250px,1fr))">
-        <a class="card" href="setup-hailo-ollama.html" style="display:block">
+        <a class="card" href="docs/setup-hailo-ollama.html" style="display:block">
           <div class="ico ico-chip">
             <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8"
                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1570,7 +1596,7 @@ onidia-chat -provider ollama -model qwen2:1.5b</pre>
           <h3 style="color:var(--teal-tx)">Hailo-Ollama &rarr;</h3>
           <p>With an AI HAT+ 2: run the model on the NPU, entirely on the Pi.</p>
         </a>
-        <a class="card" href="setup-gemini.html" style="display:block">
+        <a class="card" href="docs/setup-gemini.html" style="display:block">
           <div class="ico ico-gem">
             <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8"
                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1580,7 +1606,7 @@ onidia-chat -provider ollama -model qwen2:1.5b</pre>
           <h3 style="color:var(--teal-tx)">Gemini &rarr;</h3>
           <p>Free, no billing, five minutes. Get the key and paste it in.</p>
         </a>
-        <a class="card" href="setup-bedrock.html" style="display:block">
+        <a class="card" href="docs/setup-bedrock.html" style="display:block">
           <div class="ico ico-rock">
             <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8"
                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1600,7 +1626,7 @@ onidia-chat -provider ollama -model qwen2:1.5b</pre>
         writes is also spoken, in a voice you choose. She ships with a demo one, so this is only worth doing
         if you want her to sound like somebody in particular.</p>
       <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(250px,1fr))">
-        <a class="card" href="setup-typecast.html" style="display:block;grid-column:1/-1">
+        <a class="card" href="docs/setup-typecast.html" style="display:block;grid-column:1/-1">
           <div class="ico ico-wave">
             <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8"
                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1612,6 +1638,18 @@ onidia-chat -provider ollama -model qwen2:1.5b</pre>
           <h3 style="color:var(--teal-tx)">Set up Typecast &rarr;</h3>
           <p>A Typecast account, an API key and a voice id, so every reply is spoken. You can audition voices
             on their site before you spend a character of your quota.</p>
+        </a>
+        <a class="card" href="docs/agents.html" style="display:block;grid-column:1/-1">
+          <div class="ico ico-chip">
+            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="5.5" y="7.5" width="21" height="13" rx="2.6"/>
+              <path class="pin" d="M10 24.5v3M16 24.5v3M22 24.5v3"/>
+              <circle class="die" cx="16" cy="14" r="2.4"/>
+            </svg></div>
+          <h3 style="color:var(--teal-tx)">Agents &rarr;</h3>
+          <p>Not setup, but the same family: drop a folder in and she can do new things &mdash; play your
+            music, control the pet, or your own script. Install, list and delete them from the one binary.</p>
         </a>
       </div>
     </div>
@@ -1688,8 +1726,7 @@ onidia-chat -provider ollama -model qwen2:1.5b</pre>
     <nav class="foot-links" aria-label="Footer">
       <a href="#meet">Meet her</a><a href="#tech">Nerd start from here</a>
       <a href="#install">Install</a>
-      <a href="setup-gemini.html">Setup: Gemini</a><a href="setup-bedrock.html">Bedrock</a>
-      <a href="setup-hailo-ollama.html">Hailo-Ollama</a><a href="setup-typecast.html">Voice</a>
+      <a href="docs/index.html">Docs</a><a href="docs/agents.html">Agents</a>
       <a href="#contact">Contact</a>
     </nav>
   </div>
