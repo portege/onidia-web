@@ -100,6 +100,23 @@ pre .k{color:var(--teal-tx)}
 pre .s{color:#b6e6b0}
 pre .w{color:var(--pink-tx)}
 
+/* --- screenshots ---------------------------------------------------------- */
+/* A real screenshot from the running app, as a figure: the image inside the
+   same rounded, edged box as a code block, with a caption underneath. Kept
+   narrow (the app window is portrait-ish) so it reads as a picture of the
+   window rather than a banner. The .shot-ph class is for the placeholder used
+   until a real capture exists - it keeps the reserved space so the page does
+   not reflow when the real file drops in. */
+.shot{margin:20px 0;max-width:420px}
+.shot img{display:block;width:100%;height:auto;border-radius:var(--r-m);
+  border:1px solid var(--edge-2);background:var(--glass)}
+.shot figcaption{margin-top:9px;font-size:.8rem;color:var(--faint);line-height:1.6}
+.shot-ph{display:grid;place-items:center;min-height:260px;padding:24px;text-align:center;
+  border:1px dashed var(--edge-2);border-radius:var(--r-m);background:var(--glass);
+  font-size:.85rem;color:var(--faint);line-height:1.7}
+.shot-ph b{display:block;color:var(--muted);font-size:.95rem;margin-bottom:6px}
+
+
 /* --- cards / notes ------------------------------------------------------- */
 .grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
 .card{border-radius:var(--r-m);border:1px solid var(--edge);padding:22px;
