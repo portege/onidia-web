@@ -1436,8 +1436,27 @@ curl localhost:8000/api/tags</pre>
     <div class="rv">
       <div class="codeblock">
         <div class="cbar"><b>one line &mdash; debian, ubuntu, raspberry pi os</b><button class="copy" data-copy="#cb-oneline">copy</button></div>
-<pre id="cb-oneline">curl -fsSL https://onidia.babeh.com/download/ondia.deb -o /tmp/onidia.deb &amp;&amp; sudo apt install -y /tmp/onidia.deb</pre>
+<pre id="cb-oneline">curl -fsSL https://onidia.babeh.com/install.sh | sh</pre>
       </div>
+      <p style="color:var(--faint);font-size:.86rem;margin:16px 0 0;line-height:1.65">
+        The script asks <code>dpkg</code> what this machine actually is, fetches the build that
+        matches &mdash; <code>arm64</code>, <code>amd64</code>, <code>armhf</code>, <code>armel</code> or
+        <code>i386</code> &mdash; checks that what came back really is a package and really is for your
+        CPU, then hands it to <code>apt</code>. You never pick a filename, so you cannot pick the wrong one.
+      </p>
+      <p style="color:var(--faint);font-size:.86rem;margin:10px 0 0;line-height:1.65">
+        It asks <code>dpkg</code>, not <code>uname</code>, and on a Raspberry Pi that difference is the
+        whole ballgame: 64-bit kernel with 32-bit userland (normal on Pi OS) says
+        <code>aarch64</code> to <code>uname</code> but <code>armhf</code> to <code>dpkg</code>, and
+        <code>armhf</code> is the one you want.
+      </p>
+
+      <div class="codeblock" style="margin-top:16px">
+        <div class="cbar"><b>look before you leap</b><button class="copy" data-copy="#cb-dry">copy</button></div>
+<pre id="cb-dry">curl -fsSL https://onidia.babeh.com/install.sh | sh -s -- --dry-run   <span class="c"># what it would fetch</span>
+curl -fsSL https://onidia.babeh.com/install.sh | sh -s -- --arch      <span class="c"># just print the architecture</span></pre>
+      </div>
+
       <p style="color:var(--faint);font-size:.86rem;margin:16px 0 0;line-height:1.65">
         <code>apt</code> rather than <code>dpkg -i</code> on purpose: it resolves the audio and PipeWire packages
         she needs in the same step. Then put your key in <code>~/.config/chat-app/chat-app.ini</code>
