@@ -77,6 +77,18 @@
     <p>Both programs are installed into your PATH, so they work from any directory and you never
       need the full path. No Onidia yet? The <a href="../index.html#install">install section</a>
       has a one-liner that works out which build your machine needs.</p>
+    <p>One thing the installer deliberately does <em>not</em> do for you: put her config where she
+      looks for it. The package installs it to <code>/opt/onidia/share/chat-app.ini</code> and leaves
+      your home alone, because a file written there by <code>apt</code> would be root-owned and you
+      could not edit your own key afterwards. So once, before the first launch:</p>
+    <div class="codeblock">
+      <div class="cbar"><b>terminal</b><button class="copy" data-copy="#g0">copy</button></div>
+<pre id="g0">mkdir -p ~/.config/chat-app
+cp -n /opt/onidia/share/chat-app.ini ~/.config/chat-app/   <span class="c"># -n never overwrites yours</span></pre>
+    </div>
+    <p>Skip it if you use environment variables instead of the file, and
+      <a href="setup-gemini.html">a setup guide</a> for the provider you picked will usually write
+      it for you.</p>
   </div></div>
 
   <div class="step"><div class="step-n">3</div><div class="step-b">

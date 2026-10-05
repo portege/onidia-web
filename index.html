@@ -1459,8 +1459,10 @@ curl -fsSL https://onidia.babeh.com/install.sh | sh -s -- --arch      <span clas
 
       <p style="color:var(--faint);font-size:.86rem;margin:16px 0 0;line-height:1.65">
         <code>apt</code> rather than <code>dpkg -i</code> on purpose: it resolves the audio and PipeWire packages
-        she needs in the same step. Then put your key in <code>~/.config/chat-app/chat-app.ini</code>
-        (or just <code>export GEMINI_API_KEY=...</code>), start <b>onidia</b> before <b>onidia-chat</b>, and she's awake.
+        she needs in the same step. One thing is left for you: the package installs her config to
+        <code>/opt/onidia/share/chat-app.ini</code> rather than into your home, so it can never end up
+        root-owned and uneditable. Copy it across, add your key, start <b>onidia</b> before
+        <b>onidia-chat</b>, and she's awake.
       </p>
     </div>
 
@@ -1476,6 +1478,8 @@ onidia
   echo "hello buddy!" &gt; /tmp/desktop-pet--0.say</span>
 
 <span class="c"># terminal 2 - the brain</span>
+mkdir -p ~/.config/chat-app
+cp -n /opt/onidia/share/chat-app.ini ~/.config/chat-app/   <span class="c"># -n: never clobber yours</span>
 nano ~/.config/chat-app/chat-app.ini     <span class="c"># your API key lives here</span>
 onidia-chat
 
