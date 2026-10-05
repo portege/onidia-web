@@ -1450,6 +1450,13 @@ curl localhost:8000/api/tags</pre>
         <code>aarch64</code> to <code>uname</code> but <code>armhf</code> to <code>dpkg</code>, and
         <code>armhf</code> is the one you want.
       </p>
+      <p style="color:var(--faint);font-size:.86rem;margin:10px 0 0;line-height:1.65">
+        One exception, and it exists for a good reason: Pi OS calls <em>every</em> 32-bit board
+        <code>armhf</code>, including the ARMv6 ones &mdash; the original Pi Zero and Pi&nbsp;1.
+        There <code>uname</code> says <code>armv6l</code>, and the CPU outranks the userland: you get
+        <code>armel</code>, because the <code>armhf</code> build targets ARMv7 and would die with an
+        illegal instruction on that chip. Run <code>--arch</code> and it will tell you which it picked.
+      </p>
 
       <div class="codeblock" style="margin-top:16px">
         <div class="cbar"><b>look before you leap</b><button class="copy" data-copy="#cb-dry">copy</button></div>
@@ -1459,7 +1466,10 @@ curl -fsSL https://onidia.babeh.com/install.sh | sh -s -- --arch      <span clas
 
       <p style="color:var(--faint);font-size:.86rem;margin:16px 0 0;line-height:1.65">
         <code>apt</code> rather than <code>dpkg -i</code> on purpose: it resolves the audio and PipeWire packages
-        she needs in the same step. One thing is left for you: the package installs her config to
+        she needs in the same step. The one exception is the Pi Zero above, where the package's
+        architecture isn't the system's &mdash; there it forces it through <code>dpkg</code> instead, which is
+        safe precisely because she is a static binary with no hard dependencies, and fetches those
+        extras by name. One thing is left for you: the package installs her config to
         <code>/opt/onidia/share/chat-app.ini</code> rather than into your home, so it can never end up
         root-owned and uneditable. Copy it across, add your key, start <b>onidia</b> before
         <b>onidia-chat</b>, and she's awake. Both programs read that one file &mdash; the pet
