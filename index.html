@@ -706,9 +706,16 @@ kbd{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);
 .pipe-demo .c{color:var(--dim)}
 .pipe-demo .arrow{color:var(--pink);font-weight:700}
 
-/* ==========================================================================
+/* =======================================================================
+   Tech / architecture  —  MOVED to nerd.html
+   Unused on index.html since the #tech section moved to nerd.html
+   ("Nerd start from here").  Kept commented out for reference —
+   nerd.html carries its own live copy of these rules.
+   ======================================================================= */
+/*
+ ==========================================================================
    Tech / architecture
-   ========================================================================== */
+   ========================================================================== 
 .arch{display:grid;gap:14px;margin-top:20px}
 .achain{display:flex;align-items:stretch;gap:0;flex-wrap:wrap}
 .abox{flex:1 1 180px;border-radius:var(--r-m);padding:18px 20px;min-width:0;
@@ -722,8 +729,8 @@ kbd{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);
 .stat{border-radius:var(--r-m);padding:22px 16px;background:var(--glass);border:1px solid var(--surface-3);
   text-align:center;transition:.4s var(--ease)}
 .stat:hover{transform:translateY(-5px);border-color:var(--edge-2);background:var(--glass-2)}
-/* Must stay narrow enough for the widest value ("112×160") to fit a 6-up grid
-   track: .stat b is ~135px wide, so the text has to stay under ~140px. */
+ Must stay narrow enough for the widest value ("112×160") to fit a 6-up grid
+   track: .stat b is ~135px wide, so the text has to stay under ~140px. 
 .stat b{display:block;font-size:clamp(1.55rem,2.2vw,1.85rem);letter-spacing:-.04em;line-height:1}
 .stat small{display:block;color:var(--faint);font-size:.77rem;margin-top:8px;letter-spacing:.04em}
 .filelist{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-top:24px}
@@ -732,6 +739,7 @@ kbd{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);
 .fitem:hover{border-color:var(--edge-2);background:rgba(0,0,0,.45)}
 .fitem b{display:block;font-family:ui-monospace,monospace;font-size:.85rem;color:var(--teal-tx);margin-bottom:6px}
 .fitem small{color:var(--faint);font-size:.8rem;line-height:1.55;display:block}
+*/
 
 /* ==========================================================================
    Install — tabs + code blocks
@@ -751,18 +759,25 @@ kbd{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);
 .codeblock pre .k{color:var(--pink-tx)}
 .codeblock pre .s{color:var(--teal-tx)}
 .codeblock pre .p{color:var(--teal)}
-/* ---------- the machine it was written for ----------
+/* =======================================================================
+   Pi hardware panel (.pihw …)  —  MOVED to nerd.html
+   Unused on index.html since the #tech section moved to nerd.html
+   ("Nerd start from here").  Kept commented out for reference —
+   nerd.html carries its own live copy of these rules.
+   ======================================================================= */
+/*
+ ---------- the machine it was written for ----------
    A panel rather than another card row: this is the one place on the page
    that names the actual target hardware and what the app does with it.
    Two columns on desktop (the claim | the proof), one when it has to be.
    .fitem's dark fill is reused for the fact chips deliberately, so they
-   read as the same family of thing as the file list below them. */
+   read as the same family of thing as the file list below them. 
 .pihw{margin-top:64px;border-radius:var(--r-m);border:1px solid var(--surface-3);
   background:var(--glass);padding:34px 34px 30px}
 .pihw-in{display:grid;grid-template-columns:1fr 1fr;gap:34px;align-items:start}
-/* min-width:0 on the items, or the <pre>'s min-content (the longest code
+ min-width:0 on the items, or the <pre>'s min-content (the longest code
    line, ~583px) becomes the track's automatic minimum and the whole panel
-   overflows its own padding below ~1150px instead of the pre scrolling. */
+   overflows its own padding below ~1150px instead of the pre scrolling. 
 .pihw-in>*{min-width:0}
 .pihw-in>p, .pihw-in>div>p{color:var(--muted);margin:0 0 14px;line-height:1.72}
 .pihw-in p:last-child{margin-bottom:0}
@@ -778,13 +793,14 @@ kbd{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);
   font-size:.83rem;line-height:1.65;background:rgba(95,207,214,.1);
   border:1px solid rgba(95,207,214,.28);color:var(--muted)}
 .pihw-note b{color:var(--teal-tx);font-weight:600}
-/* 1080 and not 640: between ~940 and ~1080 the two columns get too narrow for
-   the eyebrow pill to stay on one line, so it folds the panel first. */
+ 1080 and not 640: between ~940 and ~1080 the two columns get too narrow for
+   the eyebrow pill to stay on one line, so it folds the panel first. 
 @media(max-width:1080px){.pihw-in{grid-template-columns:1fr;gap:26px}.pihw{padding:26px 22px 22px}}
-/* Below ~560 there is no room for the pill at 12px/.18em tracking, and a
-   two-line 999px-radius pill looks like a mistake. Tighten, don't reword. */
+ Below ~560 there is no room for the pill at 12px/.18em tracking, and a
+   two-line 999px-radius pill looks like a mistake. Tighten, don't reword. 
 @media(max-width:560px){.pihw .eyebrow{font-size:11px;letter-spacing:.1em;padding:7px 13px}
   .pihw-facts{grid-template-columns:repeat(2,1fr)}}
+*/
 .reqs{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-top:22px}
 .req{display:flex;gap:12px;align-items:flex-start;padding:16px 18px;border-radius:var(--r-s);
   background:var(--glass);border:1px solid var(--surface-3)}
