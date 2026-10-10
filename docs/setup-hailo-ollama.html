@@ -136,13 +136,13 @@ curl --silent http://localhost:8000/api/pull \
 <pre>provider = <mark>ollama</mark>
 
 [ollama]
-api-url = <mark>http://localhost:8000</mark>
-model   = <mark>qwen2:1.5b</mark></pre>
+ollama-api-url = <mark>http://localhost:8000</mark>
+ollama-model   = <mark>qwen2:1.5b</mark></pre>
     </div>
     <div class="note warn">
       <b>Not 11434</b>
       <p>Plain Ollama listens on 11434; Hailo-Ollama listens on <strong>8000</strong>, and 8000
-        is what Onidia assumes when <code>api-url</code> is unset. If you are running both, set
+        is what Onidia assumes when <code>ollama-api-url</code> is unset. If you are running both, set
         the URL explicitly rather than relying on the default.</p>
     </div>
   </div></div>
