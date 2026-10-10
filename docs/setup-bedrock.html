@@ -169,7 +169,7 @@ cat ~/.aws/config</pre>
 [bedrock]
 aws-profile = <mark>default</mark>
 aws-region  = <mark>us-east-1</mark>
-model = amazon.nova-lite-v1:0</pre>
+bedrock-model = <mark>amazon.nova-lite-v1:0</mark></pre>
     </div>
     <p>Left empty, <code>aws-profile</code> and <code>aws-region</code> both fall back to the
       defaults, so if your <code>~/.aws/config</code> is already set up you can leave those two
@@ -202,7 +202,7 @@ onidia-chat</pre>
     <div class="card">
       <h3>The default</h3>
       <p><code>amazon.nova-lite-v1:0</code> &mdash; small, fast, and the cheapest sensible option
-        on a Pi. Set with <code>model</code> in the config, or <code>-model</code> for one run.</p>
+        on a Pi. Set with <code>bedrock-model</code> in the config, or <code>-model</code> for one run.</p>
     </div>
     <div class="card">
       <h3>Claude</h3>

@@ -13,10 +13,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Onidia — a tiny anime companion that lives on your desktop</title>
-<meta name="description" content="Onidia is a chibi desktop pet in pure Go. She walks, blinks, naps, talks in comic speech bubbles, and answers you out loud. No cgo, no toolkit, ~0% idle CPU — happy on a Raspberry Pi.">
+<meta name="description" content="Onidia is a chibi desktop buddy in pure Go. She walks, blinks, naps, talks in comic speech bubbles, and answers you out loud. No cgo, no toolkit, ~0% idle CPU — happy on a Raspberry Pi.">
 <meta name="theme-color" content="#0c1018">
 <meta property="og:title" content="Onidia — a tiny anime companion for your desktop">
-<meta property="og:description" content="A chibi desktop pet in pure Go. Walk her, fling her, talk to her. She answers out loud.">
+<meta property="og:description" content="A chibi desktop buddy in pure Go. Walk her, fling her, talk to her. She answers out loud.">
 <meta property="og:type" content="website">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="favicon.png">
@@ -42,7 +42,7 @@
 <style>
 /* ==========================================================================
    Onidia — single-page site.
-   Palette is lifted straight out of the apps: the pet's palette
+   Palette is lifted straight out of the apps: the buddy's palette
    (characters/onidia/palette.go) and the chat UI's colours (onidia-chat/ui.go).
    Teal hair, plum outlines, pink dress. Nothing here is invented.
    ========================================================================== */
@@ -91,7 +91,7 @@
   --inset-2:rgba(255,255,255,.09);
   --inset-edge:rgba(255,255,255,.12);
 
-  /* Characters keep their own hand-picked colours in both themes — the pet is
+  /* Characters keep their own hand-picked colours in both themes — the buddy is
      teal hair on plum, and recolouring her would be inventing, not theming. */
 
   --text:#eae7f7; --muted:#a9a2c4; --faint:#8f88ad; --dim:#6f6889;
@@ -174,7 +174,7 @@ body,.nav,.backdrop,.field input,.field textarea,.chip,.clink,.card{
 /* Aurora tints are pale enough to keep as-is; the third blob is a deep plum
    that reads as mud on white, so lift it toward pink. */
 :root[data-theme="light"] .a3{background:radial-gradient(circle,rgba(236,96,156,.30),transparent 68%)}
-/* The floating FX and pet drop-shadows are tuned for dark backdrops. */
+/* The floating FX and buddy drop-shadows are tuned for dark backdrops. */
 :root[data-theme="light"] .fx{filter:drop-shadow(0 3px 8px rgba(43,33,66,.28))}
 /* Code + form controls need opaque backgrounds to stay legible on white. */
 :root[data-theme="light"] .codeblock pre{background:#1b1626;color:#e8e4f6}
@@ -189,7 +189,7 @@ body,.nav,.backdrop,.field input,.field textarea,.chip,.clink,.card{
    window, so they stay dark on the light page. That means every token they
    inherit has to be re-pinned here.
 
-   The pet engine builds its action/face buttons as bare `.btn` — the *page*
+   The buddy engine builds its action/face buttons as bare `.btn` — the *page*
    class — with nothing marking them as living inside this dark window. Without
    these re-pins, --text flips to near-black on the light theme and the buttons
    disappear into the dark panel. Placed after the light block so it wins on
@@ -366,7 +366,7 @@ kbd{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);
 .hero-note b{color:var(--teal-tx);font-weight:650}
 .hero-note .dot{width:4px;height:4px;border-radius:50%;background:var(--dim);align-self:center}
 
-/* the live hero pet sits in a glass "desktop" frame */
+/* the live hero buddy sits in a glass "desktop" frame */
 .hero-stage{position:relative;border-radius:var(--r-xl);overflow:hidden;
   border:1px solid var(--edge);box-shadow:var(--shadow),inset 0 0 90px rgba(95,207,214,.07);
   background:linear-gradient(170deg,rgba(29,63,77,.55),rgba(20,29,43,.85) 55%,rgba(12,16,24,.95)),var(--app-bg)}
@@ -671,7 +671,7 @@ kbd{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);
 @media(max-width:900px){.frow{grid-template-columns:1fr;gap:30px}.frow.flip .frow-txt{order:0}}
 
 /* ==========================================================================
-   Events & actions — triggerable, drives the live pet above
+   Events & actions — triggerable, drives the live buddy above
    ========================================================================== */
 .chips{display:flex;flex-wrap:wrap;gap:9px;margin-top:24px}
 .chip{padding:9px 17px;border-radius:999px;font-size:.86rem;font-weight:600;
@@ -706,9 +706,16 @@ kbd{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);
 .pipe-demo .c{color:var(--dim)}
 .pipe-demo .arrow{color:var(--pink);font-weight:700}
 
-/* ==========================================================================
+/* =======================================================================
+   Tech / architecture  —  MOVED to nerd.html
+   Unused on index.html since the #tech section moved to nerd.html
+   ("Nerd start from here").  Kept commented out for reference —
+   nerd.html carries its own live copy of these rules.
+   ======================================================================= */
+/*
+ ==========================================================================
    Tech / architecture
-   ========================================================================== */
+   ========================================================================== 
 .arch{display:grid;gap:14px;margin-top:20px}
 .achain{display:flex;align-items:stretch;gap:0;flex-wrap:wrap}
 .abox{flex:1 1 180px;border-radius:var(--r-m);padding:18px 20px;min-width:0;
@@ -722,8 +729,8 @@ kbd{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);
 .stat{border-radius:var(--r-m);padding:22px 16px;background:var(--glass);border:1px solid var(--surface-3);
   text-align:center;transition:.4s var(--ease)}
 .stat:hover{transform:translateY(-5px);border-color:var(--edge-2);background:var(--glass-2)}
-/* Must stay narrow enough for the widest value ("112×160") to fit a 6-up grid
-   track: .stat b is ~135px wide, so the text has to stay under ~140px. */
+ Must stay narrow enough for the widest value ("112×160") to fit a 6-up grid
+   track: .stat b is ~135px wide, so the text has to stay under ~140px. 
 .stat b{display:block;font-size:clamp(1.55rem,2.2vw,1.85rem);letter-spacing:-.04em;line-height:1}
 .stat small{display:block;color:var(--faint);font-size:.77rem;margin-top:8px;letter-spacing:.04em}
 .filelist{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-top:24px}
@@ -732,6 +739,7 @@ kbd{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);
 .fitem:hover{border-color:var(--edge-2);background:rgba(0,0,0,.45)}
 .fitem b{display:block;font-family:ui-monospace,monospace;font-size:.85rem;color:var(--teal-tx);margin-bottom:6px}
 .fitem small{color:var(--faint);font-size:.8rem;line-height:1.55;display:block}
+*/
 
 /* ==========================================================================
    Install — tabs + code blocks
@@ -751,18 +759,25 @@ kbd{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);
 .codeblock pre .k{color:var(--pink-tx)}
 .codeblock pre .s{color:var(--teal-tx)}
 .codeblock pre .p{color:var(--teal)}
-/* ---------- the machine it was written for ----------
+/* =======================================================================
+   Pi hardware panel (.pihw …)  —  MOVED to nerd.html
+   Unused on index.html since the #tech section moved to nerd.html
+   ("Nerd start from here").  Kept commented out for reference —
+   nerd.html carries its own live copy of these rules.
+   ======================================================================= */
+/*
+ ---------- the machine it was written for ----------
    A panel rather than another card row: this is the one place on the page
    that names the actual target hardware and what the app does with it.
    Two columns on desktop (the claim | the proof), one when it has to be.
    .fitem's dark fill is reused for the fact chips deliberately, so they
-   read as the same family of thing as the file list below them. */
+   read as the same family of thing as the file list below them. 
 .pihw{margin-top:64px;border-radius:var(--r-m);border:1px solid var(--surface-3);
   background:var(--glass);padding:34px 34px 30px}
 .pihw-in{display:grid;grid-template-columns:1fr 1fr;gap:34px;align-items:start}
-/* min-width:0 on the items, or the <pre>'s min-content (the longest code
+ min-width:0 on the items, or the <pre>'s min-content (the longest code
    line, ~583px) becomes the track's automatic minimum and the whole panel
-   overflows its own padding below ~1150px instead of the pre scrolling. */
+   overflows its own padding below ~1150px instead of the pre scrolling. 
 .pihw-in>*{min-width:0}
 .pihw-in>p, .pihw-in>div>p{color:var(--muted);margin:0 0 14px;line-height:1.72}
 .pihw-in p:last-child{margin-bottom:0}
@@ -778,13 +793,14 @@ kbd{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);
   font-size:.83rem;line-height:1.65;background:rgba(95,207,214,.1);
   border:1px solid rgba(95,207,214,.28);color:var(--muted)}
 .pihw-note b{color:var(--teal-tx);font-weight:600}
-/* 1080 and not 640: between ~940 and ~1080 the two columns get too narrow for
-   the eyebrow pill to stay on one line, so it folds the panel first. */
+ 1080 and not 640: between ~940 and ~1080 the two columns get too narrow for
+   the eyebrow pill to stay on one line, so it folds the panel first. 
 @media(max-width:1080px){.pihw-in{grid-template-columns:1fr;gap:26px}.pihw{padding:26px 22px 22px}}
-/* Below ~560 there is no room for the pill at 12px/.18em tracking, and a
-   two-line 999px-radius pill looks like a mistake. Tighten, don't reword. */
+ Below ~560 there is no room for the pill at 12px/.18em tracking, and a
+   two-line 999px-radius pill looks like a mistake. Tighten, don't reword. 
 @media(max-width:560px){.pihw .eyebrow{font-size:11px;letter-spacing:.1em;padding:7px 13px}
   .pihw-facts{grid-template-columns:repeat(2,1fr)}}
+*/
 .reqs{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-top:22px}
 .req{display:flex;gap:12px;align-items:flex-start;padding:16px 18px;border-radius:var(--r-s);
   background:var(--glass);border:1px solid var(--surface-3)}
@@ -910,7 +926,7 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
         <g fill="#41aeb6">
         <path d="M23.23 53.09A8 8 0 1 1 37.92 59.02L19.01 91.54A2.6 2.6 0 0 1 14.24 89.61Z"/><path d="M74.08 59.02A8 8 0 1 1 88.77 53.09L97.76 89.61A2.6 2.6 0 0 1 92.99 91.54Z"/>
         </g>
-        <!-- Tail sheen: the pet's own highlight stroke, kept for fidelity but
+        <!-- Tail sheen: the buddy's own highlight stroke, kept for fidelity but
              effectively invisible - it is drawn before the head disc below
              (r=38.7 about 56,60), which covers all of it bar a sliver where the
              far cap clears the edge by 0.021 units. Nothing renders. -->
@@ -948,7 +964,7 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
     <nav class="nav-links" id="navlinks" aria-label="Sections">
       <a href="#meet">Meet her</a>
       <a href="#inaction">In Action</a>
-      <a href="#tech">Nerd start from here</a>
+      <a href="nerd.html">Nerd start from here</a>
       <a href="https://onidia.babeh.com/docs/index.html">Docs</a>
       <a href="https://onidia.babeh.com/docs/agents.html">Agents</a>
       <a href="#contact">Contact</a>
@@ -971,7 +987,7 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
 <div class="mobile-menu" id="mmenu">
   <a href="#meet"><span>01</span>Meet her</a>
   <a href="#inaction"><span>02</span>In Action</a>
-  <a href="#tech"><span>03</span>Nerd start from here</a>
+  <a href="nerd.html"><span>03</span>Nerd start from here</a>
   <a href="https://onidia.babeh.com/docs/index.html"><span>04</span>Docs</a>
   <a href="https://onidia.babeh.com/docs/agents.html"><span>05</span>Agents</a>
   <a href="#contact"><span>06</span>Contact</a>
@@ -987,7 +1003,7 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
       <h1 class="h-xl rv">A tiny anime companion who <span class="grad-teal">lives on your screen.</span></h1>
       <p class="lede rv">Onidia walks along the bottom of your display, blinks, stretches, naps on schedule, and
         answers you <em>out loud</em>. Pick her up, throw her, talk to her &mdash; or let your apps talk to her
-        for you. All of it in a few megabytes of Go, with an idle CPU of roughly zero.</p>
+        for you.</p>
       <div class="hero-cta rv">
         <a class="btn btn-primary" href="#brain">See how she thinks &darr;</a>
         <a class="btn btn-ghost" href="#install">Install in 4 seconds</a>
@@ -1007,7 +1023,7 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
         <span class="live-pill"><i></i>live</span>
       </div>
       <div class="stage-canvas">
-        <!-- The pet stands on a Raspberry Pi desktop: an LXDE panel along the
+        <!-- The buddy stands on a Raspberry Pi desktop: an LXDE panel along the
              bottom and one terminal window open behind her. Drawn rather than
              screenshotted - no image bytes in a page that already inlines four,
              and it borrows the page palette so it reads as part of the design.
@@ -1070,7 +1086,7 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
         </div>
 
         <div class="fx-layer" id="fx" aria-hidden="true"></div>
-        <canvas id="stage" data-oid="stage" aria-label="Interactive Onidia desktop pet"></canvas>
+        <canvas id="stage" data-oid="stage" aria-label="Interactive Onidia desktop buddy"></canvas>
 
         <!-- The LXDE taskbar along the bottom. She stands on it. -->
         <div class="stage-panel" aria-hidden="true">
@@ -1202,7 +1218,7 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
       <span class="eyebrow">The other half</span>
       <h2 class="h-lg" style="margin-top:22px">Give her a brain<br><span class="grad-pink">and a voice.</span></h2>
       <p class="lede">Onidia is the body. <b>onidia-chat</b> is the mind: a tiny chat window, also pure Go on raw
-        X11, that talks to a real language model &mdash; then hands every answer to the pet so she says it out
+        X11, that talks to a real language model &mdash; then hands every answer to the buddy so she says it out
         loud with a matching expression.</p>
     </div>
 
@@ -1210,7 +1226,7 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
       <div>
         <h3 class="h-md" style="margin-bottom:18px">Ask anything. She answers twice.</h3>
         <p style="color:var(--muted);margin:0 0 16px;line-height:1.72">The reply appears in the chat bubble
-          <em>and</em> is spoken by the pet, in sync with the audio. The call runs on its own goroutine, so the
+          <em>and</em> is spoken by the buddy, in sync with the audio. The call runs on its own goroutine, so the
           window never freezes &mdash; it just shows a <code>...</code> bubble while it thinks. The last 20 turns
           stay as context, and the model is invited to tag each answer with a mood so her face matches.</p>
         <div class="chips">
@@ -1220,13 +1236,13 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
           <span class="chip" style="cursor:default">OpenRouter / any OpenAI-compatible</span>
         </div>
       </div>
-      <div class="pipe-demo" aria-label="How a reply flows from the chat window to the pet">
+      <div class="pipe-demo" aria-label="How a reply flows from the chat window to the buddy">
         <span class="c"># you type in the chat window</span><br>
         <span class="k">you</span> <span class="s">&rsaquo; what should I do about the build?</span><br>
         <span class="c"># the model answers, tagged with a mood</span><br>
         <span class="s">bot</span> <span class="k">&rsaquo;</span> <span class="s">[happy] all green - nice one!</span><br>
-        <span class="c"># onidia-chat forwards it to the pet's speech pipe</span><br>
-        <span class="k">pet</span> <span class="arrow">&rarr;</span> <span class="s">[happy] all green - nice one!</span><br>
+        <span class="c"># onidia-chat forwards it to the buddy's speech pipe</span><br>
+        <span class="k">buddy</span> <span class="arrow">&rarr;</span> <span class="s">[happy] all green - nice one!</span><br>
         <span class="c"># ...and Onidia says it, out loud, smiling</span>
       </div>
     </div>
@@ -1269,7 +1285,7 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
           <path class="spark" d="M24.5 8.5l1.1 2.4 2.4 1.1-2.4 1.1-1.1 2.4-1.1-2.4L21 12l2.4-1.1Z"/>
         </svg></div>
         <h3>Pluggable agents</h3>
-        <p>She can call real abilities: play a song, play a movie, read a story, or animate the pet. Drop in a
+        <p>She can call real abilities: play a song, play a movie, read a story, or animate the buddy. Drop in a
           folder with an <code>agent.json</code> and she can use it. No rebuild.</p></article>
       <article class="card rv"><i class="glow"></i><div class="ico ico-shield">
         <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.9"
@@ -1284,121 +1300,13 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
   </div>
 </section>
 
-<!-- ===================== TECH ===================== -->
-<section id="tech">
-  <div class="wrap">
-    <div class="sechead rv">
-      <span class="eyebrow">Nerd start from here</span>
-      <h2 class="h-lg" style="margin-top:22px">No toolkit.<br><span class="grad-teal">No cgo. Just Go and X11.</span></h2>
-      <p class="lede">Most desktop toys drag in a GUI framework measured in hundreds of megabytes. This one
-        doesn't. It speaks the X11 wire protocol directly, and every pixel of Onidia is drawn by code at runtime.</p>
-    </div>
-
-    <div class="arch rv">
-      <div class="achain">
-        <div class="abox hl"><b>You</b><small>type, or speak into the mic</small></div>
-        <div class="aflex">&rarr;</div>
-        <div class="abox"><b>onidia-chat</b><small>pure Go, raw X11<br>UI thread never blocks</small></div>
-        <div class="aflex">&rarr;</div>
-        <div class="abox"><b>The model</b><small>Gemini / Bedrock<br>Ollama / OpenRouter</small></div>
-        <div class="aflex">&rarr;</div>
-        <div class="abox"><b>Speech pipe</b><small>a named FIFO per display<br>/tmp/desktop-pet--0.say</small></div>
-        <div class="aflex">&rarr;</div>
-        <div class="abox hl"><b>Onidia</b><small>speaks it, with the<br>matching expression</small></div>
-      </div>
-    </div>
-
-    <div class="stats rv">
-      <div class="stat"><b class="grad-teal">~0%</b><small>IDLE CPU</small></div>
-      <div class="stat"><b class="grad-teal">~3 MB</b><small>RESIDENT MEMORY</small></div>
-      <div class="stat"><b class="grad-pink">0</b><small>IMAGE ASSETS</small></div>
-      <div class="stat"><b class="grad-pink">0</b><small>CGO DEPENDENCIES</small></div>
-      <div class="stat"><b class="grad-teal">112&times;160</b><small>AUTHORING GRID</small></div>
-      <div class="stat"><b class="grad-teal">5&times;7</b><small>BITMAP FONT</small></div>
-    </div>
-
-    <!-- The one place on the page that names the actual target hardware and
-         what the app does with it. Claim on the left, proof on the right. -->
-    <div class="pihw rv">
-      <div class="pihw-in">
-        <div>
-          <span class="eyebrow">Written, designed and tested on a Pi 5</span>
-          <h3 class="h-md" style="margin:18px 0 16px">Sixty-four bits, end to end.</h3>
-          <p>Onidia and onidia-chat are pure Go, so a build is a single static <code>arm64</code>
-            binary &mdash; nothing to cross-compile on the Pi, nothing to install beside it. The
-            release artifact is exactly that: one <code>arm64</code> .deb that carries both
-            halves. A Raspberry Pi 5 is what they were written against,
-            designed around and tested on.</p>
-          <p>The more interesting half is what that Pi can be <b>as</b> the machine. On a
-            <b>AI HAT+ 2</b> &mdash; the Hailo-10H board, 40 TOPS of INT4 inference and 8 GB of RAM
-            living on the card itself &mdash; Hailo's <code>hailo-ollama</code> speaks the very same
-            ollama <code>/api/chat</code> dialect <code>onidia-chat</code> already speaks to the network.
-            Point the provider at localhost and the model stops being someone else's computer.</p>
-          <div class="pihw-facts">
-            <div class="pihw-fact"><b class="grad-teal">arm64</b><small>BUILD TARGET</small></div>
-            <div class="pihw-fact"><b class="grad-pink">40 TOPS</b><small>INT4 INFERENCE</small></div>
-            <div class="pihw-fact"><b class="grad-teal">8 GB</b><small>ON-BOARD MODEL RAM</small></div>
-            <div class="pihw-fact"><b class="grad-pink">0 B</b><small>LEAVES THE PI</small></div>
-          </div>
-        </div>
-        <div>
-          <div class="codeblock">
-            <div class="cbar"><b>private by default</b><button class="copy" data-copy="#cb-hw">copy</button></div>
-<pre id="cb-hw"><span class="c"># Hailo's ollama-compatible server. Listens on :8000.</span>
-hailo-ollama
-
-<span class="c"># 8000 is already the default - this is the whole switch:</span>
-./onidia-chat -provider ollama -model <span class="s">qwen2:1.5b</span>
-
-<span class="c"># Qwen2 1.5B, Llama 3.2 1B, Qwen2.5-Coder, DeepSeek-R1</span>
-curl localhost:8000/api/tags</pre>
-          </div>
-          <div class="pihw-note"><b>Nothing leaves the Pi.</b> No key, no account, no request to a
-            vendor you cannot audit &mdash; pull the network cable and it behaves identically. One
-            honest footnote: hailo-ollama rejects the <code>tools</code> field, so onidia-chat retires
-            tool calling after the first reply and carries on in plain text.</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="grid g2" style="margin-top:64px;align-items:start">
-      <div class="rv">
-        <h3 class="h-md" style="margin-bottom:16px">How a frame is made</h3>
-        <p style="color:var(--muted);margin:0 0 14px;line-height:1.72">A tiny state machine &mdash; idle, walk, hop,
-          drag, throw &mdash; runs a few physics steps a frame and produces a <b>pose</b>: bob, leg swing, foot
-          lift, blink, arm flags, expression. The pose is rendered procedurally onto a supersampled canvas and
-          downsampled for smooth edges, the speech bubble is composed above it, and the whole image is uploaded
-          with a single <code>PutImage</code>. The window itself just moves to follow her.</p>
-        <p style="color:var(--muted);margin:0 0 14px;line-height:1.72">Because the character is code and not a
-          sprite sheet, adding a personality means writing a Go package: its own palette, drawing functions and
-          phrase list, registered at startup and picked with <code>-character</code>. Two characters can never
-          collide, because they share nothing but the pose contract.</p>
-        <p style="color:var(--muted);margin:0;line-height:1.72">XShape is deliberately <em>not</em> used: under
-          XWayland, shrinking a shaped window's region can stop updates from being presented, so the plain
-          transparent window composites correctly everywhere instead.</p>
-      </div>
-      <div class="rv">
-        <h3 class="h-md" style="margin-bottom:16px">Worth knowing</h3>
-        <div class="filelist">
-          <div class="fitem"><b>characters/</b><small>One self-contained package per personality &mdash; onidia, kama, and a template for yours.</small></div>
-          <div class="fitem"><b>behavior.go</b><small>The buddy brain: idle / walk / hop / drag / throw FSM plus the throw and parachute physics.</small></div>
-          <div class="fitem"><b>bubble.go</b><small>Comic speech-bubble rendering, word wrapping, and the scene layout that reserves headroom for the cloud.</small></div>
-          <div class="fitem"><b>events*.go</b><small>The celebration framework: hearts, confetti, floating Zs, the lightbulb, the robot suit-up.</small></div>
-          <div class="fitem"><b>internal/fx</b><small>Shared supersample compositing, the built-in bitmap font, alpha and easing maths.</small></div>
-          <div class="fitem"><b>single instance</b><small>A kernel <code>flock</code> per display, so a second launch exits and names the pid holding it.</small></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
 <!-- ===================== INSTALL ===================== -->
 <section id="install">
   <div class="wrap">
     <div class="sechead rv">
       <span class="eyebrow">Get her onto your desktop</span>
       <h2 class="h-lg" style="margin-top:22px">One line.<br><span class="grad-teal">That's the whole install.</span></h2>
-      <p class="lede">One package carries both halves &mdash; the pet, the chat window, her config, and the agents that
+      <p class="lede">One package carries both halves &mdash; the buddy, the chat window, her config, and the agents that
         make her act. It's static Go: no runtime to provision, no toolkit, no build step.</p>
     </div>
 
@@ -1441,7 +1349,7 @@ curl -fsSL https://onidia.babeh.com/install.sh | sh -s -- --arch      <span clas
         extras by name. One thing is left for you: the package installs her config to
         <code>/opt/onidia/share/chat-app.ini</code> rather than into your home, so it can never end up
         root-owned and uneditable. Copy it across, add your key, start <b>onidia</b> before
-        <b>onidia-chat</b>, and she's awake. Both programs read that one file &mdash; the pet
+        <b>onidia-chat</b>, and she's awake. Both programs read that one file &mdash; the buddy
         resolves it exactly as the window does &mdash; so the sleep window and busy window in
         there reach her too.
       </p>
@@ -1500,7 +1408,7 @@ echo <span class="s">"deploy finished, great job!"</span> &gt; /tmp/desktop-pet-
       <h3 class="h-md" style="margin:0 0 14px">Installed for you <span style="color:var(--dim)">&mdash; in the same apt step</span></h3>
       <div class="reqs" style="margin-top:0">
         <div class="req"><span class="x">&#9835;</span><div><b>PipeWire or ALSA</b><small><code>pipewire-bin</code> / <code>pipewire-utils</code>, <code>alsa-utils</code> and <code>pulseaudio-utils</code>. A microphone to listen from, a speaker to talk through.</small></div></div>
-        <div class="req"><span class="x">&#9679;</span><div><b>Python 3</b><small>Most of her agents &mdash; playing music, animating the pet &mdash; are small Python scripts. This is the one real dependency.</small></div></div>
+        <div class="req"><span class="x">&#9679;</span><div><b>Python 3</b><small>Most of her agents &mdash; playing music, animating the buddy &mdash; are small Python scripts. This is the one real dependency.</small></div></div>
         <div class="req"><span class="x">&#9881;</span><div><b>xdg-utils</b><small>So the launchers in your applications menu can actually find her.</small></div></div>
       </div>
     </div>
@@ -1628,7 +1536,7 @@ onidia-chat -provider ollama -model qwen2:1.5b</pre>
             </svg></div>
           <h3 style="color:var(--teal-tx)">Agents &rarr;</h3>
           <p>Not setup, but the same family: drop a folder in and she can do new things &mdash; play your
-            music, control the pet, or your own script. Install, list and delete them from the one binary.</p>
+            music, control the buddy, or your own script. Install, list and delete them from the one binary.</p>
         </a>
       </div>
     </div>
@@ -1705,7 +1613,7 @@ onidia-chat -provider ollama -model qwen2:1.5b</pre>
   <div class="wrap foot">
     <small>&copy; Onidia &mdash; a tiny anime companion for your desktop. Pure Go, no cgo, no toolkit.</small>
     <nav class="foot-links" aria-label="Footer">
-      <a href="#meet">Meet her</a><a href="#tech">Nerd start from here</a>
+      <a href="#meet">Meet her</a><a href="nerd.html">Nerd start from here</a>
       <a href="#install">Install</a>
       <a href="docs/index.html">Docs</a><a href="docs/agents.html">Agents</a>
       <a href="#contact">Contact</a>
@@ -1794,7 +1702,13 @@ totop.addEventListener('click', function () {
   W.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
 });
 
-var links = $$('#navlinks a'), sections = links.map(function (a) { return $(a.getAttribute('href')); });
+var links = $$('#navlinks a'), sections = links.map(function (a) {
+  var h = a.getAttribute('href');
+  /* Only on-page anchors can be scrolled to: the absolute Docs/Agents URLs are
+     not valid selectors and would throw here, killing everything below — burger
+     menu, reveals, the contact form. Cross-page links are simply not targets. */
+  return (h && h.charAt(0) === '#') ? $(h) : null;
+});
 function spy() {
   var y = W.scrollY + W.innerHeight * 0.32, best = 0;
   sections.forEach(function (s, i) { if (s && s.offsetTop <= y) best = i; });
@@ -1935,7 +1849,7 @@ form.addEventListener('submit', function (e) {
 });
 
 /* ==========================================================================
-   Floating FX over the playground — the site's own nod to the pet's events
+   Floating FX over the playground — the site's own nod to the buddy's events
    ========================================================================== */
 var fxLayer = $('#fx'), FX = {
   love:       { n: 16, glyph: ['❤', '💗', '💕'], spread: 0.55, dur: 2400, rise: -150 },
@@ -2004,7 +1918,7 @@ for (var pass = 0; pass < 2; pass++) {
 }
 track.innerHTML = html;
 
-/* ---------- expose a tiny bridge the pet engine hooks into ---------- */
+/* ---------- expose a tiny bridge the buddy engine hooks into ---------- */
 W.onidiaPage = {
   burst: burst,
   say: function (text) { /* the engine calls this so the site's own copy can stay in sync */ }
@@ -2023,9 +1937,9 @@ W.onidiaPage = {
    ========================================================================== */
 function mountOnidia(root, canvas) {
 // ---------------------------------------------------------------------------
-// Onidia — chibi desktop pet, ported to canvas.
+// Onidia — chibi desktop buddy, ported to canvas.
 //
-// This is the Go pet's character redrawn in vanilla JS, so the sprite can be
+// This is the Go buddy's character redrawn in vanilla JS, so the sprite can be
 // opened straight from disk. There is no build step and nothing to install.
 //
 // Source of truth, kept 1:1 so the two never drift apart:
@@ -2703,7 +2617,7 @@ function drawThink(x, y, text, pop) {
   ctx.textBaseline = 'alphabetic';
 }
 
-// ---- the pet brain ---------------------------------------------------------
+// ---- the buddy brain ---------------------------------------------------------
 
 const IDLE_MS = 4200;                     // how long she rests between actions
 const pet = {
@@ -2855,7 +2769,7 @@ function buildPose(dt) {
   return p;
 }
 
-// ---- stage: ground, grid, pet, bubble --------------------------------------
+// ---- stage: ground, grid, buddy, bubble --------------------------------------
 
 const autoChk = root.querySelector('[data-oid="auto"]');
 const groundY = () => viewH - Math.max(18, viewH * 0.055);
@@ -2878,7 +2792,7 @@ function drawStage(dt) {
 
   const p = buildPose(dt);
 
-  // The pet lives on the author grid: logical (CX, GROUNDY) is the point she
+  // The buddy lives on the author grid: logical (CX, GROUNDY) is the point she
   // stands on, so that is the transform origin. The grid's Y axis already
   // grows downward, like the canvas.
   ctx.save();
@@ -3152,7 +3066,7 @@ function scaffold(root) {
   root.appendChild(box);
 }
 
-/* ---------- drag her around, like the real desktop pet ---------- */
+/* ---------- drag her around, like the real desktop buddy ---------- */
 function attachDrag(canvas, pet, wrap) {
   var dragging = false, moved = false, id = null;
   function pt(e) { var r = canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
@@ -3178,8 +3092,8 @@ function attachDrag(canvas, pet, wrap) {
   canvas.style.touchAction = 'none';
 }
 
-/* ---------- mount the pet: one canvas, in the hero, with real controls ----------
-   There used to be two mounts (a canvas-only hero pet plus a separate
+/* ---------- mount the buddy: one canvas, in the hero, with real controls ----------
+   There used to be two mounts (a canvas-only hero buddy plus a separate
    playground). The playground now *is* the hero, so there is exactly one. */
 var hero = $('#hero-pet'), stage = $('#stage'), pet = null;
 if (hero && stage) {
