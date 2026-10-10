@@ -987,7 +987,7 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
       <h1 class="h-xl rv">A tiny anime companion who <span class="grad-teal">lives on your screen.</span></h1>
       <p class="lede rv">Onidia walks along the bottom of your display, blinks, stretches, naps on schedule, and
         answers you <em>out loud</em>. Pick her up, throw her, talk to her &mdash; or let your apps talk to her
-        for you. All of it in a few megabytes of Go, with an idle CPU of roughly zero.</p>
+        for you.</p>
       <div class="hero-cta rv">
         <a class="btn btn-primary" href="#brain">See how she thinks &darr;</a>
         <a class="btn btn-ghost" href="#install">Install in 4 seconds</a>
@@ -1794,7 +1794,13 @@ totop.addEventListener('click', function () {
   W.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
 });
 
-var links = $$('#navlinks a'), sections = links.map(function (a) { return $(a.getAttribute('href')); });
+var links = $$('#navlinks a'), sections = links.map(function (a) {
+  var h = a.getAttribute('href');
+  /* Only on-page anchors can be scrolled to: the absolute Docs/Agents URLs are
+     not valid selectors and would throw here, killing everything below — burger
+     menu, reveals, the contact form. Cross-page links are simply not targets. */
+  return (h && h.charAt(0) === '#') ? $(h) : null;
+});
 function spy() {
   var y = W.scrollY + W.innerHeight * 0.32, best = 0;
   sections.forEach(function (s, i) { if (s && s.offsetTop <= y) best = i; });
