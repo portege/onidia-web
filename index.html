@@ -948,7 +948,7 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
     <nav class="nav-links" id="navlinks" aria-label="Sections">
       <a href="#meet">Meet her</a>
       <a href="#inaction">In Action</a>
-      <a href="#tech">Nerd start from here</a>
+      <a href="nerd.html">Nerd start from here</a>
       <a href="https://onidia.babeh.com/docs/index.html">Docs</a>
       <a href="https://onidia.babeh.com/docs/agents.html">Agents</a>
       <a href="#contact">Contact</a>
@@ -971,7 +971,7 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
 <div class="mobile-menu" id="mmenu">
   <a href="#meet"><span>01</span>Meet her</a>
   <a href="#inaction"><span>02</span>In Action</a>
-  <a href="#tech"><span>03</span>Nerd start from here</a>
+  <a href="nerd.html"><span>03</span>Nerd start from here</a>
   <a href="https://onidia.babeh.com/docs/index.html"><span>04</span>Docs</a>
   <a href="https://onidia.babeh.com/docs/agents.html"><span>05</span>Agents</a>
   <a href="#contact"><span>06</span>Contact</a>
@@ -1280,114 +1280,6 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
         <h3>Checks itself first</h3>
         <p>Before the window opens, a preflight gate verifies your backend is really reachable and the
           environment is sane &mdash; and tells you exactly what to fix instead of failing mysteriously later.</p></article>
-    </div>
-  </div>
-</section>
-
-<!-- ===================== TECH ===================== -->
-<section id="tech">
-  <div class="wrap">
-    <div class="sechead rv">
-      <span class="eyebrow">Nerd start from here</span>
-      <h2 class="h-lg" style="margin-top:22px">No toolkit.<br><span class="grad-teal">No cgo. Just Go and X11.</span></h2>
-      <p class="lede">Most desktop toys drag in a GUI framework measured in hundreds of megabytes. This one
-        doesn't. It speaks the X11 wire protocol directly, and every pixel of Onidia is drawn by code at runtime.</p>
-    </div>
-
-    <div class="arch rv">
-      <div class="achain">
-        <div class="abox hl"><b>You</b><small>type, or speak into the mic</small></div>
-        <div class="aflex">&rarr;</div>
-        <div class="abox"><b>onidia-chat</b><small>pure Go, raw X11<br>UI thread never blocks</small></div>
-        <div class="aflex">&rarr;</div>
-        <div class="abox"><b>The model</b><small>Gemini / Bedrock<br>Ollama / OpenRouter</small></div>
-        <div class="aflex">&rarr;</div>
-        <div class="abox"><b>Speech pipe</b><small>a named FIFO per display<br>/tmp/desktop-pet--0.say</small></div>
-        <div class="aflex">&rarr;</div>
-        <div class="abox hl"><b>Onidia</b><small>speaks it, with the<br>matching expression</small></div>
-      </div>
-    </div>
-
-    <div class="stats rv">
-      <div class="stat"><b class="grad-teal">~0%</b><small>IDLE CPU</small></div>
-      <div class="stat"><b class="grad-teal">~3 MB</b><small>RESIDENT MEMORY</small></div>
-      <div class="stat"><b class="grad-pink">0</b><small>IMAGE ASSETS</small></div>
-      <div class="stat"><b class="grad-pink">0</b><small>CGO DEPENDENCIES</small></div>
-      <div class="stat"><b class="grad-teal">112&times;160</b><small>AUTHORING GRID</small></div>
-      <div class="stat"><b class="grad-teal">5&times;7</b><small>BITMAP FONT</small></div>
-    </div>
-
-    <!-- The one place on the page that names the actual target hardware and
-         what the app does with it. Claim on the left, proof on the right. -->
-    <div class="pihw rv">
-      <div class="pihw-in">
-        <div>
-          <span class="eyebrow">Written, designed and tested on a Pi 5</span>
-          <h3 class="h-md" style="margin:18px 0 16px">Sixty-four bits, end to end.</h3>
-          <p>Onidia and onidia-chat are pure Go, so a build is a single static <code>arm64</code>
-            binary &mdash; nothing to cross-compile on the Pi, nothing to install beside it. The
-            release artifact is exactly that: one <code>arm64</code> .deb that carries both
-            halves. A Raspberry Pi 5 is what they were written against,
-            designed around and tested on.</p>
-          <p>The more interesting half is what that Pi can be <b>as</b> the machine. On a
-            <b>AI HAT+ 2</b> &mdash; the Hailo-10H board, 40 TOPS of INT4 inference and 8 GB of RAM
-            living on the card itself &mdash; Hailo's <code>hailo-ollama</code> speaks the very same
-            ollama <code>/api/chat</code> dialect <code>onidia-chat</code> already speaks to the network.
-            Point the provider at localhost and the model stops being someone else's computer.</p>
-          <div class="pihw-facts">
-            <div class="pihw-fact"><b class="grad-teal">arm64</b><small>BUILD TARGET</small></div>
-            <div class="pihw-fact"><b class="grad-pink">40 TOPS</b><small>INT4 INFERENCE</small></div>
-            <div class="pihw-fact"><b class="grad-teal">8 GB</b><small>ON-BOARD MODEL RAM</small></div>
-            <div class="pihw-fact"><b class="grad-pink">0 B</b><small>LEAVES THE PI</small></div>
-          </div>
-        </div>
-        <div>
-          <div class="codeblock">
-            <div class="cbar"><b>private by default</b><button class="copy" data-copy="#cb-hw">copy</button></div>
-<pre id="cb-hw"><span class="c"># Hailo's ollama-compatible server. Listens on :8000.</span>
-hailo-ollama
-
-<span class="c"># 8000 is already the default - this is the whole switch:</span>
-./onidia-chat -provider ollama -model <span class="s">qwen2:1.5b</span>
-
-<span class="c"># Qwen2 1.5B, Llama 3.2 1B, Qwen2.5-Coder, DeepSeek-R1</span>
-curl localhost:8000/api/tags</pre>
-          </div>
-          <div class="pihw-note"><b>Nothing leaves the Pi.</b> No key, no account, no request to a
-            vendor you cannot audit &mdash; pull the network cable and it behaves identically. One
-            honest footnote: hailo-ollama rejects the <code>tools</code> field, so onidia-chat retires
-            tool calling after the first reply and carries on in plain text.</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="grid g2" style="margin-top:64px;align-items:start">
-      <div class="rv">
-        <h3 class="h-md" style="margin-bottom:16px">How a frame is made</h3>
-        <p style="color:var(--muted);margin:0 0 14px;line-height:1.72">A tiny state machine &mdash; idle, walk, hop,
-          drag, throw &mdash; runs a few physics steps a frame and produces a <b>pose</b>: bob, leg swing, foot
-          lift, blink, arm flags, expression. The pose is rendered procedurally onto a supersampled canvas and
-          downsampled for smooth edges, the speech bubble is composed above it, and the whole image is uploaded
-          with a single <code>PutImage</code>. The window itself just moves to follow her.</p>
-        <p style="color:var(--muted);margin:0 0 14px;line-height:1.72">Because the character is code and not a
-          sprite sheet, adding a personality means writing a Go package: its own palette, drawing functions and
-          phrase list, registered at startup and picked with <code>-character</code>. Two characters can never
-          collide, because they share nothing but the pose contract.</p>
-        <p style="color:var(--muted);margin:0;line-height:1.72">XShape is deliberately <em>not</em> used: under
-          XWayland, shrinking a shaped window's region can stop updates from being presented, so the plain
-          transparent window composites correctly everywhere instead.</p>
-      </div>
-      <div class="rv">
-        <h3 class="h-md" style="margin-bottom:16px">Worth knowing</h3>
-        <div class="filelist">
-          <div class="fitem"><b>characters/</b><small>One self-contained package per personality &mdash; onidia, kama, and a template for yours.</small></div>
-          <div class="fitem"><b>behavior.go</b><small>The buddy brain: idle / walk / hop / drag / throw FSM plus the throw and parachute physics.</small></div>
-          <div class="fitem"><b>bubble.go</b><small>Comic speech-bubble rendering, word wrapping, and the scene layout that reserves headroom for the cloud.</small></div>
-          <div class="fitem"><b>events*.go</b><small>The celebration framework: hearts, confetti, floating Zs, the lightbulb, the robot suit-up.</small></div>
-          <div class="fitem"><b>internal/fx</b><small>Shared supersample compositing, the built-in bitmap font, alpha and easing maths.</small></div>
-          <div class="fitem"><b>single instance</b><small>A kernel <code>flock</code> per display, so a second launch exits and names the pid holding it.</small></div>
-        </div>
-      </div>
     </div>
   </div>
 </section>
@@ -1705,7 +1597,7 @@ onidia-chat -provider ollama -model qwen2:1.5b</pre>
   <div class="wrap foot">
     <small>&copy; Onidia &mdash; a tiny anime companion for your desktop. Pure Go, no cgo, no toolkit.</small>
     <nav class="foot-links" aria-label="Footer">
-      <a href="#meet">Meet her</a><a href="#tech">Nerd start from here</a>
+      <a href="#meet">Meet her</a><a href="nerd.html">Nerd start from here</a>
       <a href="#install">Install</a>
       <a href="docs/index.html">Docs</a><a href="docs/agents.html">Agents</a>
       <a href="#contact">Contact</a>

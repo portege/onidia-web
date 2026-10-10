@@ -1,0 +1,1476 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1MPT6SXMJN"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-1MPT6SXMJN');
+</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nerd start from here — Onidia</title>
+<meta name="description" content="How Onidia is built: pure Go with no cgo and no toolkit, the raw X11 wire protocol, a named FIFO speech pipe, procedural drawing — and how a frame is made.">
+<meta name="theme-color" content="#0c1018">
+<meta property="og:title" content="Nerd start from here — Onidia">
+<meta property="og:description" content="The architecture behind Onidia: pure Go, raw X11, a FIFO speech pipe — and how a frame is made.">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="favicon.png">
+<script>
+/* Applies the stored theme before first paint. This has to be inline and early:
+   deferring it to the end of the body would let the browser paint the default
+   dark theme first, then snap to light — a white flash for anyone who chose
+   light. A storage exception (private mode, blocked cookies) must not break the
+   page, hence the try/catch around the only call that can throw. */
+(function () {
+  var t = null;
+  try { t = localStorage.getItem('onidia-theme'); } catch (e) {}
+  if (t !== 'light' && t !== 'dark') {
+    t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches)
+      ? 'light' : 'dark';
+  }
+  document.documentElement.setAttribute('data-theme', t);
+  /* Suppresses the theme cross-fade for one frame so a reload in the stored
+     theme doesn't animate in from the wrong colours. */
+  document.documentElement.classList.add('theme-booting');
+})();
+</script>
+<style>
+/* ==========================================================================
+   Onidia — single-page site.
+   Palette is lifted straight out of the apps: the buddy's palette
+   (characters/onidia/palette.go) and the chat UI's colours (onidia-chat/ui.go).
+   Teal hair, plum outlines, pink dress. Nothing here is invented.
+   ========================================================================== */
+:root{
+  --teal:#5fcfd6; --teal-lt:#a5ecef; --teal-dk:#41aeb6;
+  --plum:#2f223e; --plum-2:#3a2347; --plum-3:#1b1428;
+  --pink:#ec609c; --pink-lt:#fc96c2; --pink-dk:#ba3474;
+  --dress:#ff9aaa; --lilac:#f6f3fa; --iris:#363e6e;
+
+  /* --- themeable surfaces -------------------------------------------------
+     Everything that reads as "a surface" resolves through these, so the light
+     theme only has to override this block instead of hunting literals.
+
+     --teal-tx / --pink-tx exist because --teal-lt and --pink-lt are doing two
+     jobs: accent *text* and the gradient *fill* of .btn-primary, which pairs
+     with a fixed dark #052a2e. Re-theming the light token would have put dark
+     text on a dark button, so accent text gets its own token per theme. */
+  --bg:#0f0d1a;
+  --ink:#0f0d1a;   /* body background */
+  --ink-3:#1a2136; /* top of the backdrop gradient */
+  --grad-ink:linear-gradient(180deg,var(--ink-3),var(--ink));
+  --surface:rgba(255,255,255,.045);
+  --surface-2:rgba(255,255,255,.075);
+  --surface-3:rgba(255,255,255,.10);
+  --field:rgba(0,0,0,.35);
+  --field-focus:rgba(0,0,0,.5);
+  --teal-tx:#7fdee3;
+  --pink-tx:#f486b4;
+  --shadow:0 30px 80px -30px rgba(0,0,0,.85);
+  --shadow-sm:0 20px 40px -20px rgba(0,0,0,.9);
+  --scrim:rgba(15,13,26,.72);
+
+  /* The playground and chat panels are pictures of the real app, which is a
+     dark window — they stay dark in the light theme on purpose. */
+  --chrome:rgba(0,0,0,.28);
+  --chrome-solid:rgba(0,0,0,.4);
+  --chrome-focus:rgba(0,0,0,.55);
+  /* Opaque base for the app-window frames. Their gradients are semi-transparent
+     and were written assuming a near-black page behind them; on the light theme
+     that transparency blends the window into grey mud. This base makes the
+     frames self-contained, so they composite the same in either theme. */
+  --app-bg:#121a29;
+  /* Surfaces *inside* those dark windows. These must not follow the page theme:
+     a white card on a dark app window is the same bug as dark text on it. */
+  --inset:rgba(255,255,255,.05);
+  --inset-2:rgba(255,255,255,.09);
+  --inset-edge:rgba(255,255,255,.12);
+
+  /* Characters keep their own hand-picked colours in both themes — the buddy is
+     teal hair on plum, and recolouring her would be inventing, not theming. */
+
+  --text:#eae7f7; --muted:#a9a2c4; --faint:#8f88ad; --dim:#6f6889;
+
+  --glass:rgba(255,255,255,.045);
+  --glass-2:rgba(255,255,255,.075);
+  --edge:rgba(165,236,239,.16);
+  --edge-2:rgba(165,236,239,.30);
+  --grad-teal:linear-gradient(180deg,var(--teal-lt),var(--teal) 55%,var(--teal-dk));
+  --grad-pink:linear-gradient(135deg,var(--pink-lt),var(--pink) 60%,var(--pink-dk));
+  /* Gradient-clipped TEXT needs its own gradient for the same reason as
+     --teal-tx: these two are also the fill of .btn-primary/.btn-pink, which
+     carry fixed dark text. Lightening the text variant must not lighten the
+     button fill. Identical to the fills above in the dark theme. */
+  --grad-teal-tx:var(--grad-teal);
+  --grad-pink-tx:var(--grad-pink);
+  --r-s:12px; --r-m:20px; --r-l:30px; --r-xl:42px;
+  --maxw:1220px;
+  --ease:cubic-bezier(.22,1,.36,1);
+  --ease-io:cubic-bezier(.65,0,.35,1);
+}
+
+/* ---------- light theme ----------
+   Overrides the tokens above only. The palette constants (--teal, --pink,
+   --plum…) are deliberately left alone. */
+:root[data-theme="light"]{
+  --bg:#f4f2f9;
+  --ink:#f4f2f9;                 /* body background + backdrop gradient */
+  --ink-3:#eae6f5;
+  --text:#221c33;
+  --muted:#4e4664;
+  --faint:#5d5479;
+  --dim:#736a8c;
+
+  /* Accent text has to darken here — the light --teal-lt on white sits at
+     ~1.4:1, far below the 4.5:1 floor for body text. */
+  --teal-tx:#0f6f77;
+  --pink-tx:#b8306e;
+
+  --surface:rgba(255,255,255,.72);
+  --surface-2:rgba(255,255,255,.92);
+  --surface-3:rgba(34,28,51,.07);
+  --field:rgba(255,255,255,.9);
+  --field-focus:#fff;
+  --glass:rgba(255,255,255,.66);
+  --glass-2:#fff;
+  --edge:rgba(34,28,51,.13);
+  --edge-2:rgba(15,111,119,.42);
+
+  --shadow:0 28px 60px -32px rgba(43,33,66,.42);
+  --shadow-sm:0 18px 34px -22px rgba(43,33,66,.4);
+  --scrim:rgba(244,242,249,.82);
+  --chrome:rgba(0,0,0,.28);
+  --chrome-solid:rgba(0,0,0,.4);
+  --chrome-focus:rgba(0,0,0,.55);
+  --teal:#3fb9c0; --teal-dk:#2b9aa1;   /* gradient fills, not text */
+  --pink:#e14d90; --pink-dk:#c33a76;
+  /* Text gradients get the darkened stops so the clipped text stays legible;
+     the button fills above keep the brighter ones for their white/dark labels. */
+  --grad-teal-tx:linear-gradient(180deg,var(--teal-tx),#1c8f98 55%,#14666e);
+  --grad-pink-tx:linear-gradient(135deg,#c33a76,var(--pink-tx) 60%,#96255a);
+}
+
+/* The backdrop, nav and inputs cross-fade between themes. The transition is on
+   the properties that actually change colour — not `all` — so layout-affecting
+   properties are never animated. */
+body,.nav,.backdrop,.field input,.field textarea,.chip,.clink,.card{
+  transition:background-color .35s var(--ease),border-color .35s var(--ease),
+             color .35s var(--ease),box-shadow .35s var(--ease);
+}
+/* Suppress the cross-fade while the page is still settling, so a reload in the
+   stored theme doesn't visibly animate in from the wrong colours. */
+:root.theme-booting body,:root.theme-booting .nav,:root.theme-booting .backdrop,
+:root.theme-booting .field input,:root.theme-booting .field textarea{
+  transition:none!important;
+}
+/* Grain is an overlay blend — on a light backdrop it just muddies the whites. */
+:root[data-theme="light"] .grain{opacity:.05;mix-blend-mode:multiply}
+:root[data-theme="light"] .aurora{opacity:.42}
+/* Aurora tints are pale enough to keep as-is; the third blob is a deep plum
+   that reads as mud on white, so lift it toward pink. */
+:root[data-theme="light"] .a3{background:radial-gradient(circle,rgba(236,96,156,.30),transparent 68%)}
+/* The floating FX and buddy drop-shadows are tuned for dark backdrops. */
+:root[data-theme="light"] .fx{filter:drop-shadow(0 3px 8px rgba(43,33,66,.28))}
+/* Code + form controls need opaque backgrounds to stay legible on white. */
+:root[data-theme="light"] .codeblock pre{background:#1b1626;color:#e8e4f6}
+:root[data-theme="light"] code:not(pre code){background:rgba(15,111,119,.11);border-color:rgba(15,111,119,.2)}
+:root[data-theme="light"] .codeblock pre .k{color:#ff9fd0}
+:root[data-theme="light"] .codeblock pre .c{color:#9a90b8}
+:root[data-theme="light"] .field input,.field textarea{box-shadow:0 1px 2px rgba(43,33,66,.06)}
+:root[data-theme="light"] ::selection{background:var(--teal);color:#fff}
+
+/* ---------- dark islands ----------
+   The playground and hero stage are pictures of the real app, which is a dark
+   window, so they stay dark on the light page. That means every token they
+   inherit has to be re-pinned here.
+
+   The buddy engine builds its action/face buttons as bare `.btn` — the *page*
+   class — with nothing marking them as living inside this dark window. Without
+   these re-pins, --text flips to near-black on the light theme and the buttons
+   disappear into the dark panel. Placed after the light block so it wins on
+   source order against the :root[data-theme="light"] overrides. */
+.hero-stage{
+  /* `color` has to be re-applied here, not just the tokens. `color` inherits as
+     an already-computed value, so re-declaring --text on this element changes
+     nothing on its own — body{color:var(--text)} resolved against the *light*
+     --text long ago, and that resolved colour is what descendants inherit.
+     This line re-resolves it against the dark values above. */
+  color:#eae7f7;
+  --text:#eae7f7; --muted:#a9a2c4; --faint:#8f88ad; --dim:#6f6889;
+  --teal-tx:#7fdee3; --pink-tx:#f486b4;
+  --teal:#5fcfd6; --teal-dk:#41aeb6; --pink:#ec609c; --pink-dk:#ba3474;
+  --edge:rgba(165,236,239,.16); --edge-2:rgba(165,236,239,.30);
+  --glass:rgba(255,255,255,.045); --glass-2:rgba(255,255,255,.075);
+  --surface:rgba(255,255,255,.045); --surface-2:rgba(255,255,255,.075);
+  --surface-3:rgba(255,255,255,.10);
+  --grad-teal:linear-gradient(180deg,var(--teal-lt),var(--teal) 55%,var(--teal-dk));
+  --grad-pink:linear-gradient(135deg,var(--pink-lt),var(--pink) 60%,var(--pink-dk));
+  --grad-teal-tx:var(--grad-teal);
+  --grad-pink-tx:var(--grad-pink);
+}
+*,*::before,*::after{box-sizing:border-box}
+/* scroll-padding keeps anchor targets clear of the fixed nav (worst case: the
+   taller, un-collapsed bar) — without it, headings land underneath the nav. */
+html{scroll-behavior:smooth;scroll-padding-top:96px;-webkit-text-size-adjust:100%}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Inter,Roboto,system-ui,sans-serif;
+  background:var(--ink); color:var(--text);
+  line-height:1.6; overflow-x:hidden;
+  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+::selection{background:var(--pink);color:#fff}
+
+/* ---------- the animated backdrop: aurora + grain, fixed behind everything -- */
+.backdrop{position:fixed;inset:0;z-index:-2;overflow:hidden;background:var(--grad-ink)}
+.aurora{position:absolute;border-radius:50%;filter:blur(90px);opacity:.5;will-change:transform}
+.a1{width:60vw;height:60vw;min-width:520px;min-height:520px;left:-16vw;top:-18vw;
+    background:radial-gradient(circle,rgba(95,207,214,.55),transparent 66%);animation:drift1 26s var(--ease-io) infinite}
+.a2{width:56vw;height:56vw;min-width:480px;min-height:480px;right:-14vw;top:6vh;
+    background:radial-gradient(circle,rgba(236,96,156,.42),transparent 66%);animation:drift2 32s var(--ease-io) infinite}
+.a3{width:52vw;height:52vw;min-width:440px;min-height:440px;left:24vw;bottom:-22vw;
+    background:radial-gradient(circle,rgba(58,35,71,.85),transparent 68%);animation:drift3 38s var(--ease-io) infinite}
+@keyframes drift1{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(9vw,7vh,0) scale(1.14)}}
+@keyframes drift2{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(-8vw,10vh,0) scale(1.1)}}
+@keyframes drift3{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(6vw,-8vh,0) scale(1.16)}}
+.grain{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.16;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E")}
+
+/* ---------- layout primitives ---------- */
+.wrap{width:100%;max-width:var(--maxw);margin:0 auto;padding:0 26px}
+section{position:relative;padding:120px 0}
+.eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:12px;font-weight:700;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--teal-tx);
+  padding:7px 15px;border:1px solid var(--edge);border-radius:999px;
+  background:rgba(95,207,214,.08);backdrop-filter:blur(10px)}
+.eyebrow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--pink);
+  box-shadow:0 0 10px var(--pink);animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.7)}}
+h1,h2,h3,h4{margin:0;line-height:1.08;letter-spacing:-.035em;font-weight:700}
+.h-xl{font-size:clamp(2.5rem,5vw,4.35rem);letter-spacing:-.04em;line-height:1.02}
+.h-lg{font-size:clamp(2rem,4.2vw,3.4rem);letter-spacing:-.038em;line-height:1.06}
+.h-md{font-size:clamp(1.4rem,2.3vw,1.9rem);letter-spacing:-.03em}
+.grad-teal{background:var(--grad-teal-tx);-webkit-background-clip:text;background-clip:text;color:transparent}
+.grad-pink{background:var(--grad-pink-tx);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{font-size:clamp(1.02rem,1.55vw,1.25rem);color:var(--muted);max-width:62ch;line-height:1.68}
+.sechead{max-width:820px;margin-bottom:64px}
+.sechead p{margin:20px 0 0}
+.center{margin-inline:auto;text-align:center}
+.rule{height:1px;border:0;margin:0;background:linear-gradient(90deg,transparent,var(--edge-2),transparent)}
+code,kbd{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+code:not(pre code){background:rgba(95,207,214,.12);color:var(--teal-tx);padding:2px 7px;
+  border-radius:6px;font-size:.86em;border:1px solid rgba(95,207,214,.18)}
+kbd{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);
+  border-bottom-width:2px;border-radius:6px;padding:1px 7px;font-size:.78rem}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;gap:9px;padding:14px 27px;border-radius:999px;
+  font-size:.96rem;font-weight:600;letter-spacing:-.01em;white-space:nowrap;
+  transition:transform .3s var(--ease),box-shadow .3s var(--ease),background .3s,border-color .3s}
+.btn:hover{transform:translateY(-2px)}
+.btn-primary{background:var(--grad-teal);color:#052a2e;box-shadow:0 14px 34px -12px rgba(95,207,214,.75)}
+.btn-primary:hover{box-shadow:0 20px 44px -12px rgba(95,207,214,.95)}
+.btn-pink{background:var(--grad-pink);color:#fff;box-shadow:0 14px 34px -12px rgba(236,96,156,.7)}
+.btn-pink:hover{box-shadow:0 20px 44px -12px rgba(236,96,156,.9)}
+.btn-ghost{border:1px solid var(--edge-2);color:var(--text);background:var(--glass);backdrop-filter:blur(12px)}
+.btn-ghost:hover{background:var(--glass-2);border-color:rgba(165,236,239,.5)}
+.btn-sm{padding:9px 18px;font-size:.85rem}
+
+/* ---------- scroll reveal ----------
+   The hidden start state is opt-out: a `.no-js` document, or one where the
+   script never reaches the observer, must still show every word. The script
+   drops `.no-js` on <html> as its first act, so JS-capable browsers get the
+   animation and everything else falls back to fully visible content. */
+.no-js .rv{opacity:1;transform:none}
+.rv{opacity:0;transform:translateY(38px);transition:opacity .9s var(--ease),transform .9s var(--ease)}
+.rv.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .rv{opacity:1;transform:none;transition:none}
+  .aurora{animation:none}
+  *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+
+/* ==========================================================================
+   Scroll progress + sticky navigation
+   ========================================================================== */
+.progress{position:fixed;top:0;left:0;height:3px;width:100%;z-index:120;
+  background:transparent;pointer-events:none}
+.progress i{display:block;height:100%;width:0;transform-origin:0 50%;
+  background:linear-gradient(90deg,var(--teal),var(--pink) 70%,var(--pink-lt));
+  box-shadow:0 0 14px rgba(236,96,156,.8)}
+.nav{position:fixed;top:0;left:0;right:0;z-index:110;padding:16px 0;
+  transition:padding .45s var(--ease),background .45s var(--ease),border-color .45s;
+  border-bottom:1px solid transparent}
+.nav.solid{padding:9px 0;background:var(--scrim);backdrop-filter:blur(22px) saturate(160%);
+  -webkit-backdrop-filter:blur(22px) saturate(160%);border-bottom-color:var(--edge)}
+.nav-in{display:flex;align-items:center;gap:22px}
+.brand{display:flex;align-items:center;gap:11px;font-weight:800;letter-spacing:-.03em;font-size:1.12rem;flex-shrink:0}
+.brand .mark{width:38px;height:38px;flex-shrink:0;filter:drop-shadow(0 4px 12px rgba(95,207,214,.45))}
+.nav-links{display:flex;gap:4px;margin-left:auto}
+.nav-links a{position:relative;padding:9px 15px;border-radius:999px;font-size:.89rem;
+  color:var(--muted);font-weight:550;transition:color .3s,background .3s}
+.nav-links a:hover{color:var(--text);background:var(--glass)}
+.nav-links a.on{color:var(--teal-tx);background:rgba(95,207,214,.12)}
+.nav-cta{margin-left:6px}
+.burger{display:none;margin-left:auto;width:42px;height:42px;border-radius:12px;
+  border:1px solid var(--edge);background:var(--glass);align-items:center;justify-content:center;flex-direction:column;gap:5px}
+.burger i{display:block;width:17px;height:2px;background:var(--text);border-radius:2px;transition:.35s var(--ease)}
+.burger[aria-expanded="true"] i:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.burger[aria-expanded="true"] i:nth-child(2){opacity:0}
+.burger[aria-expanded="true"] i:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+/* ---------- theme toggle ----------
+   Two icons stacked in one button; only the one matching the active theme is
+   shown, so the button's accessible name has to name the *action*, not the
+   current state — hence the swap in the label text. */
+.theme-toggle{width:42px;height:42px;flex-shrink:0;border-radius:12px;position:relative;
+  border:1px solid var(--edge);background:var(--glass);color:var(--text);display:flex;
+  align-items:center;justify-content:center;transition:background .3s,border-color .3s,transform .3s var(--ease)}
+.theme-toggle:hover{background:var(--glass-2);border-color:var(--edge-2);transform:translateY(-1px)}
+.theme-toggle svg{width:18px;height:18px;position:absolute;stroke:currentColor;fill:none;
+  stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;
+  transition:opacity .3s var(--ease),transform .45s var(--ease)}
+.theme-toggle .i-sun{opacity:0;transform:rotate(-70deg) scale(.5)}
+.theme-toggle .i-moon{opacity:1;transform:none}
+:root[data-theme="light"] .theme-toggle .i-sun{opacity:1;transform:none}
+:root[data-theme="light"] .theme-toggle .i-moon{opacity:0;transform:rotate(70deg) scale(.5)}
+.mobile-menu{position:fixed;inset:0;z-index:105;background:var(--scrim);
+  backdrop-filter:blur(26px);display:flex;flex-direction:column;justify-content:center;
+  gap:6px;padding:80px 30px;opacity:0;pointer-events:none;transition:opacity .4s var(--ease)}
+.mobile-menu.open{opacity:1;pointer-events:auto}
+.mobile-menu a{font-size:1.7rem;font-weight:700;letter-spacing:-.035em;padding:12px 0;
+  border-bottom:1px solid var(--edge);display:flex;align-items:center;gap:14px}
+.mobile-menu a span{color:var(--teal);font-size:.8rem;font-family:ui-monospace,monospace;font-weight:400}
+@media(max-width:900px){
+  .nav-links,.nav-cta{display:none}
+  .burger{display:flex}
+}
+
+/* ==========================================================================
+   Hero
+   ========================================================================== */
+.hero{min-height:100svh;display:flex;align-items:center;padding:150px 0 90px;position:relative}
+.hero-grid{display:grid;grid-template-columns:1.06fr .94fr;gap:60px;align-items:center;width:100%}
+.hero h1{margin:26px 0 0}
+.hero .lede{margin:26px 0 0;font-size:clamp(1.05rem,1.6vw,1.3rem)}
+.hero-cta{display:flex;gap:14px;margin-top:38px;flex-wrap:wrap}
+.hero-note{margin-top:30px;display:flex;gap:22px;flex-wrap:wrap;font-size:.85rem;color:var(--faint)}
+.hero-note b{color:var(--teal-tx);font-weight:650}
+.hero-note .dot{width:4px;height:4px;border-radius:50%;background:var(--dim);align-self:center}
+
+/* the live hero buddy sits in a glass "desktop" frame */
+.hero-stage{position:relative;border-radius:var(--r-xl);overflow:hidden;
+  border:1px solid var(--edge);box-shadow:var(--shadow),inset 0 0 90px rgba(95,207,214,.07);
+  background:linear-gradient(170deg,rgba(29,63,77,.55),rgba(20,29,43,.85) 55%,rgba(12,16,24,.95)),var(--app-bg)}
+.hero-stage::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+  box-shadow:inset 0 1px 0 var(--surface-3)}
+.hero-stage-top{display:flex;align-items:center;gap:8px;padding:12px 16px;
+  border-bottom:1px solid var(--edge);background:var(--chrome);backdrop-filter:blur(8px)}
+.tl{display:flex;gap:6px}
+.tl i{width:11px;height:11px;border-radius:50%;display:block}
+.tl i:nth-child(1){background:#ff5f57}.tl i:nth-child(2){background:#febc2e}.tl i:nth-child(3){background:#28c840}
+.hero-stage-top .lbl{font-size:.72rem;color:var(--faint);font-family:ui-monospace,monospace;
+  margin-left:8px;letter-spacing:.02em}
+.hero-stage-top .lbl b{color:var(--teal-tx);font-weight:600}
+.live-pill{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:.66rem;
+  font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--pink-tx);
+  padding:3px 10px;border-radius:999px;background:rgba(236,96,156,.14);border:1px solid rgba(236,96,156,.3)}
+.live-pill i{width:6px;height:6px;border-radius:50%;background:var(--pink);animation:pulse 1.8s ease-in-out infinite}
+/* the stage-canvas wrapper keeps the FX layer aligned to the canvas box, so
+   burst() centres particles on her and not on the whole window frame */
+.stage-canvas{position:relative}
+/* The Raspberry Pi desktop she stands on. The engine clears its canvas to
+   transparent every frame, so this is what she is standing on rather than
+   something painted over it. z-index is explicit on every layer because the
+   canvas is not positioned by default and a positioned sibling would paint
+   straight over her. */
+.stage-bg{position:absolute;inset:0;width:100%;height:100%;z-index:0;display:block;pointer-events:none}
+#stage{position:relative;z-index:2;display:block;width:100%;height:clamp(300px,46vh,440px);cursor:pointer}
+/* The open window and the LXDE taskbar are real elements rather than drawn
+   into the SVG: the wallpaper is sliced and therefore cropped on narrow and
+   wide windows alike, and a window that loses its left edge to the crop looks
+   broken. Percentages here fit whatever shape the canvas ends up. */
+.stage-win{position:absolute;left:6%;top:7%;width:56%;height:72%;z-index:1;
+  display:flex;flex-direction:column;border-radius:8px;overflow:hidden;
+  background:#0e1117;border:1px solid rgba(255,255,255,.1);pointer-events:none;
+  box-shadow:0 18px 40px rgba(0,0,0,.5)}
+.stage-win-hd{flex:0 0 auto;display:flex;align-items:center;height:26px;padding:0 10px;
+  background:linear-gradient(180deg,#2b3550,#1b2338);border-bottom:1px solid rgba(255,255,255,.07);
+  font-size:.68rem;color:#cdd6e6}
+.stage-win-btns{margin-left:auto;display:inline-flex;align-items:center;gap:9px}
+.stage-win-btns i{display:block;width:9px;height:9px;border:1px solid #8d9ab4;border-radius:2px}
+.stage-win-btns i:nth-child(1){height:2px;border:none;border-radius:1px;margin-top:3px}
+.stage-win-btns i:nth-child(3){position:relative;border:none}
+.stage-win-btns i:nth-child(3)::before,.stage-win-btns i:nth-child(3)::after{
+  content:"";position:absolute;left:0;right:0;top:50%;height:1.5px;
+  background:#8d9ab4;transform:rotate(45deg)}
+.stage-win-btns i:nth-child(3)::after{transform:rotate(-45deg)}
+.stage-term{flex:1 1 auto;margin:0;padding:10px 12px;overflow:hidden;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;line-height:1.7;
+  color:#e6edf3;white-space:pre}
+.stage-term .pr{color:#5fcfd6}
+.stage-term .dm{color:#7d8aa3}
+.stage-term .pk{color:#ec609c}
+.stage-term .cu{color:#c8d3e2}
+.stage-panel{position:absolute;left:0;right:0;bottom:0;z-index:3;height:26px;
+  display:flex;align-items:center;gap:10px;padding:0 10px;
+  font-size:.68rem;color:#b9c4d8;pointer-events:none;
+  background:linear-gradient(180deg,#2b3550,#1b2338);
+  border-top:1px solid rgba(255,255,255,.09);
+  box-shadow:0 -6px 18px rgba(0,0,0,.28)}
+.stage-panel .sp-menu,.stage-panel .sp-task{display:inline-flex;align-items:center;gap:6px;
+  padding:2px 9px;border-radius:4px;background:rgba(255,255,255,.07);white-space:nowrap}
+.stage-panel .sp-task{background:rgba(95,207,214,.16);color:var(--teal-tx)}
+.stage-panel .sp-logo{width:9px;height:9px;border-radius:50%;
+  background:radial-gradient(circle at 34% 34%,#e2407a,#a81545 62%,transparent 64%)}
+.stage-panel .sp-right{margin-left:auto;display:inline-flex;align-items:center;gap:8px;color:#8d9ab4}
+.stage-panel .sp-ico{width:11px;height:8px;border-radius:2px;background:#6b7891;opacity:.75}
+@media(max-width:1000px){
+  .hero-grid{grid-template-columns:1fr;gap:48px}
+  section{padding:88px 0}
+}
+
+/* ==========================================================================
+   The embedded Onidia web version (playground) — the onidia/onidia.html engine
+   ========================================================================== */
+/* the acronym only reads as an acronym if its inner capitals survive, so no
+   text-transform here — the casing IS the styling */
+.brand-txt{display:flex;flex-direction:column;line-height:1.05}
+.abbr{font-style:normal;font-weight:600;font-size:.53rem;letter-spacing:.13em;
+  color:var(--faint);white-space:nowrap}
+@media(max-width:1080px){.abbr{display:none}}
+
+/* the engine now mounts in the hero, so the window frame is .hero-stage and
+   this block only styles the control bar that hangs beneath the canvas */
+.play-bar{display:grid;grid-template-columns:1fr;gap:16px;padding:16px;
+  border-top:1px solid var(--edge);background:var(--chrome-solid)}
+.pcard{background:var(--inset);border:1px solid var(--inset-edge);
+  border-radius:var(--r-m);padding:14px 15px;backdrop-filter:blur(6px);min-width:0}
+.pcard h3{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--faint);
+  margin:0 0 11px;font-weight:700}
+.prow{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+/* The 16 expressions as an even grid rather than a ragged flex wrap: the names
+   run from 5 to 10 characters, so wrapping by content left a lopsided last row
+   that changed shape with every viewport. Fixed tracks, equal chips. */
+.prow[data-oid="faces"]{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px}
+.prow[data-oid="faces"] .pbtn{justify-content:center;width:100%;padding:6px 4px;
+  border-radius:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow[data-oid="faces"] .pbtn:hover{transform:none}
+@media(max-width:900px){.prow[data-oid="faces"]{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:520px){.prow[data-oid="faces"]{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.prow.small{margin-top:10px;font-size:.79rem;color:var(--faint);gap:14px}
+.pinput{flex:1 1 150px;min-width:120px;background:var(--chrome-solid);color:#f2eefc;
+  border:1px solid rgba(165,236,239,.25);border-radius:999px;padding:10px 16px;font-size:.9rem;outline:none;
+  transition:.25s;font-family:inherit}
+.pinput:focus{border-color:var(--teal);box-shadow:0 0 0 4px rgba(95,207,214,.18);background:var(--chrome-focus)}
+.pinput::placeholder{color:var(--dim)}
+.pbtn{background:rgba(95,207,214,.1);color:#cdeff1;border:1px solid rgba(95,207,214,.3);
+  border-radius:999px;padding:8px 15px;font-size:.84rem;font-weight:600;transition:.2s var(--ease)}
+.pbtn:hover{background:rgba(95,207,214,.24);transform:translateY(-1px)}
+.pbtn.on{background:rgba(95,207,214,.42);color:#06232a;border-color:var(--teal);font-weight:700}
+.pbtn.pink{background:rgba(255,154,170,.16);border-color:rgba(255,154,170,.45);color:#ffd6e0}
+.pbtn.pink:hover{background:rgba(255,154,170,.3)}
+.pbtn.mini{padding:5px 11px;font-size:.76rem}
+.pchk{display:inline-flex;align-items:center;gap:7px;cursor:pointer;user-select:none;transition:.2s}
+.pchk:hover{color:var(--text)}
+.pchk input{accent-color:var(--teal);width:15px;height:15px;cursor:pointer}
+.pchk .hint{margin-left:auto;color:var(--dim);font-size:.75rem}
+@media(max-width:860px){.play-bar{grid-template-columns:1fr}}
+
+/* ==========================================================================
+   Cards / bento
+   ========================================================================== */
+.grid{display:grid;gap:18px}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:1000px){.g3,.g4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:640px){.g2,.g3,.g4{grid-template-columns:1fr}}
+.card{position:relative;border-radius:var(--r-l);padding:30px;overflow:hidden;
+  background:var(--glass);border:1px solid var(--surface-3);backdrop-filter:blur(14px);
+  transition:transform .5s var(--ease),border-color .5s,background .5s}
+.card:hover{transform:translateY(-7px);border-color:var(--edge-2);background:var(--glass-2)}
+.card .ico{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;
+  font-size:1.5rem;margin-bottom:18px;background:linear-gradient(150deg,rgba(95,207,214,.24),rgba(236,96,156,.16));
+  border:1px solid rgba(165,236,239,.22)}
+
+/* The four "Give her a brain" cards use drawn icons rather than emoji, so they
+   inherit the palette instead of whatever the OS font decides, and they can
+   move. The box is unchanged - 52px square - so the cards keep their rhythm;
+   only the artwork inside is adjusted. overflow:visible lets the strokes grow
+   on hover without being clipped by the box, and without affecting layout. */
+.card .ico-mic,.card .ico-pic,.card .ico-plug,.card .ico-shield,
+.card .ico-win,.card .ico-talk,.card .ico-spark,.card .ico-term,.card .ico-cast,
+.card .ico-chip,.card .ico-gem,.card .ico-rock,.card .ico-wave{
+  color:var(--teal-tx);overflow:visible}
+.card .ico svg{width:27px;height:27px;display:block;overflow:visible;
+  transition:transform .45s var(--ease)}
+.card .ico svg *{transition:opacity .45s var(--ease),transform .45s var(--ease)}
+
+/* speaking: the sound waves breathe outward, offset so it pulses rather than
+   blinking in unison */
+.ico-mic .wv{opacity:.45;transform-origin:16px 16px}
+.card:hover .ico-mic .wv{opacity:1;animation:micPulse 1.5s var(--ease) infinite}
+.card:hover .ico-mic .wv2{animation-delay:.22s}
+.card:hover .ico-mic .wv1{animation-delay:.44s}
+@keyframes micPulse{
+  0%,100%{transform:scale(1);opacity:.45}
+  50%{transform:scale(1.13);opacity:1}
+}
+/* a photo: the sun glints, the frame lifts */
+.ico-pic .sun{transform-origin:11.5px 12.5px;opacity:.8}
+.card:hover .ico-pic svg{transform:translateY(-1px) scale(1.06)}
+.card:hover .ico-pic .sun{animation:picGlint 1.9s var(--ease) infinite}
+@keyframes picGlint{
+  0%,100%{transform:scale(1);opacity:.75}
+  50%{transform:scale(1.22);opacity:1}
+}
+/* plug in: the plug settles into place, the spark twinkles */
+.ico-plug svg{transform-origin:16px 16px}
+.card:hover .ico-plug svg{animation:plugIn .7s var(--ease)}
+@keyframes plugIn{
+  0%{transform:translateY(-3px) scale(.94)}
+  60%{transform:translateY(1px) scale(1.03)}
+  100%{transform:translateY(0) scale(1)}
+}
+.card:hover .ico-plug .spark{animation:sparkTwinkle 1.4s var(--ease) infinite}
+@keyframes sparkTwinkle{
+  0%,100%{opacity:.35;transform:scale(.8) rotate(0deg)}
+  50%{opacity:1;transform:scale(1.15) rotate(22deg)}
+}
+/* preflight: the badge rocks once, then the tick draws itself in */
+.card:hover .ico-shield svg{animation:shieldRock .8s var(--ease)}
+@keyframes shieldRock{
+  0%,100%{transform:rotate(0deg)}
+  30%{transform:rotate(-5deg)}
+  65%{transform:rotate(4deg)}
+}
+.card:hover .ico-shield .tick{animation:tickDraw .55s var(--ease) both}
+@keyframes tickDraw{
+  0%{opacity:0;transform:scale(.5)}
+  100%{opacity:1;transform:scale(1)}
+}
+
+/* --- the five "what is it" cards ------------------------------------------ */
+/* she lives there: a bare window with her in it, and she bobs inside it */
+.ico-win .pip{transform-origin:16px 19px;opacity:.55}
+.card:hover .ico-win .pip{opacity:1;animation:winBob 1.5s var(--ease) infinite}
+@keyframes winBob{
+  0%,100%{transform:translateY(0);opacity:.6}
+  50%{transform:translateY(-1.6px);opacity:1}
+}
+/* she talks back: three dots type themselves, left to right */
+.ico-talk circle{opacity:.4}
+.card:hover .ico-talk .d1{animation:typeDot 1.2s var(--ease) infinite}
+.card:hover .ico-talk .d2{animation:typeDot 1.2s var(--ease) .18s infinite}
+.card:hover .ico-talk .d3{animation:typeDot 1.2s var(--ease) .36s infinite}
+@keyframes typeDot{
+  0%,100%{opacity:.35;transform:scale(.8)}
+  35%{opacity:1;transform:scale(1.2)}
+}
+/* she does things: three sparkles out of phase, so it never pulses in unison */
+.ico-spark path{opacity:.5;transform-box:fill-box;transform-origin:center}
+.card:hover .ico-spark .sp1{animation:spTwinkle 1.5s var(--ease) infinite}
+.card:hover .ico-spark .sp2{animation:spTwinkle 1.5s var(--ease) .3s infinite}
+.card:hover .ico-spark .sp3{animation:spTwinkle 1.5s var(--ease) .6s infinite}
+@keyframes spTwinkle{
+  0%,100%{opacity:.35;transform:scale(.7) rotate(-12deg)}
+  50%{opacity:1;transform:scale(1.15) rotate(12deg)}
+}
+/* for your tools: a shell prompt, and the caret blinks like a terminal */
+.ico-term .caret{stroke-dasharray:7 4}
+.card:hover .ico-term svg{transform:translateY(-1px)}
+.card:hover .ico-term .caret{animation:caretBlink 1s steps(1,end) infinite}
+@keyframes caretBlink{0%,49%{opacity:1}50%,100%{opacity:.15}}
+/* whichever character: the second figure slides in, the arrow nudges across */
+.ico-cast .two,.ico-cast .swap{opacity:.42;transition:.45s var(--ease)}
+.card:hover .ico-cast .two{opacity:1;transform:translateX(-1.6px)}
+.card:hover .ico-cast .swap{opacity:1;transform:translateX(1.6px)}
+
+/* --- the four provider marks on the setup guide cards ---------------------- */
+/* These stand in for the vendors' real logos: drawn in this page's palette
+   rather than embedded artwork, so nothing here is a trademarked asset and
+   the marks cannot drift out of step with the rest of the design. Each one is
+   themed rather than literal - a chip for the NPU, strata for Bedrock - so it
+   reads as "this is the Hailo guide" without pretending to be Hailo's mark. */
+
+/* Hailo: the AI HAT+ is an accelerator, so a chip whose die lights up */
+.ico-chip .pin{opacity:.5}
+.ico-chip .die{opacity:.35;transform-origin:16px 16px}
+.card:hover .ico-chip .pin{opacity:1}
+.card:hover .ico-chip .die{opacity:1;animation:chipPulse 1.6s var(--ease) infinite}
+@keyframes chipPulse{
+  0%,100%{transform:scale(1);opacity:.5}
+  50%{transform:scale(1.18);opacity:1}
+}
+/* Gemini: the four-point sparkle, with a smaller one trailing it */
+.ico-gem .star{transform-origin:16px 13px;opacity:.6}
+.ico-gem .s2{transform-origin:26.5px 24.7px;opacity:.4}
+.card:hover .ico-gem .star{animation:gemSpin 1.8s var(--ease) infinite}
+.card:hover .ico-gem .s2{animation:gemSpin 1.8s var(--ease) .25s infinite}
+@keyframes gemSpin{
+  0%,100%{transform:rotate(-8deg) scale(.92);opacity:.55}
+  50%{transform:rotate(8deg) scale(1.08);opacity:1}
+}
+/* Bedrock: three strata, settling downward */
+.ico-rock .lay{opacity:.85}
+.card:hover .ico-rock .l1{animation:layDrop .9s var(--ease)}
+.card:hover .ico-rock .l2{animation:layDrop .9s var(--ease) .08s}
+.card:hover .ico-rock .l3{animation:layDrop .9s var(--ease) .16s}
+@keyframes layDrop{
+  0%{transform:translateY(0);opacity:.45}
+  50%{transform:translateY(2px);opacity:1}
+  100%{transform:translateY(0);opacity:.85}
+}
+/* Typecast: a waveform, each bar a different height and out of phase */
+.ico-wave .bar{fill:currentColor;stroke:none;transform-box:fill-box;transform-origin:center}
+.card:hover .ico-wave .b1{animation:waveBar .95s var(--ease) infinite}
+.card:hover .ico-wave .b2{animation:waveBar .95s var(--ease) .12s infinite}
+.card:hover .ico-wave .b3{animation:waveBar .95s var(--ease) .24s infinite}
+.card:hover .ico-wave .b4{animation:waveBar .95s var(--ease) .36s infinite}
+@keyframes waveBar{
+  0%,100%{transform:scaleY(.55);opacity:.5}
+  50%{transform:scaleY(1.05);opacity:1}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .card:hover .ico svg *{animation:none!important}
+  .card:hover .ico-cast .two,.card:hover .ico-cast .swap{transform:none!important}
+  .card .ico svg{transform:none!important}
+}
+.card h3{margin:0 0 10px;font-size:1.2rem;letter-spacing:-.025em}
+.card p{margin:0;color:var(--muted);font-size:.93rem;line-height:1.62}
+.card .tag{position:absolute;top:26px;right:26px;font-size:.66rem;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--teal-tx);padding:4px 10px;border-radius:999px;
+  background:rgba(95,207,214,.1);border:1px solid rgba(95,207,214,.22)}
+.card .glow{position:absolute;inset:0;opacity:0;transition:opacity .5s;pointer-events:none;
+  background:radial-gradient(420px circle at var(--mx,50%) var(--my,50%),rgba(95,207,214,.16),transparent 62%)}
+.card:hover .glow{opacity:1}
+
+/* feature list rows */
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:52px;align-items:center;padding:60px 0;
+  border-top:1px solid var(--edge)}
+.frow.flip .frow-txt{order:2}
+.frow-viz{min-height:260px;display:grid;place-items:center}
+.frow h3{font-size:clamp(1.5rem,2.7vw,2.15rem);margin-bottom:16px;letter-spacing:-.035em}
+.frow p{color:var(--muted);margin:0 0 14px;line-height:1.7}
+.frow ul{margin:18px 0 0;padding:0;list-style:none;display:grid;gap:10px}
+.frow li{display:flex;gap:11px;align-items:flex-start;font-size:.93rem;color:var(--muted)}
+.frow li::before{content:"";flex-shrink:0;width:18px;height:18px;margin-top:2px;border-radius:50%;
+  background:rgba(95,207,214,.16);border:1px solid rgba(95,207,214,.4);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a5ecef' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+  background-size:11px;background-position:center;background-repeat:no-repeat}
+@media(max-width:900px){.frow{grid-template-columns:1fr;gap:30px}.frow.flip .frow-txt{order:0}}
+
+/* ==========================================================================
+   Events & actions — triggerable, drives the live buddy above
+   ========================================================================== */
+.chips{display:flex;flex-wrap:wrap;gap:9px;margin-top:24px}
+.chip{padding:9px 17px;border-radius:999px;font-size:.86rem;font-weight:600;
+  border:1px solid var(--edge);background:var(--glass);color:var(--muted);
+  transition:.25s var(--ease);position:relative;overflow:hidden}
+.chip:hover{color:var(--text);border-color:var(--edge-2);background:var(--glass-2);transform:translateY(-2px)}
+.chip:active{transform:translateY(0) scale(.96)}
+.chip.hot{border-color:rgba(236,96,156,.42);color:var(--pink-tx);background:rgba(236,96,156,.1)}
+.chip.hot:hover{background:rgba(236,96,156,.22);border-color:var(--pink)}
+.chip .k{font-size:.68rem;color:var(--dim);font-family:ui-monospace,monospace;margin-left:7px}
+
+/* floating FX layer that sits over the playground */
+.fx-layer{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:5}
+.fx{position:absolute;font-size:1.5rem;will-change:transform,opacity;line-height:1;
+  filter:drop-shadow(0 3px 8px var(--field-focus))}
+
+/* ==========================================================================
+   Chat app showcase
+   ========================================================================== */
+/* Text sits in two comfortable columns; the demo video gets its own full-width
+   band underneath. */
+.lead2{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
+@media(max-width:960px){.lead2{grid-template-columns:1fr;gap:32px}}
+/* 16:9 player in the same rounded, edged frame the cards use. */
+.video-wrap{margin-top:44px;border-radius:var(--r-m);overflow:hidden;border:1px solid var(--surface-3);background:#000;position:relative;aspect-ratio:16/9}
+.video-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.pipe-demo{margin-top:30px;border-radius:var(--r-m);border:1px solid var(--edge);
+  background:rgba(0,0,0,.4);padding:20px;font-family:ui-monospace,monospace;font-size:.83rem;
+  color:var(--faint);overflow-x:auto;line-height:1.9}
+.pipe-demo .k{color:var(--pink-tx)}
+.pipe-demo .s{color:var(--teal-tx)}
+.pipe-demo .c{color:var(--dim)}
+.pipe-demo .arrow{color:var(--pink);font-weight:700}
+
+/* ==========================================================================
+   Tech / architecture
+   ========================================================================== */
+.arch{display:grid;gap:14px;margin-top:20px}
+.achain{display:flex;align-items:stretch;gap:0;flex-wrap:wrap}
+.abox{flex:1 1 180px;border-radius:var(--r-m);padding:18px 20px;min-width:0;
+  background:var(--glass);border:1px solid var(--surface-3);position:relative;transition:.4s var(--ease)}
+.abox:hover{background:var(--glass-2);border-color:var(--edge-2);transform:translateY(-4px)}
+.abox b{display:block;font-size:.95rem;margin-bottom:6px;letter-spacing:-.02em}
+.abox small{display:block;color:var(--faint);font-size:.79rem;line-height:1.55;font-family:ui-monospace,monospace}
+.abox.hl{background:linear-gradient(160deg,rgba(95,207,214,.16),rgba(95,207,214,.04));border-color:rgba(95,207,214,.32)}
+.aflex{width:38px;display:grid;place-items:center;color:var(--pink);font-size:1.15rem;flex:0 0 38px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-top:26px}
+.stat{border-radius:var(--r-m);padding:22px 16px;background:var(--glass);border:1px solid var(--surface-3);
+  text-align:center;transition:.4s var(--ease)}
+.stat:hover{transform:translateY(-5px);border-color:var(--edge-2);background:var(--glass-2)}
+/* Must stay narrow enough for the widest value ("112×160") to fit a 6-up grid
+   track: .stat b is ~135px wide, so the text has to stay under ~140px. */
+.stat b{display:block;font-size:clamp(1.55rem,2.2vw,1.85rem);letter-spacing:-.04em;line-height:1}
+.stat small{display:block;color:var(--faint);font-size:.77rem;margin-top:8px;letter-spacing:.04em}
+.filelist{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-top:24px}
+.fitem{border-radius:var(--r-s);padding:16px 18px;background:rgba(0,0,0,.3);
+  border:1px solid var(--surface-3);transition:.35s var(--ease)}
+.fitem:hover{border-color:var(--edge-2);background:rgba(0,0,0,.45)}
+.fitem b{display:block;font-family:ui-monospace,monospace;font-size:.85rem;color:var(--teal-tx);margin-bottom:6px}
+.fitem small{color:var(--faint);font-size:.8rem;line-height:1.55;display:block}
+
+/* ==========================================================================
+   Install — tabs + code blocks
+   ========================================================================== */
+.codeblock{position:relative;border-radius:var(--r-m);border:1px solid var(--edge);
+  background:linear-gradient(180deg,rgba(0,0,0,.55),var(--field));overflow:hidden;margin-top:18px}
+.codeblock .cbar{display:flex;align-items:center;gap:10px;padding:11px 15px;
+  border-bottom:1px solid var(--surface-3);background:var(--surface)}
+.codeblock .cbar b{font-size:.74rem;color:var(--faint);font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.copy{margin-left:auto;font-size:.72rem;font-weight:600;padding:5px 12px;border-radius:999px;
+  border:1px solid var(--edge);color:var(--teal-tx);transition:.25s}
+.copy:hover{background:rgba(95,207,214,.16)}
+.copy.done{background:var(--teal);color:#052a2e;border-color:var(--teal)}
+.codeblock pre{margin:0;padding:18px 20px;overflow-x:auto;font-size:.83rem;line-height:1.85;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#cfc9e6}
+.codeblock pre .c{color:var(--dim)}
+.codeblock pre .k{color:var(--pink-tx)}
+.codeblock pre .s{color:var(--teal-tx)}
+.codeblock pre .p{color:var(--teal)}
+/* ---------- the machine it was written for ----------
+   A panel rather than another card row: this is the one place on the page
+   that names the actual target hardware and what the app does with it.
+   Two columns on desktop (the claim | the proof), one when it has to be.
+   .fitem's dark fill is reused for the fact chips deliberately, so they
+   read as the same family of thing as the file list below them. */
+.pihw{margin-top:64px;border-radius:var(--r-m);border:1px solid var(--surface-3);
+  background:var(--glass);padding:34px 34px 30px}
+.pihw-in{display:grid;grid-template-columns:1fr 1fr;gap:34px;align-items:start}
+/* min-width:0 on the items, or the <pre>'s min-content (the longest code
+   line, ~583px) becomes the track's automatic minimum and the whole panel
+   overflows its own padding below ~1150px instead of the pre scrolling. */
+.pihw-in>*{min-width:0}
+.pihw-in>p, .pihw-in>div>p{color:var(--muted);margin:0 0 14px;line-height:1.72}
+.pihw-in p:last-child{margin-bottom:0}
+.pihw-in p b{color:var(--text);font-weight:600}
+.pihw-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(116px,1fr));gap:12px;margin-top:24px}
+.pihw-fact{border-radius:var(--r-s);padding:14px;background:rgba(0,0,0,.3);
+  border:1px solid var(--surface-3)}
+.pihw-fact b{display:block;font-size:1.14rem;font-weight:800;letter-spacing:-.01em;margin-bottom:5px}
+.pihw-fact small{color:var(--faint);font-size:.68rem;letter-spacing:.05em;
+  display:block;line-height:1.5}
+.pihw .codeblock{margin-top:0}
+.pihw-note{margin-top:16px;padding:14px 16px;border-radius:var(--r-s);
+  font-size:.83rem;line-height:1.65;background:rgba(95,207,214,.1);
+  border:1px solid rgba(95,207,214,.28);color:var(--muted)}
+.pihw-note b{color:var(--teal-tx);font-weight:600}
+/* 1080 and not 640: between ~940 and ~1080 the two columns get too narrow for
+   the eyebrow pill to stay on one line, so it folds the panel first. */
+@media(max-width:1080px){.pihw-in{grid-template-columns:1fr;gap:26px}.pihw{padding:26px 22px 22px}}
+/* Below ~560 there is no room for the pill at 12px/.18em tracking, and a
+   two-line 999px-radius pill looks like a mistake. Tighten, don't reword. */
+@media(max-width:560px){.pihw .eyebrow{font-size:11px;letter-spacing:.1em;padding:7px 13px}
+  .pihw-facts{grid-template-columns:repeat(2,1fr)}}
+.reqs{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-top:22px}
+.req{display:flex;gap:12px;align-items:flex-start;padding:16px 18px;border-radius:var(--r-s);
+  background:var(--glass);border:1px solid var(--surface-3)}
+.req .x{width:22px;height:22px;flex-shrink:0;border-radius:7px;display:grid;place-items:center;
+  background:rgba(95,207,214,.16);border:1px solid rgba(95,207,214,.35);color:var(--teal-tx);font-size:.75rem;font-weight:800}
+.req b{display:block;font-size:.9rem;margin-bottom:3px}
+.req small{color:var(--faint);font-size:.79rem;line-height:1.5}
+
+/* ==========================================================================
+   Contact + footer
+   ========================================================================== */
+.contact-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:44px;align-items:start}
+@media(max-width:940px){.contact-grid{grid-template-columns:1fr;gap:34px}}
+.field{margin-bottom:16px}
+/* the honeypot: off-screen, not display:none, and not hidden - bots that skip
+   hidden fields never fill it, which is the one thing we need it to do */
+.hp{position:absolute!important;left:-9999px!important;top:auto!important;width:1px;height:1px;
+  opacity:0;border:0;padding:0}
+
+/* The iframe the contact form falls back to. Hidden, but still a real focusable
+   browsing context - display:none would be fine too, except some browsers skip
+   submitting into a fully hidden frame. */
+#cpost{position:absolute;width:1px;height:1px;border:0;opacity:0;pointer-events:none;left:-9999px}
+
+/* "Message sent" confirmation. Fixed, centred low, out of the way of the
+   back-to-top button at the same time - the two never overlap. */
+.toast{position:fixed;left:50%;bottom:34px;z-index:120;transform:translate(-50%,16px);
+  opacity:0;pointer-events:none;transition:opacity .35s var(--ease),transform .35s var(--ease);
+  padding:13px 22px;border-radius:999px;font-size:.9rem;font-weight:600;
+  background:rgba(20,30,38,.92);color:var(--teal-lt);border:1px solid rgba(165,236,239,.35);
+  box-shadow:0 18px 44px -18px rgba(0,0,0,.9);backdrop-filter:blur(14px)}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.toast.err{color:#ffd6e0;border-color:rgba(255,154,170,.5)}
+:root[data-theme="light"] .toast{background:rgba(255,255,255,.96);color:#0d6a70;
+  border-color:rgba(95,207,214,.45);box-shadow:0 18px 40px -20px rgba(43,33,66,.45)}
+:root[data-theme="light"] .toast.err{color:#a01f52;border-color:rgba(236,96,156,.45)}
+@media(max-width:640px){.toast{bottom:26px;left:20px;right:20px;transform:translateY(16px);text-align:center}
+  .toast.on{transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){
+  .toast{transition:opacity .01s linear;transform:none}
+  .toast.on{transform:none}
+}
+.field label{display:block;font-size:.76rem;font-weight:700;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--faint);margin-bottom:8px}
+.field input,.field textarea{width:100%;background:var(--field);color:var(--text);
+  border:1px solid var(--edge);border-radius:var(--r-s);padding:13px 16px;font-size:.94rem;
+  font-family:inherit;outline:none;transition:.25s;resize:vertical}
+.field input:focus,.field textarea:focus{border-color:var(--teal);box-shadow:0 0 0 4px rgba(95,207,214,.16);background:var(--field-focus)}
+.field input::placeholder,.field textarea::placeholder{color:var(--dim)}
+.formnote{margin-top:14px;font-size:.82rem;color:var(--faint);min-height:20px}
+.formnote.ok{color:var(--teal-tx)}
+.formnote.err{color:var(--pink-tx)}
+.clink{display:flex;align-items:center;gap:15px;padding:18px 20px;border-radius:var(--r-m);
+  background:var(--glass);border:1px solid var(--surface-3);margin-bottom:12px;transition:.4s var(--ease)}
+.clink:hover{background:var(--glass-2);border-color:var(--edge-2);transform:translateX(7px)}
+.clink .ci{width:44px;height:44px;flex-shrink:0;border-radius:13px;display:grid;place-items:center;font-size:1.25rem;
+  background:linear-gradient(150deg,rgba(95,207,214,.2),rgba(236,96,156,.14));border:1px solid rgba(165,236,239,.2);
+  color:var(--teal-tx);overflow:visible}
+/* Same treatment as the cards: drawn rather than emoji, so the credit links
+   match the rest of the page instead of depending on the OS emoji font. */
+.clink .ci svg{width:24px;height:24px;display:block;overflow:visible;
+  transition:transform .45s var(--ease)}
+.clink .ci svg *{transition:opacity .45s var(--ease),transform .45s var(--ease)}
+/* engineered by: tuning sliders, each knob sliding to its other stop */
+.clink:hover .ci-eng .knob{animation:knobSlide .9s var(--ease)}
+.clink:hover .ci-eng .k1{animation-delay:0s}
+.clink:hover .ci-eng .k2{animation-delay:.1s}
+.clink:hover .ci-eng .k3{animation-delay:.2s}
+@keyframes knobSlide{0%,100%{transform:translateX(0)}50%{transform:translateX(3px)}}
+/* built on xgb: the bolt flashes once, then settles */
+.clink:hover .ci-fast .bolt{animation:boltFlash .8s var(--ease)}
+@keyframes boltFlash{
+  0%{opacity:.55}
+  35%{opacity:1;transform:scale(1.1)}
+  100%{opacity:1;transform:scale(1)}
+}
+.clink:hover .ci-fast svg{transform:scale(1.06)}
+.clink b{display:block;font-size:.95rem;margin-bottom:2px}
+.clink small{color:var(--faint);font-size:.8rem;font-family:ui-monospace,monospace;word-break:break-all}
+.clink .go{margin-left:auto;color:var(--teal);font-size:1.15rem;flex-shrink:0;transition:transform .3s}
+.clink:hover .go{transform:translateX(4px)}
+footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px}
+.foot{display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap}
+.foot small{color:var(--dim);font-size:.82rem}
+.foot-links{display:flex;gap:22px;flex-wrap:wrap}
+.foot-links a{color:var(--faint);font-size:.85rem;transition:color .3s}
+.foot-links a:hover{color:var(--teal-tx)}
+
+/* misc */
+.ticker{overflow:hidden;border-block:1px solid var(--edge);padding:18px 0;
+  background:var(--surface);mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
+.ticker-track{display:flex;gap:44px;width:max-content;animation:slide 34s linear infinite}
+.ticker:hover .ticker-track{animation-play-state:paused}
+.ticker span{font-size:.95rem;color:var(--faint);white-space:nowrap;display:flex;align-items:center;gap:44px}
+.ticker span b{color:var(--teal-tx);font-weight:600}
+@keyframes slide{to{transform:translateX(-50%)}}
+.to-top{position:fixed;right:24px;bottom:24px;z-index:100;width:48px;height:48px;border-radius:50%;
+  background:rgba(20,29,43,.85);border:1px solid var(--edge-2);backdrop-filter:blur(14px);
+  display:grid;place-items:center;opacity:0;pointer-events:none;transform:translateY(16px) scale(.9);
+  transition:.45s var(--ease);color:var(--teal-tx);font-size:1.1rem}
+.to-top.on{opacity:1;pointer-events:auto;transform:none}
+.to-top:hover{background:rgba(95,207,214,.2);transform:translateY(-3px)}
+@media(max-width:640px){.card{padding:24px}.sec,section{padding:70px 0}.to-top{right:16px;bottom:16px}}
+</style></head>
+<body>
+
+<div class="backdrop"><i class="aurora a1"></i><i class="aurora a2"></i><i class="aurora a3"></i></div>
+<div class="grain"></div>
+<div class="progress"><i id="bar"></i></div>
+
+<!-- ===================== NAV ===================== -->
+<header class="nav" id="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="#top" aria-label="Onidia home">
+      <svg class="mark" viewBox="10 10 91 91" aria-hidden="true">
+        <!-- Onidia's head, happy expression. Traced from
+        onidia/characters/onidia/{draw_head,draw_body,face,face_parts,palette}.go -->
+        <g fill="#2f223e">
+        <path d="M21.1 52.56A10.2 10.2 0 1 1 39.82 60.13L20.91 92.65A4.8 4.8 0 0 1 12.1 89.09Z"/><path d="M72.18 60.13A10.2 10.2 0 1 1 90.9 52.56L99.9 89.09A4.8 4.8 0 0 1 91.09 92.65Z"/>
+        </g>
+        <g fill="#41aeb6">
+        <path d="M23.23 53.09A8 8 0 1 1 37.92 59.02L19.01 91.54A2.6 2.6 0 0 1 14.24 89.61Z"/><path d="M74.08 59.02A8 8 0 1 1 88.77 53.09L97.76 89.61A2.6 2.6 0 0 1 92.99 91.54Z"/>
+        </g>
+        <!-- Tail sheen: the buddy's own highlight stroke, kept for fidelity but
+             effectively invisible - it is drawn before the head disc below
+             (r=38.7 about 56,60), which covers all of it bar a sliver where the
+             far cap clears the edge by 0.021 units. Nothing renders. -->
+        <g stroke="#a5ecef" stroke-width="3" stroke-linecap="round" fill="none">
+        <path d="M28 62 22.46 76.14"/><path d="M84 62 89.54 76.14"/>
+        </g>
+        <circle cx="56" cy="60" r="38.7" fill="#2f223e"/>
+        <circle cx="56" cy="60" r="36.5" fill="#5fcfd6"/>
+        <circle cx="56" cy="63" r="31.5" fill="#ffe4ce" stroke="#c68664" stroke-width="2"/>
+        <path d="M21.41 51A35.5 35.5 0 0 1 90.59 51Z" fill="#5fcfd6" stroke="#2f223e" stroke-width="2.2"/>
+        <path d="M27 49h10l-2 17ZM39 49h10l2 20ZM51 49h10l-2 17ZM63 49h10l2 20ZM75 49h10l-2 17Z" fill="#5fcfd6" stroke="#2f223e" stroke-width="1.6" stroke-linejoin="round"/>
+        <g stroke-linecap="round" fill="none">
+        <path d="M24 48 28 88" stroke="#2f223e" stroke-width="14"/>
+        <path d="M24 48 28 88" stroke="#5fcfd6" stroke-width="10"/>
+        <path d="M88 48 84 88" stroke="#2f223e" stroke-width="14"/>
+        <path d="M88 48 84 88" stroke="#5fcfd6" stroke-width="10"/>
+        <path d="M54 27 62 15" stroke="#5fcfd6" stroke-width="2.8"/>
+        <path d="M62 15 69 19" stroke="#5fcfd6" stroke-width="1.1"/>
+        </g>
+        <circle cx="29" cy="52" r="5.4" fill="#ff7a9e" stroke="#2f223e" stroke-width="1.6"/>
+        <circle cx="83" cy="52" r="5.4" fill="#ff7a9e" stroke="#2f223e" stroke-width="1.6"/>
+        <g fill="none" stroke="#282032" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M37.5 73.6 41 69.6 45 69.6 48.5 73.6" stroke-width="4"/>
+        <path d="M37.8 70.8 34.4 68.4" stroke-width="2.8"/>
+        <path d="M63.5 73.6 67 69.6 71 69.6 74.5 73.6" stroke-width="4"/>
+        <path d="M74.2 70.8 77.6 68.4" stroke-width="2.8"/>
+        </g>
+        <ellipse cx="35" cy="84" rx="7.43" ry="4.05" fill="#ff7887" opacity=".27"/>
+        <ellipse cx="77" cy="84" rx="7.43" ry="4.05" fill="#ff7887" opacity=".27"/>
+        <path d="M60.8 87.5A4.8 4.8 0 0 1 51.2 87.5Z" fill="#b0425a"/>
+        <path d="M58.64 90.2A2.64 2.64 0 0 1 53.36 90.2Z" fill="#e77e8f"/>
+      </svg>
+      <span class="brand-txt">ONIDIA<em class="abbr">OmNIpresent DigItal Amigo</em></span>
+    </a>
+    <nav class="nav-links" id="navlinks" aria-label="Sections">
+      <a href="index.html#meet">Meet her</a>
+      <a href="index.html#inaction">In Action</a>
+      <a href="nerd.html" class="on" data-self>Nerd start from here</a>
+      <a href="https://onidia.babeh.com/docs/index.html">Docs</a>
+      <a href="https://onidia.babeh.com/docs/agents.html">Agents</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <a class="btn btn-primary btn-sm nav-cta" href="index.html#install">Get Onidia</a>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light theme">
+      <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="4.2"/>
+        <path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"/>
+      </svg>
+      <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M20 14.2A8.4 8.4 0 019.8 4a8.4 8.4 0 1010.2 10.2z"/>
+      </svg>
+    </button>
+    <button class="burger" id="burger" aria-label="Menu" aria-expanded="false" aria-controls="mmenu">
+      <i></i><i></i><i></i>
+    </button>
+  </div>
+</header>
+<div class="mobile-menu" id="mmenu">
+  <a href="index.html#meet"><span>01</span>Meet her</a>
+  <a href="index.html#inaction"><span>02</span>In Action</a>
+  <a href="nerd.html"><span>03</span>Nerd start from here</a>
+  <a href="https://onidia.babeh.com/docs/index.html"><span>04</span>Docs</a>
+  <a href="https://onidia.babeh.com/docs/agents.html"><span>05</span>Agents</a>
+  <a href="#contact"><span>06</span>Contact</a>
+</div>
+
+<main id="top">
+
+<!-- ===================== TECH ===================== -->
+<section id="tech">
+  <div class="wrap">
+    <div class="sechead rv">
+      <span class="eyebrow">Nerd start from here</span>
+      <h2 class="h-lg" style="margin-top:22px">No toolkit.<br><span class="grad-teal">No cgo. Just Go and X11.</span></h2>
+      <p class="lede">Most desktop toys drag in a GUI framework measured in hundreds of megabytes. This one
+        doesn't. It speaks the X11 wire protocol directly, and every pixel of Onidia is drawn by code at runtime.</p>
+    </div>
+
+    <div class="arch rv">
+      <div class="achain">
+        <div class="abox hl"><b>You</b><small>type, or speak into the mic</small></div>
+        <div class="aflex">&rarr;</div>
+        <div class="abox"><b>onidia-chat</b><small>pure Go, raw X11<br>UI thread never blocks</small></div>
+        <div class="aflex">&rarr;</div>
+        <div class="abox"><b>The model</b><small>Gemini / Bedrock<br>Ollama / OpenRouter</small></div>
+        <div class="aflex">&rarr;</div>
+        <div class="abox"><b>Speech pipe</b><small>a named FIFO per display<br>/tmp/desktop-pet--0.say</small></div>
+        <div class="aflex">&rarr;</div>
+        <div class="abox hl"><b>Onidia</b><small>speaks it, with the<br>matching expression</small></div>
+      </div>
+    </div>
+
+    <div class="stats rv">
+      <div class="stat"><b class="grad-teal">~0%</b><small>IDLE CPU</small></div>
+      <div class="stat"><b class="grad-teal">~3 MB</b><small>RESIDENT MEMORY</small></div>
+      <div class="stat"><b class="grad-pink">0</b><small>IMAGE ASSETS</small></div>
+      <div class="stat"><b class="grad-pink">0</b><small>CGO DEPENDENCIES</small></div>
+      <div class="stat"><b class="grad-teal">112&times;160</b><small>AUTHORING GRID</small></div>
+      <div class="stat"><b class="grad-teal">5&times;7</b><small>BITMAP FONT</small></div>
+    </div>
+
+    <!-- The one place on the page that names the actual target hardware and
+         what the app does with it. Claim on the left, proof on the right. -->
+    <div class="pihw rv">
+      <div class="pihw-in">
+        <div>
+          <span class="eyebrow">Written, designed and tested on a Pi 5</span>
+          <h3 class="h-md" style="margin:18px 0 16px">Sixty-four bits, end to end.</h3>
+          <p>Onidia and onidia-chat are pure Go, so a build is a single static <code>arm64</code>
+            binary &mdash; nothing to cross-compile on the Pi, nothing to install beside it. The
+            release artifact is exactly that: one <code>arm64</code> .deb that carries both
+            halves. A Raspberry Pi 5 is what they were written against,
+            designed around and tested on.</p>
+          <p>The more interesting half is what that Pi can be <b>as</b> the machine. On a
+            <b>AI HAT+ 2</b> &mdash; the Hailo-10H board, 40 TOPS of INT4 inference and 8 GB of RAM
+            living on the card itself &mdash; Hailo's <code>hailo-ollama</code> speaks the very same
+            ollama <code>/api/chat</code> dialect <code>onidia-chat</code> already speaks to the network.
+            Point the provider at localhost and the model stops being someone else's computer.</p>
+          <div class="pihw-facts">
+            <div class="pihw-fact"><b class="grad-teal">arm64</b><small>BUILD TARGET</small></div>
+            <div class="pihw-fact"><b class="grad-pink">40 TOPS</b><small>INT4 INFERENCE</small></div>
+            <div class="pihw-fact"><b class="grad-teal">8 GB</b><small>ON-BOARD MODEL RAM</small></div>
+            <div class="pihw-fact"><b class="grad-pink">0 B</b><small>LEAVES THE PI</small></div>
+          </div>
+        </div>
+        <div>
+          <div class="codeblock">
+            <div class="cbar"><b>private by default</b><button class="copy" data-copy="#cb-hw">copy</button></div>
+<pre id="cb-hw"><span class="c"># Hailo's ollama-compatible server. Listens on :8000.</span>
+hailo-ollama
+
+<span class="c"># 8000 is already the default - this is the whole switch:</span>
+./onidia-chat -provider ollama -model <span class="s">qwen2:1.5b</span>
+
+<span class="c"># Qwen2 1.5B, Llama 3.2 1B, Qwen2.5-Coder, DeepSeek-R1</span>
+curl localhost:8000/api/tags</pre>
+          </div>
+          <div class="pihw-note"><b>Nothing leaves the Pi.</b> No key, no account, no request to a
+            vendor you cannot audit &mdash; pull the network cable and it behaves identically. One
+            honest footnote: hailo-ollama rejects the <code>tools</code> field, so onidia-chat retires
+            tool calling after the first reply and carries on in plain text.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid g2" style="margin-top:64px;align-items:start">
+      <div class="rv">
+        <h3 class="h-md" style="margin-bottom:16px">How a frame is made</h3>
+        <p style="color:var(--muted);margin:0 0 14px;line-height:1.72">A tiny state machine &mdash; idle, walk, hop,
+          drag, throw &mdash; runs a few physics steps a frame and produces a <b>pose</b>: bob, leg swing, foot
+          lift, blink, arm flags, expression. The pose is rendered procedurally onto a supersampled canvas and
+          downsampled for smooth edges, the speech bubble is composed above it, and the whole image is uploaded
+          with a single <code>PutImage</code>. The window itself just moves to follow her.</p>
+        <p style="color:var(--muted);margin:0 0 14px;line-height:1.72">Because the character is code and not a
+          sprite sheet, adding a personality means writing a Go package: its own palette, drawing functions and
+          phrase list, registered at startup and picked with <code>-character</code>. Two characters can never
+          collide, because they share nothing but the pose contract.</p>
+        <p style="color:var(--muted);margin:0;line-height:1.72">XShape is deliberately <em>not</em> used: under
+          XWayland, shrinking a shaped window's region can stop updates from being presented, so the plain
+          transparent window composites correctly everywhere instead.</p>
+      </div>
+      <div class="rv">
+        <h3 class="h-md" style="margin-bottom:16px">Worth knowing</h3>
+        <div class="filelist">
+          <div class="fitem"><b>characters/</b><small>One self-contained package per personality &mdash; onidia, kama, and a template for yours.</small></div>
+          <div class="fitem"><b>behavior.go</b><small>The buddy brain: idle / walk / hop / drag / throw FSM plus the throw and parachute physics.</small></div>
+          <div class="fitem"><b>bubble.go</b><small>Comic speech-bubble rendering, word wrapping, and the scene layout that reserves headroom for the cloud.</small></div>
+          <div class="fitem"><b>events*.go</b><small>The celebration framework: hearts, confetti, floating Zs, the lightbulb, the robot suit-up.</small></div>
+          <div class="fitem"><b>internal/fx</b><small>Shared supersample compositing, the built-in bitmap font, alpha and easing maths.</small></div>
+          <div class="fitem"><b>single instance</b><small>A kernel <code>flock</code> per display, so a second launch exits and names the pid holding it.</small></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CONTACT ===================== -->
+<section id="contact">
+  <div class="wrap">
+    <div class="sechead rv">
+      <span class="eyebrow">Get in touch</span>
+      <h2 class="h-lg" style="margin-top:22px">Questions, ideas,<br><span class="grad-pink">or a new character?</span></h2>
+      <p class="lede">Found a bug, want a feature, or fancy writing your own personality? The repositories are
+        the fastest way in &mdash; and issues are genuinely read. If you'd rather just say hello, the form works too.</p>
+    </div>
+
+    <div class="contact-grid rv">
+      <div class="card" style="padding:32px">
+        <form id="cform" action="https://formspree.io/f/mdekrvdp" method="POST" novalidate>
+          <!-- Honeypot. Formspree treats a filled _gotcha as spam and silently
+               drops it, so real visitors never see this and never have to
+               solve a captcha. Kept off-screen rather than display:none,
+               because some bots skip hidden fields outright. -->
+          <input class="hp" type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <input type="hidden" name="_subject" value="New message from the Onidia page">
+          <div class="grid g2" style="gap:16px">
+            <div class="field"><label for="fname">Your name</label>
+              <input id="fname" name="name" type="text" placeholder="Ada" required autocomplete="name"></div>
+            <div class="field"><label for="fmail">Email <span style="color:var(--faint);font-weight:600">(optional)</span></label>
+              <input id="fmail" name="email" type="email" placeholder="you@example.com" autocomplete="email"></div>
+          </div>
+          <div class="field"><label for="fmsg">Message</label>
+            <textarea id="fmsg" name="message" rows="5" placeholder="Tell Onidia what she's been up to&hellip;" required></textarea></div>
+          <button class="btn btn-pink" type="submit" style="width:100%;justify-content:center">Send message</button>
+          <p class="formnote" id="fnote" role="status" aria-live="polite"></p>
+        </form>
+        <!-- The fallback posts in here. An iframe cannot navigate the page, so
+             even when fetch is blocked the visitor stays put instead of being
+             dumped on Formspree's thank-you page. -->
+        <iframe name="cpost" id="cpost" title="" aria-hidden="true" tabindex="-1"></iframe>
+      </div>
+
+      <div>
+        <a class="clink" href="https://mas-mas.it" target="_blank" rel="noopener">
+          <span class="ci ci-eng">
+            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.9"
+                 stroke-linecap="round" aria-hidden="true">
+              <path d="M6.5 10.5h11.5M23.5 10.5h2M6.5 16h4.5M17.5 16h8.5M6.5 21.5h11.5M23.5 21.5h2"/>
+              <circle class="knob k1" cx="20.2" cy="10.5" r="2.5"/>
+              <circle class="knob k2" cx="13.2" cy="16" r="2.5"/>
+              <circle class="knob k3" cx="20.2" cy="21.5" r="2.5"/>
+            </svg></span>
+          <span><b>Engineered by</b><small>mas-mas.it</small></span>
+          <span class="go">&rarr;</span></a>
+        <a class="clink" href="https://medium.com/@boi_21419" target="_blank" rel="noopener">
+          <span class="ci ci-fast">
+            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.9"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20.8 4.5l3 3-10.9 10.9-4.1 1 1-4.1L20.8 4.5Z"/>
+              <path d="M18.6 6.7l3 3"/>
+              <path d="M6 26h9"/>
+            </svg></span>
+          <span><b>Writing on Medium</b><small>@boi_21419 &mdash; notes &amp; build logs</small></span>
+          <span class="go">&rarr;</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <small>&copy; Onidia &mdash; a tiny anime companion for your desktop. Pure Go, no cgo, no toolkit.</small>
+    <nav class="foot-links" aria-label="Footer">
+      <a href="index.html#meet">Meet her</a><a href="nerd.html">Nerd start from here</a>
+      <a href="index.html#install">Install</a>
+      <a href="docs/index.html">Docs</a><a href="docs/agents.html">Agents</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </div>
+</footer>
+
+<button class="to-top" id="totop" aria-label="Back to top">&#8593;</button>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+'use strict';
+var D = document, W = window;
+var $ = function (s, r) { return (r || D).querySelector(s); };
+var $$ = function (s, r) { return Array.prototype.slice.call((r || D).querySelectorAll(s)); };
+
+/* ---------- reveal guards ----------
+   `.rv` starts hidden and is shown by the observer further down. These two run
+   before anything that can throw, so no failure below can strand the page with
+   invisible text: if the observer never runs, the `no-js` class is still on
+   <html>; if it throws after we drop it, the error handler reveals the lot. */
+W.addEventListener('error', function () {
+  $$('.rv').forEach(function (el) { el.classList.add('in'); });
+});
+D.documentElement.classList.remove('no-js');
+
+/* ---------- theme toggle ----------
+   The stored value is the source of truth; the OS preference is only consulted
+   when the visitor has never chosen. Keeping that precedence means the site
+   doesn't fight someone who deliberately picked a theme. */
+var THEME_KEY = 'onidia-theme';
+var root = D.documentElement;
+var mq = W.matchMedia ? W.matchMedia('(prefers-color-scheme: light)') : null;
+
+function themeLabel(t) {
+  return t === 'light' ? 'Switch to dark theme' : 'Switch to light theme';
+}
+function applyTheme(t, persist) {
+  root.setAttribute('data-theme', t);
+  var btn = $('#themeToggle');
+  if (btn) { btn.setAttribute('aria-label', themeLabel(t)); btn.setAttribute('aria-pressed', t === 'light'); }
+  var meta = $('meta[name="theme-color"]');
+  /* Matches the body background so mobile browser chrome doesn't keep the old
+     theme's colour after a switch. */
+  if (meta) { meta.setAttribute('content', t === 'light' ? '#f4f2f9' : '#0f0d1a'); }
+  if (persist) { try { localStorage.setItem(THEME_KEY, t); } catch (e) {} }
+}
+
+var toggle = $('#themeToggle');
+if (toggle) {
+  applyTheme(root.getAttribute('data-theme') === 'light' ? 'light' : 'dark', false);
+  toggle.addEventListener('click', function () {
+    applyTheme(root.getAttribute('data-theme') === 'light' ? 'dark' : 'light', true);
+  });
+}
+/* Follow the OS only while the visitor hasn't expressed a preference of their
+   own — once they've toggled, their stored choice wins. */
+if (mq && mq.addEventListener) {
+  mq.addEventListener('change', function (e) {
+    var stored = null;
+    try { stored = localStorage.getItem(THEME_KEY); } catch (err) {}
+    if (!stored) { applyTheme(e.matches ? 'light' : 'dark', false); }
+  });
+}
+/* Release the no-transition guard on the next frame, now that the correct
+   colours are on screen. */
+W.requestAnimationFrame(function () {
+  W.requestAnimationFrame(function () { root.classList.remove('theme-booting'); });
+});
+
+var reduced = !!(W.matchMedia && W.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+/* ---------- nav: solid-on-scroll, scroll progress, active link, mobile menu */
+var nav = $('#nav'), bar = $('#bar'), totop = $('#totop');
+function onScroll() {
+  var y = W.scrollY || 0;
+  var h = D.documentElement.scrollHeight - W.innerHeight;
+  bar.style.width = (h > 0 ? Math.min(100, (y / h) * 100) : 0) + '%';
+  nav.classList.toggle('solid', y > 24);
+  totop.classList.toggle('on', y > 700);
+}
+W.addEventListener('scroll', onScroll, { passive: true }); onScroll();
+
+totop.addEventListener('click', function () {
+  W.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+});
+
+var links = $$('#navlinks a'), sections = links.map(function (a) {
+  var h = a.getAttribute('href');
+  /* Only on-page anchors are spy targets; cross-page links (index.html#... and
+     the absolute Docs/Agents URLs) are not same-page targets. */
+  return (h && h.charAt(0) === '#') ? $(h) : null;
+});
+/* The link pointing at this very page holds the highlight while no section of
+   this page is in view yet. */
+var selfIdx = -1;
+links.forEach(function (a, i) { if (a.hasAttribute('data-self')) selfIdx = i; });
+function spy() {
+  var y = W.scrollY + W.innerHeight * 0.32, best = -1;
+  sections.forEach(function (s, i) { if (s && s.offsetTop <= y) best = i; });
+  if (best < 0) best = selfIdx;
+  if (best < 0) return;
+  links.forEach(function (a, i) { a.classList.toggle('on', i === best); });
+}
+W.addEventListener('scroll', spy, { passive: true }); spy();
+
+var burger = $('#burger'), menu = $('#mmenu');
+burger.addEventListener('click', function () {
+  var open = menu.classList.toggle('open');
+  burger.setAttribute('aria-expanded', String(open));
+  D.body.style.overflow = open ? 'hidden' : '';
+});
+$$('#mmenu a').forEach(function (a) {
+  a.addEventListener('click', function () {
+    menu.classList.remove('open'); burger.setAttribute('aria-expanded', 'false'); D.body.style.overflow = '';
+  });
+});
+
+/* ---------- scroll reveal (guarded: never let a missing observer hide content) */
+var revealAll = $$('.rv');
+if (typeof IntersectionObserver === 'function') {
+  var io = new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { rootMargin: '0px 0px -12% 0px', threshold: 0.08 });
+  revealAll.forEach(function (el, i) { el.style.transitionDelay = (i % 4) * 70 + 'ms'; io.observe(el); });
+} else {
+  revealAll.forEach(function (el) { el.classList.add('in'); });
+}
+
+/* ---------- pointer-tracked glow on cards */
+$$('.card').forEach(function (c) {
+  c.addEventListener('pointermove', function (e) {
+    var r = c.getBoundingClientRect(), g = $('.glow', c);
+    if (g) { g.style.setProperty('--mx', (e.clientX - r.left) + 'px'); g.style.setProperty('--my', (e.clientY - r.top) + 'px'); }
+  });
+});
+
+/* ---------- copy-to-clipboard on the code blocks */
+$$('.copy').forEach(function (b) {
+  b.addEventListener('click', function () {
+    var pre = $(b.dataset.copy);
+    var text = pre ? pre.innerText : '';
+    var done = function () {
+      b.classList.add('done'); b.textContent = 'copied';
+      setTimeout(function () { b.classList.remove('done'); b.textContent = 'copy'; }, 1600);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { fallback(pre, done); });
+    } else { fallback(pre, done); }
+  });
+});
+function fallback(pre, done) {
+  var ta = D.createElement('textarea');
+  ta.value = pre.innerText; ta.setAttribute('readonly', '');
+  ta.style.cssText = 'position:fixed;top:-1000px;opacity:0';
+  D.body.appendChild(ta); ta.select();
+  try { D.execCommand('copy'); done(); } catch (e) { /* clipboard unavailable */ }
+  D.body.removeChild(ta);
+}
+
+/* ---------- contact form: validate, then post to Formspree ---------------
+var form = $('#cform'), note = $('#fnote'), sendBtn = form.querySelector('button[type="submit"]');
+var cpost = $('#cpost');   // hidden iframe: the fallback target
+
+// A toast rather than only the inline #fnote, because "did that send?" is the
+// one thing a visitor should not have to hunt for.
+function toast(msg, kind) {
+  var t = $('#toast');
+  t.textContent = msg;
+  t.className = 'toast on ' + (kind || 'ok');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(function () { t.classList.remove('on'); }, 4200);
+}
+
+// The fallback posts into a hidden iframe. A native form.submit() would
+// navigate the visitor to Formspree's thank-you page, which is exactly what
+// this is meant to avoid - an iframe cannot navigate us, and it needs no CORS
+// and no fetch, so it still works when the JSON path cannot.
+function postToIframe() {
+  form.target = 'cpost';
+  form.submit();
+  form.target = '';
+  setTimeout(done, 900);   // the iframe never reports back; assume it landed
+}
+
+function done() {
+  sendBtn.disabled = false; sendBtn.textContent = 'Send message';
+  note.classList.remove('err'); note.classList.add('ok');
+  note.textContent = 'Thanks — that came through. She says hello back.';
+  form.reset();
+  toast('Message sent ✓');
+}
+
+form.addEventListener('submit', function (e) {
+  e.preventDefault();
+  var n = $('#fname').value.trim(), m = $('#fmail').value.trim(), s = $('#fmsg').value.trim();
+  note.className = 'formnote';
+  if (!n || !s) { note.classList.add('err'); note.textContent = 'Please add your name and a message.'; return; }
+  if (m && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(m)) { note.classList.add('err'); note.textContent = 'That email address does not look right.'; return; }
+
+  sendBtn.disabled = true; sendBtn.textContent = 'Sending…';
+
+  if (!window.fetch) { postToIframe(); return; }
+
+  // Accept: application json asks Formspree to answer in place rather than
+  // redirect, so this is the path that can actually tell us it worked.
+  fetch(form.action, {
+    method: 'POST',
+    body: new FormData(form),
+    headers: { 'Accept': 'application/json' }
+  }).then(function (r) {
+    return r.json().catch(function () { return {}; }).then(function (d) {
+      if (!r.ok) {
+        var err = new Error((d.errors && d.errors[0] && d.errors[0].message) || ('HTTP ' + r.status));
+        err.serverRejected = true;
+        throw err;
+      }
+      return d;
+    });
+  }).then(function () {
+    done();
+  }).catch(function (err) {
+    // A rejection we can read is a real "no" - show it and keep the text.
+    // Anything else (no fetch, offline, a CORS block) still sends via the
+    // iframe, so the visitor is never dumped on an error page and the
+    // message is never lost to a network wobble.
+    if (err && err.serverRejected) {
+      sendBtn.disabled = false; sendBtn.textContent = 'Send message';
+      note.classList.add('err');
+      note.textContent = 'That did not go through: ' + err.message +
+        ' — or mail hello@mas-mas.it and I will still read it.';
+      toast('Not sent — try again', 'err');
+      return;
+    }
+    postToIframe();
+  });
+});
+
+/* ==========================================================================
+   Floating FX over the playground — the site's own nod to the buddy's events
+   ========================================================================== */
+var fxLayer = $('#fx'), FX = {
+  love:       { n: 16, glyph: ['❤', '💗', '💕'], spread: 0.55, dur: 2400, rise: -150 },
+  idea:       { n: 1,  glyph: ['💡'],           spread: 0.02, dur: 2600, rise: -120 },
+  celebration:{ n: 46, glyph: ['🎉', '🎊', '✨', '💫', '🎈'], spread: 1, dur: 2700, rise: 120 },
+  peace:      { n: 3,  glyph: ['✌', '✨'],       spread: 0.16, dur: 1900, rise: -90 },
+  sleep:      { n: 7,  glyph: ['Z', 'z'],        spread: 0.2, dur: 2500, rise: -110 },
+  halloween:  { n: 1,  glyph: ['🎃'],           spread: 0.02, dur: 2400, rise: -30 },
+  matrix:     { n: 34, glyph: ['0', '1', 'ｱ', 'ｲ', 'ｳ'], spread: 0.9, dur: 2100, rise: 170 },
+  magic:      { n: 1,  glyph: ['🎩'],           spread: 0.02, dur: 2300, rise: -60 },
+  robot:      { n: 1,  glyph: ['🤖'],           spread: 0.02, dur: 2500, rise: -140 },
+  disappear:  { n: 16, glyph: ['✨', '💫'],      spread: 0.4, dur: 1500, rise: -70 },
+  appear:     { n: 16, glyph: ['✨', '💫'],      spread: 0.4, dur: 1700, rise: -70 }
+};
+function burst(kind) {
+  var f = FX[kind]; if (!f || !fxLayer) return;
+  var w = fxLayer.clientWidth, h = fxLayer.clientHeight;
+  var cx = w * 0.5, cy = h * 0.52;
+  for (var i = 0; i < f.n; i++) {
+    (function (i) {
+      var s = D.createElement('span');
+      s.className = 'fx';
+      s.textContent = f.glyph[(Math.random() * f.glyph.length) | 0];
+      var fs = kind === 'matrix' ? 12 + Math.random() * 9 : 14 + Math.random() * 20;
+      s.style.fontSize = fs + 'px';
+      s.style.left = (cx + (Math.random() - 0.5) * w * f.spread - fs / 2) + 'px';
+      s.style.top = (cy + (Math.random() - 0.5) * 90) + 'px';
+      fxLayer.appendChild(s);
+      var dx = (Math.random() - 0.5) * (kind === 'matrix' ? 30 : 200);
+      var dy = f.rise * (0.6 + Math.random() * 0.8) + (Math.random() - 0.5) * 40;
+      var rot = (Math.random() - 0.5) * (kind === 'matrix' ? 0 : 320);
+      var dur = f.dur * (0.7 + Math.random() * 0.6);
+      var anim, done = false;
+      var fin = function () { if (!done) { done = true; s.remove(); } };
+      try {
+        anim = s.animate([
+          { transform: 'translate3d(0,0,0) rotate(0deg) scale(.4)', opacity: 0 },
+          { transform: 'translate3d(' + dx * 0.5 + 'px,' + dy * 0.6 + 'px,0) rotate(' + rot * 0.6 + 'deg) scale(1.1)', opacity: 1, offset: 0.22 },
+          { transform: 'translate3d(' + dx + 'px,' + dy + 'px,0) rotate(' + rot + 'deg) scale(.85)', opacity: 0 }
+        ], { duration: dur, easing: 'cubic-bezier(.2,.7,.3,1)' });
+        anim.onfinish = fin;
+      } catch (e) {
+        s.style.transition = 'transform ' + dur + 'ms cubic-bezier(.2,.7,.3,1), opacity ' + dur + 'ms';
+        requestAnimationFrame(function () {
+          s.style.transform = 'translate3d(' + dx + 'px,' + dy + 'px,0) rotate(' + rot + 'deg)';
+          s.style.opacity = '0';
+        });
+        setTimeout(fin, dur + 60);
+      }
+    })(i);
+  }
+}
+
+/* ---------- ticker content */
+var TICKS = [
+  'walks the bottom of your screen', 'speaks in <b>comic speech bubbles</b>', '<b>16 expressions</b>',
+  'drag her, fling her, she bounces', 'a <b>parachute</b> if you drop her from the top',
+  '<b>scheduled naps</b>, overnight included', 'any app can make her talk', '<b>pure Go</b>, zero cgo',
+  '<b>~0% idle CPU</b>', 'skateboards, juggles, discos, plays guitar', '<b>one instance per display</b>',
+  'she answers <b>out loud</b>', 'a character is just a Go package', 'Gemini &middot; Bedrock &middot; Ollama &middot; OpenRouter',
+  'happily runs on a <b>Raspberry Pi</b>'
+];
+var track = $('#ticker'), html = '';
+for (var pass = 0; pass < 2; pass++) {
+  html += '<span>' + TICKS.map(function (t) { return t + '<i class="dot" style="width:4px;height:4px;border-radius:50%;background:var(--dim)"></i>'; }).join('') + '</span>';
+}
+if (track) track.innerHTML = html;   /* #ticker only exists on index */
+
+/* ---------- expose a tiny bridge the buddy engine hooks into ---------- */
+W.onidiaPage = {
+  burst: burst,
+  say: function (text) { /* the engine calls this so the site's own copy can stay in sync */ }
+};
+})();
+</script>
+</body>
+</html>
