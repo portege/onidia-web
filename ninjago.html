@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1MPT6SXMJN"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-1MPT6SXMJN');
+</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="favicon.png">
+<title>Kai — LEGO Ninjago fire ninja in one HTML file</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;color:#f2e9e6;
+    font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:
+      radial-gradient(1100px 620px at 15% -5%, #4a1414 0%, rgba(74,20,20,0) 60%),
+      radial-gradient(900px 700px at 95% 110%, #47240f 0%, rgba(71,36,15,0) 55%),
+      linear-gradient(#1d1416,#120c0e);
+  }
+  .app{max-width:1060px;margin:0 auto;padding:20px 16px 44px;display:flex;flex-direction:column;gap:14px}
+  .head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  h1{margin:0;font-size:30px;letter-spacing:.5px;
+     background:linear-gradient(180deg,#ffe08a,#f0a93c 55%,#d9761f);
+     -webkit-background-clip:text;background-clip:text;color:transparent;
+     text-shadow:0 2px 0 rgba(64,20,10,.5)}
+  .sub{margin:4px 0 0;color:#c0a59d;font-size:13.5px}
+  code{background:rgba(255,170,60,.14);color:#ffcf7a;padding:1px 5px;border-radius:5px;font-size:12.5px}
+  .legend{display:flex;align-items:center;gap:8px;color:#a08a83;font-size:12.5px}
+  .dot{width:9px;height:9px;border-radius:50%;background:#ffb054;box-shadow:0 0 10px #ffb054}
+
+  .stage-wrap{position:relative;border-radius:18px;overflow:hidden;
+    border:1px solid rgba(255,150,80,.22);
+    box-shadow:0 22px 60px rgba(0,0,0,.5), inset 0 0 70px rgba(233,110,60,.05)}
+  #stage{display:block;width:100%;height:clamp(300px,56vh,460px);cursor:pointer}
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px}
+  .card{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);
+    border-radius:14px;padding:12px 13px;backdrop-filter:blur(4px)}
+  .card h2{margin:0 0 9px;font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:#a08a83}
+  .row{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+  .row.small{margin-top:9px;font-size:12.5px;color:#a08a83}
+  input[type=text]{flex:1 1 150px;min-width:130px;background:rgba(0,0,0,.28);color:#fdf3ec;
+    border:1px solid rgba(255,150,80,.28);border-radius:10px;padding:8px 11px;font-size:14px;outline:none}
+  input[type=text]:focus{border-color:#ff9a4a;box-shadow:0 0 0 3px rgba(255,154,74,.18)}
+  .btn{background:rgba(255,130,70,.1);color:#ffe2cd;border:1px solid rgba(255,140,80,.32);
+    border-radius:999px;padding:7px 13px;font-size:13px;cursor:pointer;transition:.15s}
+  .btn:hover{background:rgba(255,130,70,.24);transform:translateY(-1px)}
+  .btn.primary{background:rgba(255,196,80,.16);border-color:rgba(255,196,80,.45);color:#ffe6b0}
+  .btn.primary:hover{background:rgba(255,196,80,.3)}
+  .btn.on{background:rgba(255,150,60,.38);color:#2b0f04;border-color:#ff9a4a;font-weight:600}
+  .btn.face{font-size:12px;padding:5px 10px}
+  .chk{display:inline-flex;align-items:center;gap:6px;cursor:pointer;user-select:none}
+  .chk input{accent-color:#ff9a4a}
+  kbd{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:5px;
+    padding:0 5px;font-size:11.5px;font-family:ui-monospace,monospace}
+  .hint{margin-left:auto}
+  footer{color:#8a7a76;font-size:12px;line-height:1.6}
+  footer b{color:#ffcf7a;font-weight:600}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="head">
+    <div>
+      <h1>Kai</h1>
+      <p class="sub">the LEGO® Ninjago red ninja — minifigure <code>njo0007</code> (2011) redrawn as a single HTML file with canvas &amp; vanilla JS</p>
+    </div>
+    <div class="legend"><span class="dot"></span>112×160 author grid · 16 faces · 36 phrases</div>
+  </header>
+
+  <div class="stage-wrap"><canvas id="stage"></canvas></div>
+
+  <div class="cards">
+    <section class="card">
+      <h2>Talk to her</h2>
+      <div class="row">
+        <input id="say" type="text" placeholder="type something, then Enter…" maxlength="140" autocomplete="off">
+        <button id="send" class="btn primary">send</button>
+        <button id="boop" class="btn">boop!</button>
+      </div>
+      <div class="row small">
+        <label class="chk"><input type="checkbox" id="auto" checked> random chatter</label>
+        <label class="chk"><input type="checkbox" id="hood" checked> ninja hood</label>
+        <label class="chk"><input type="checkbox" id="grid"> show grid</label>
+        <label class="chk"><input type="checkbox" id="light"> bright background</label>
+        <span class="hint">click him to boop · <kbd>space</kbd></span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Action</h2>
+      <div class="row" id="actions"></div>
+    </section>
+
+    <section class="card">
+      <h2>Face</h2>
+      <div class="row" id="faces"></div>
+    </section>
+  </div>
+
+  <footer>
+    Art built to match the real minifigure: red ninja wrap with only the eye band showing (untick
+    <b>ninja hood</b> to see the full face print — stern brows, frown, scar across the eye and chin dimple),
+    crossed brown ropes with a gold medallion and the dark-red undershirt marks on the torso,
+    the dark-red belt with its knot and hanging ends, red arms with black claw hands, red hips and legs.
+    Colours are the official LEGO® ones: Red <b>#C91A09</b>, Dark Red <b>#720E0F</b>, Yellow <b>#F5CD2F</b>.
+    He blinks, walks, waves, spinjitzus, dances, hops and naps; chatter comes from his own phrase pool,
+    each line with the face he makes while saying it. Everything runs in this one file — no build step,
+    no dependencies. Unofficial fan page — LEGO®, NINJAGO® and Kai are trademarks of the LEGO Group,
+    which does not sponsor, authorize or endorse this page.
+  </footer>
+</div>
+
+<script>
+'use strict';
+// ---------------------------------------------------------------------------
+// Kai — the LEGO Ninjago fire ninja (minifigure njo0007, 2011), ported to canvas.
+//
+// Same engine as onidia.html — palette block, primitives, bubble, behaviour
+// machine and main loop are the same code; only the sprite art is new, and it
+// is drawn to match the real minifigure part for part:
+//   headgear "Ninja Wrap" (red), head "Male Stern ... Scar Across Left Eye,
+//   Chin Dimple" (yellow), torso "Ninjago Brown Rope, Gold Medallion and Dark
+//   Red Undershirt" (red / red arms / black hands), "Hips and Legs with Dark
+//   Red Belt Pattern" (red).
+// The art is authored on a fixed 112x160 grid (CX = 56, GROUNDY = 156), and the
+// scene is drawn in logical units scaled to CSS pixels; the device-pixel ratio
+// is applied only to the canvas context, never to the sprite math.
+//
+// Drawing order per frame (drawPet): legs, hips + belt, torso print, head, then
+// the arms and claw hands on top so raised wave / dance hands stay visible.
+// ---------------------------------------------------------------------------
+
+const BASEW = 112, BASEH = 160, CX = 56, GROUNDY = 156;
+const TAU = Math.PI * 2;
+
+// Kai's palette: official LEGO colours plus print inks.
+const C = {
+  red: 'rgba(201,26,9,1)',        // LEGO Red
+  redShade: 'rgba(168,20,7,1)',
+  redLight: 'rgba(232,90,60,1)',
+  darkRed: 'rgba(114,14,15,1)',   // LEGO Dark Red
+  outline: 'rgba(74,9,5,1)',
+  yellow: 'rgba(245,205,47,1)',   // LEGO Yellow
+  yellowEdge: 'rgba(190,148,20,1)',
+  ink: 'rgba(30,27,36,1)',        // face/torso print black
+  hand: 'rgba(15,16,20,1)',       // black claw hands
+  rope: 'rgba(107,68,35,1)',
+  ropeDark: 'rgba(69,41,15,1)',
+  ropeLight: 'rgba(142,98,54,1)',
+  gold: 'rgba(216,169,60,1)',
+  goldDark: 'rgba(160,118,31,1)',
+  scar: 'rgba(200,134,47,1)',
+  mouthIn: 'rgba(110,24,26,1)',
+  shadow: 'rgba(10,4,6,0.32)',
+  tear: 'rgba(126,188,255,0.85)', sweat: 'rgba(158,212,255,0.92)',
+  anger: 'rgba(240,78,78,0.94)',
+};
+
+// Phrases: each line carries the face he makes while saying it.
+const PHRASES = [
+  ['ninja, go!', 'happy'], ['hiya-ya!', 'angry'], ['spinjitzu, baby!', 'happy'],
+  ['fire never gives up.', 'neutral'], ["i'm the elemental master of fire!", 'happy'],
+  ['sensei wu is watching.', 'thinking'], ['my sword of fire... where is it?!', 'anxious'],
+  ['nya can handle herself.', 'contempt'], ['skulkin never learn.', 'contempt'],
+  ['dragon power!', 'adore'], ['the golden weapons!', 'surprised'], ['too close to the flames...', 'fear'],
+  ['i tripped. it was the floor.', 'embarrassed'], ['ninjago city never sleeps.', 'thinking'],
+  ['again! from the top!', 'happy'], ['ouch... that hurt...', 'sad'],
+  ["i'm fine... really...", 'sad'], ['who put mushrooms in the soup?', 'disgust'],
+  ['keep training!', 'happy'], ['wait... what??', 'confused'],
+  ['yeah... right...', 'skeptical'], ['*yawn* five more minutes', 'sleepy'],
+  ['so sleepy...', 'sleepy'], ['boop!', 'wink'],
+  ['you got this!', 'happy'], ['is that a serpent?', 'fear'],
+  ['i never give up.', 'neutral'], ['focus... breathe... fire!', 'thinking'],
+  ['high five!', 'happy'], ['did the stone warrior move?', 'anxious'],
+  ['ew, gross!', 'disgust'], ['not again...', 'sad'],
+  ['my hood! it slipped!', 'embarrassed'], ['hmph.', 'angry'],
+  ['that was too easy.', 'contempt'], ['backflip! nailed it.', 'happy'],
+];
+
+const EXPR_NAMES = ['neutral', 'happy', 'wink', 'sad', 'thinking', 'anxious', 'angry', 'surprised',
+  'sleepy', 'fear', 'disgust', 'contempt', 'confused', 'skeptical', 'embarrassed', 'adore'];
+
+// ---- canvas plumbing -------------------------------------------------------
+
+const cv = document.getElementById('stage');
+const ctx = cv.getContext('2d');
+let S = 4;               // device pixels per logical unit (set on resize)
+let viewW = 0, viewH = 0;
+
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const r = cv.getBoundingClientRect();
+  viewW = r.width; viewH = r.height;          // CSS pixels; the scene is drawn in these
+  cv.width = Math.round(r.width * dpr);
+  cv.height = Math.round(r.height * dpr);
+  S = Math.max(1.4, (viewH / BASEH) * 0.72);  // logical units -> CSS pixels
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+}
+
+// ---- drawing primitives (mirrors canvas/canvas.go) -------------------------
+
+function ellipsePath(x, y, rx, ry, rotDeg) {
+  ctx.beginPath();
+  ctx.ellipse(x, y, Math.abs(rx), Math.abs(ry), (rotDeg || 0) * Math.PI / 180, 0, TAU);
+}
+function circlePath(x, y, r) { ellipsePath(x, y, r, r, 0); }
+function polyPath(pts) {
+  ctx.beginPath();
+  ctx.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+  ctx.closePath();
+}
+// Taper: a quad joining a round cap at (x1,y1) of radius r1 to one at (x2,y2) of r2.
+function taperPath(x1, y1, x2, y2, r1, r2) {
+  const a = Math.atan2(y2 - y1, x2 - x1);
+  ctx.beginPath();
+  ctx.arc(x1, y1, r1, a + Math.PI / 2, a - Math.PI / 2);
+  ctx.arc(x2, y2, r2, a - Math.PI / 2, a + Math.PI / 2);
+  ctx.closePath();
+}
+// Rounded rectangle: rt rounds the top corners, rb the bottom ones.
+function rrPath(x, y, w, h, rt, rb) {
+  const r1 = Math.min(rt, w / 2, h / 2), r2 = Math.min(rb, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r1, y);
+  ctx.lineTo(x + w - r1, y);
+  ctx.arcTo(x + w, y, x + w, y + r1, r1);
+  ctx.lineTo(x + w, y + h - r2);
+  ctx.arcTo(x + w, y + h, x + w - r2, y + h, r2);
+  ctx.lineTo(x + r2, y + h);
+  ctx.arcTo(x, y + h, x, y + h - r2, r2);
+  ctx.lineTo(x, y + r1);
+  ctx.arcTo(x, y, x + r1, y, r1);
+  ctx.closePath();
+}
+// Uniform-radius rounded rect (the speech bubble uses this signature).
+function roundRect(x, y, w, h, r) { rrPath(x, y, w, h, r, r); }
+
+function fEllipse(x, y, rx, ry, rot, col) { ellipsePath(x, y, rx, ry, rot); ctx.fillStyle = col; ctx.fill(); }
+function fCircle(x, y, r, col) { circlePath(x, y, r); ctx.fillStyle = col; ctx.fill(); }
+function fPoly(pts, col) { polyPath(pts); ctx.fillStyle = col; ctx.fill(); }
+function fRect(x, y, w, h, col) { ctx.fillStyle = col; ctx.fillRect(x, y, w, h); }
+function fRR(x, y, w, h, rt, rb, col) { rrPath(x, y, w, h, rt, rb); ctx.fillStyle = col; ctx.fill(); }
+function fCapsule(x1, y1, x2, y2, r, col) {
+  ctx.lineCap = 'round'; ctx.strokeStyle = col; ctx.lineWidth = r * 2;
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+}
+function fTaper(x1, y1, x2, y2, r1, r2, col) { taperPath(x1, y1, x2, y2, r1, r2); ctx.fillStyle = col; ctx.fill(); }
+// Polyline stroke through pts (chain of capsules reads as one printed line).
+function fPath(pts, r, col) {
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = col; ctx.lineWidth = r * 2;
+  ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+  ctx.stroke();
+}
+
+// Outlined variants: stroke the boundary (half in, half out), then fill over
+// the inner half — the same ring the Go canvas blits per shape.
+function ring(col, ow) { ctx.lineJoin = 'round'; ctx.strokeStyle = col; ctx.lineWidth = ow; ctx.stroke(); }
+function oEllipse(x, y, rx, ry, rot, ow, fill, oc) {
+  ellipsePath(x, y, rx, ry, rot); ring(oc, ow); ctx.fillStyle = fill; ctx.fill();
+}
+function oCircle(x, y, r, ow, fill, oc) { oEllipse(x, y, r, r, 0, ow, fill, oc); }
+function oPoly(pts, ow, fill, oc) { polyPath(pts); ring(oc, ow); ctx.fillStyle = fill; ctx.fill(); }
+function oRR(x, y, w, h, rt, rb, ow, fill, oc) {
+  rrPath(x, y, w, h, rt, rb); ring(oc, ow); ctx.fillStyle = fill; ctx.fill();
+}
+function oCapsule(x1, y1, x2, y2, r, ow, fill, oc) {
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = oc; ctx.lineWidth = (r + ow) * 2;
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  ctx.strokeStyle = fill; ctx.lineWidth = r * 2;
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+}
+function oTaper(x1, y1, x2, y2, r1, r2, ow, fill, oc) {
+  taperPath(x1, y1, x2, y2, r1 + ow, r2 + ow); ctx.fillStyle = oc; ctx.fill();
+  taperPath(x1, y1, x2, y2, r1, r2); ctx.fillStyle = fill; ctx.fill();
+}
+
+// ---- figure geometry (minifigure proportions on the shared grid) -----------
+//
+// ground 154 .. hood top 10 = 144 units ≈ a minifigure's 45 mm, split the way
+// the real figure is: head+wrap 24 %, torso 33 %, hips 9 %, legs 34 %.
+
+const HEAD_X = 34, HEAD_W = 44, HEAD_Y = 10, HEAD_H = 35;   // red ninja wrap
+const BAND_X = 40, BAND_W = 32, BAND_Y = 23, BAND_BOT = 34.5; // the eye window
+const BARE_X = 36, BARE_W = 40, BARE_Y = 12, BARE_BOT = 45;  // bare yellow head
+const EYE_Y = 30, EYE_DX = 8;                                // eyes, both states
+const MOUTH_Y = 38;
+const TORSO_TOP = 47, TORSO_BOT = 94;
+const HIP_TOP = 94, HIP_BOT = 107;
+const LEG_TOP = 104, LEG_BOT = 154, FOOT_TOP = 147;         // each leg ends in a foot
+const SHOULDER_Y = 52, SHOULDER_DX = 22;                     // 56 ± 22
+
+// ---- face parts (print style: black blobs, white pupil glints, line mouths) --
+
+// Standard eye: a black print blob with the white pupil dot the real head has.
+// k scales it, idx/idy shift the gaze.
+function eyeBlob(ex, ey, k, idx, idy) {
+  const dx = idx || 0, dy = idy || 0;
+  fEllipse(ex + dx, ey + dy, 3.5 * k, 3.9 * k, 0, C.ink);
+  fCircle(ex + dx - 1.1, ey + dy - 1.4 * k, 1.15 * k, '#ffffff');
+}
+// Wide startled whites around a shrunken blob (fear / anxiety).
+function eyeStartled(ex, ey) {
+  fEllipse(ex, ey, 5.0, 5.4, 0, '#ffffff');
+  fEllipse(ex, ey + 0.4, 2.3, 2.6, 0, C.ink);
+}
+// Half-lidded: blob, then the skin-coloured lid pressed over its top half.
+function eyeHalfLidded(ex, ey, tilt) {
+  eyeBlob(ex, ey, 1, 0, 0.4);
+  fRect(ex - 5, ey - 6, 10, 4.2, C.yellow);
+  fPath([[ex - 4.4, ey - 1.9 + tilt], [ex + 4.4, ey - 1.9 - tilt]], 1.1, C.ink);
+}
+// Closed eye: an arc, +1 bulging up (happy), -1 bulging down (sleepy).
+function eyeShut(ex, ey, dir) {
+  fPath([[ex - 3.4, ey + dir * -0.9], [ex, ey + dir * -2.6], [ex + 3.4, ey + dir * -0.9]], 1.3, C.ink);
+}
+// Embarrassed: shut with two little stress ticks at the outer corner.
+function eyePinched(ex, ey, side) {
+  eyeShut(ex, ey, 1);
+  fCapsule(ex + side * 4.6, ey - 1.6, ex + side * 6.4, ey - 3.0, 0.8, C.ink);
+}
+// Adoring: big blob, two glints — the sparkly print eye.
+function eyeAdore(ex, ey) {
+  fEllipse(ex, ey, 4.4, 4.9, 0, C.ink);
+  fCircle(ex - 1.5, ey - 1.8, 1.7, '#ffffff');
+  fCircle(ex + 1.6, ey + 1.6, 0.9, '#ffffff');
+}
+
+// Brows: thick black strokes angled the way the print's stern pair sits —
+// outer ends high, inner ends low (a determined V).
+function browPair(dy, yOuter, yInner, w) {
+  fPath([[CX - 12.6, yOuter + dy], [CX - 3.4, yInner + dy]], w, C.ink);
+  fPath([[CX + 12.6, yOuter + dy], [CX + 3.4, yInner + dy]], w, C.ink);
+}
+function browStern(dy)   { browPair(dy, 24.8, 26.6, 2.0); }
+function browAngry(dy)   { browPair(dy, 23.8, 27.8, 2.3); }
+function browWorried(dy) { browPair(dy, 27.4, 24.4, 1.9); }   // inner ends up
+function browHigh(dy)    { browPair(dy, 23.0, 23.6, 1.7); }
+function browLow(dy)     { browPair(dy, 26.6, 26.6, 2.1); }
+function browUneven(dy) {                                    // confused: one up
+  fPath([[CX - 12.6, 26.6 + dy], [CX - 3.4, 26.6 + dy]], 2.1, C.ink);
+  fPath([[CX + 12.6, 23.0 + dy], [CX + 3.4, 23.6 + dy]], 1.7, C.ink);
+}
+function browOne(dy) {                                        // one brow raised
+  browStern(dy);
+  fPath([[CX + 12.6, 23.2 + dy], [CX + 3.4, 24.0 + dy]], 1.7, C.ink);
+}
+
+// ---- mouths (only visible when the hood is off) ----------------------------
+
+function mouthStern(my) {                    // the print's own slanted frown
+  fPath([[49.6, my - 0.4], [56, my + 1.7], [62.4, my - 1.4]], 1.3, C.ink);
+}
+function mouthSmile(my) {
+  fPath([[49.6, my + 1.4], [56, my - 1.4], [62.4, my + 1.4]], 1.4, C.ink);
+}
+function mouthFrown(my) {
+  fPath([[49.6, my + 1.8], [56, my - 1.2], [62.4, my + 1.8]], 1.5, C.ink);
+}
+function mouthOpenSmile(my, openness) {      // open print mouth, dark red inside
+  const w = 4.6 + 3.0 * openness, h = 2.4 + 4.2 * openness;
+  fEllipse(CX, my + 1.0, w, h, 0, C.ink);
+  fEllipse(CX, my + 1.6, w * 0.74, h * 0.62, 0, C.mouthIn);
+}
+function mouthO(my, w, h) {
+  fEllipse(CX, my + 1.0, w, h, 0, C.ink);
+  fEllipse(CX, my + 1.8, w * 0.5, h * 0.5, 0, C.mouthIn);
+}
+function mouthSquiggle(my) {
+  fPath([[CX - 5.4, my + 0.6], [CX - 2.7, my - 0.9], [CX, my + 0.6],
+          [CX + 2.7, my - 0.9], [CX + 5.4, my + 0.6]], 1.2, C.ink);
+}
+function mouthFlatSide(my) { fPath([[CX - 5.4, my + 0.4], [CX - 1.0, my - 0.6]], 1.2, C.ink); }
+function mouthSmirk(my) {
+  fPath([[CX - 4.6, my + 0.6], [CX - 1.5, my - 0.6], [CX + 1.5, my - 1.0], [CX + 5.0, my + 0.2]], 1.3, C.ink);
+}
+// Animated talking mouth: a rounded cavity whose jaw follows `open`.
+function mouthTalk(my, open) {
+  const mw = 3.4 + 3.2 * open, mh = 1.4 + 5.4 * open, cy = my + 1.2 + 1.8 * open;
+  fEllipse(CX, cy, mw, mh, 0, C.ink);
+  if (open > 0.25) fEllipse(CX, cy + mh * 0.35, mw * 0.55, mh * 0.45, 0, C.mouthIn);
+}
+// Slow sleeping breath: the mouth eases open and shut on a soft sine.
+function mouthBreath(my, breath) {
+  const bw = 3.0 + 2.6 * breath, bh = 1.2 + 4.6 * breath, cy = my + 1.2 + 1.5 * breath;
+  fEllipse(CX, cy, bw, bh, 0, C.ink);
+  if (breath > 0.35) fEllipse(CX, cy + bh * 0.3, bw * 0.5, bh * 0.4, 0, C.mouthIn);
+}
+
+// ---- face extras -----------------------------------------------------------
+
+function blushPair(dy, k) {
+  fEllipse(CX - 15, MOUTH_Y - 3 + dy, 4.4 * k, 2.4 * k, 0, 'rgba(240,104,52,0.42)');
+  fEllipse(CX + 15, MOUTH_Y - 3 + dy, 4.4 * k, 2.4 * k, 0, 'rgba(240,104,52,0.42)');
+}
+// Liquid drop with its fat end at (x,y) and the thin tail above.
+function dropAt(x, y, col) {
+  fTaper(x, y - 6.5, x, y, 1.0, 3.0, col);
+  fCircle(x - 1.0, y - 2.4, 0.9, 'rgba(255,255,255,0.667)');
+}
+function angerMark(x, y) {                           // manga anger vein
+  const s = Math.SQRT2;
+  for (const [dx, dy] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) {
+    fTaper(x + dx * 2.6 / s, y + dy * 2.6 / s, x + dx * 6.6 / s, y + dy * 6.6 / s, 1.7, 0.7, C.anger);
+  }
+}
+// The head print's scar, crossing the eye on the viewer's right.
+function faceScar(dy) {
+  fPath([[64.5, 16.5 + dy], [67.6, 23 + dy], [70.6, 31.5 + dy]], 1.2, C.scar);
+}
+
+// ---- face composition ------------------------------------------------------
+//
+// Eyes and brows sit at the same coordinates with or without the hood — the
+// wrap simply hides everything outside the eye band (and the mouth never shows
+// while it is on, exactly like the real minifigure).
+function drawFace(p, dy) {
+  const ey = EYE_Y + dy, my = MOUTH_Y + dy;
+  const hooded = pet.hood;
+  const leftShut = p.blink >= 0.5 || p.expr === 'happy' || p.expr === 'sleepy' || p.expr === 'embarrassed';
+  const rightShut = leftShut || p.expr === 'wink';
+
+  for (const side of [-1, 1]) {
+    const ex = CX + side * EYE_DX;
+    const shut = side < 0 ? leftShut : rightShut;
+    if (shut && p.expr === 'sleepy') eyeShut(ex, ey, -1);
+    else if (shut && p.expr === 'embarrassed') eyePinched(ex, ey, side);
+    else if (shut) eyeShut(ex, ey, 1);
+    else if (p.blink >= 0.5) eyeShut(ex, ey, 1);
+    else switch (p.expr) {
+      case 'surprised': eyeBlob(ex, ey, 1.35, 0, 0); break;
+      case 'adore': eyeAdore(ex, ey); break;
+      case 'anxious': case 'fear': eyeStartled(ex, ey); break;
+      case 'sad': eyeBlob(ex, ey, 0.95, 0, 1.0); break;        // downcast
+      case 'angry': eyeBlob(ex, ey, 0.9, 0, -0.3); break;       // narrowed glare
+      case 'thinking': eyeBlob(ex, ey, 1, -1.3, 0); break;      // gaze aside
+      case 'disgust': eyeBlob(ex, ey, 0.9, 1.2, 0); break;      // looking aside
+      case 'contempt': eyeHalfLidded(ex, ey, 0.15); break;
+      case 'confused': eyeBlob(ex, ey, 0.95, -0.7, 0); break;
+      case 'skeptical': eyeHalfLidded(ex, ey, -0.2); break;
+      default: eyeBlob(ex, ey, 1, 0, 0);
+    }
+  }
+
+  switch (p.expr) {
+    case 'sad': case 'fear': case 'anxious': browWorried(dy); break;
+    case 'angry': browAngry(dy); break;
+    case 'surprised': case 'adore': browHigh(dy); break;
+    case 'disgust': browLow(dy); break;
+    case 'confused': browUneven(dy); break;
+    case 'contempt': case 'skeptical': case 'thinking': browOne(dy); break;
+    default: browStern(dy);
+  }
+
+  // Marks that live outside the eye band sit on the hood (or on the bare head).
+  if (p.expr === 'sad') dropAt(CX + 15, 34 + dy, C.tear);
+  if (p.expr === 'anxious') dropAt(73, 21 + dy, C.sweat);
+  if (p.expr === 'fear') { dropAt(73, 20 + dy, C.sweat); dropAt(CX - 15, 34 + dy, C.tear); }
+  if (p.expr === 'angry') angerMark(86, 20 + dy);
+
+  if (hooded) return;                            // the wrap hides the rest
+
+  if (p.expr === 'happy' || p.expr === 'wink' || p.expr === 'adore') blushPair(dy, 1.1);
+  if (p.expr === 'embarrassed') blushPair(dy, 1.6);
+
+  switch (p.expr) {
+    case 'happy': case 'wink': mouthOpenSmile(my, 0.55); break;
+    case 'adore': mouthOpenSmile(my, 0.3); break;
+    case 'sad': case 'angry': mouthFrown(my); break;
+    case 'surprised': mouthO(my, 3.0, 3.8); break;
+    case 'thinking': case 'skeptical': case 'contempt': mouthFlatSide(my); break;
+    case 'anxious': case 'embarrassed': case 'confused': mouthSquiggle(my); break;
+    case 'disgust': mouthSmirk(my); break;
+    case 'sleepy': if (p.breath <= 0.03) mouthO(my, 2.0, 2.4); break;
+    default: mouthStern(my);
+  }
+
+  if (p.talk > 0.03 && p.expr !== 'sleepy') {
+    mouthTalk(my, Math.min(Math.max(p.talk, 0), 1));
+  }
+  if (p.breath > 0.03) mouthBreath(my, Math.min(Math.max(p.breath, 0), 1));
+
+  faceScar(dy);                                  // part of the print, always there
+  fCapsule(CX, my + 4.4, CX, my + 6.2, 0.7, C.ink);   // chin dimple
+}
+
+// ---- head: red ninja wrap, or the bare printed head ------------------------
+
+// The wrap: red hood with a horizontal window that only shows the eye band —
+// forehead and mouth/chin stay covered, like the real headgear.
+function drawHead(p, dy) {
+  if (!pet.hood) {
+    // Bare head: the classic cylinder with its top stud.
+    fRR(49, 6 + dy, 14, 8, 3, 1, C.yellow);
+    rrPath(49, 6 + dy, 14, 8, 3, 1); ring(C.yellowEdge, 1.6);
+    oRR(BARE_X, BARE_Y + dy, BARE_W, BARE_BOT - BARE_Y, 9, 6, 2.0, C.yellow, C.yellowEdge);
+    // Soft shading down the right edge, so the cylinder reads round.
+    fRect(BARE_X + BARE_W - 7, BARE_Y + 9 + dy, 5, BARE_BOT - BARE_Y - 13, 'rgba(190,148,20,0.20)');
+    drawFace(p, dy);
+    return;
+  }
+
+  // Hood shell.
+  oRR(HEAD_X, HEAD_Y + dy, HEAD_W, HEAD_H, 12, 7, 2.2, C.red, C.outline);
+  // Dome sheen + shaded sides give the plastic its roundness.
+  fEllipse(CX - 4, HEAD_Y + 7 + dy, 11, 4.6, -12, 'rgba(232,90,60,0.55)');
+  fRect(HEAD_X + 2, HEAD_Y + 14 + dy, 4, HEAD_H - 20, 'rgba(168,20,7,0.45)');
+  fRect(HEAD_X + HEAD_W - 6, HEAD_Y + 14 + dy, 4, HEAD_H - 20, 'rgba(168,20,7,0.45)');
+
+  // Talking lifts the mask edge a little — the fabric moves with the jaw.
+  const maskTop = BAND_BOT + p.talk * 1.5;
+  oRR(BAND_X, BAND_Y + dy, BAND_W, maskTop - BAND_Y, 6, 3, 1.6, C.yellow, C.yellowEdge);
+
+  // Wrapped-cloth folds across the mask.
+  fPath([[HEAD_X + 3, 39 + dy], [CX, 42 + dy], [HEAD_X + HEAD_W - 3, 38 + dy]], 1.1, 'rgba(168,20,7,0.9)');
+  fPath([[HEAD_X + 3, 44 + dy], [CX, 46 + dy], [HEAD_X + HEAD_W - 3, 43 + dy]], 1.0, 'rgba(168,20,7,0.75)');
+  // Fold over the brow line where the wrap turns.
+  fPath([[HEAD_X + 4, 21 + dy], [CX, 19.4 + dy], [HEAD_X + HEAD_W - 4, 21 + dy]], 1.0, 'rgba(168,20,7,0.7)');
+
+  drawFace(p, dy);
+}
+
+// ---- torso: crossed ropes, gold medallion, dark-red undershirt -------------
+
+function drawTorso(p, dy) {
+  // Neck peg showing between wrap and collar.
+  fRR(50, TORSO_TOP - 4 + dy, 12, 6, 2, 2, C.yellow);
+  rrPath(50, TORSO_TOP - 4 + dy, 12, 6, 2, 2); ring(C.yellowEdge, 1.4);
+
+  // Torso block: slightly narrower at the shoulders, like the real moulding.
+  oPoly([[33, TORSO_TOP + dy], [79, TORSO_TOP + dy], [83, TORSO_BOT + dy], [29, TORSO_BOT + dy]],
+    2.2, C.red, C.outline);
+
+  // Dark-red undershirt showing at the V of the gi.
+  fPoly([[46, TORSO_TOP + dy], [66, TORSO_TOP + dy], [56, TORSO_TOP + 15 + dy]], C.darkRed);
+  // The gi's crossed front edges.
+  fPath([[39, TORSO_TOP + 3 + dy], [56, TORSO_TOP + 26 + dy]], 1.2, 'rgba(74,9,5,0.85)');
+  fPath([[73, TORSO_TOP + 3 + dy], [56, TORSO_TOP + 26 + dy]], 1.2, 'rgba(74,9,5,0.85)');
+
+  // Scattered dark-red undershirt marks (the print's slashes).
+  for (const [x1, y1, x2, y2] of [
+    [64, TORSO_TOP + 20, 68, TORSO_TOP + 27],
+    [68, TORSO_TOP + 24, 71, TORSO_TOP + 30],
+    [40, TORSO_TOP + 33, 44, TORSO_TOP + 39],
+    [74, TORSO_TOP + 34, 77, TORSO_TOP + 39],
+    [36, TORSO_TOP + 40, 39, TORSO_TOP + 45],
+  ]) fPath([[x1, y1 + dy], [x2, y2 + dy]], 1.1, C.darkRed);
+
+  // The two brown ropes crossing the chest (over the medallion's anchor).
+  const ropeA = [[37, TORSO_TOP + 7 + dy], [75, TORSO_BOT - 6 + dy]];
+  const ropeB = [[75, TORSO_TOP + 7 + dy], [37, TORSO_BOT - 6 + dy]];
+  for (const seg of [ropeA, ropeB]) {
+    fPath(seg, 3.4, C.ropeDark);          // outline first
+    fPath(seg, 2.3, C.rope);              // body
+    ctx.save();                           // twist: light dashes along the strand
+    ctx.setLineDash([2.2, 3.4]);
+    fPath(seg, 2.3, C.ropeLight);
+    ctx.restore();
+  }
+
+  // Gold medallion where the ropes meet.
+  const mx = CX, my = TORSO_TOP + 22 + dy;
+  oCircle(mx, my, 6.6, 1.4, C.gold, C.goldDark);
+  fCircle(mx, my, 4.2, C.goldDark);
+  fCircle(mx, my, 3.0, C.gold);
+  for (let i = 0; i < 6; i++) {
+    const a = TAU * i / 6;
+    fCircle(mx + Math.cos(a) * 5.3, my + Math.sin(a) * 5.3, 0.8, C.goldDark);
+  }
+}
+
+// ---- hips and legs: red with the dark-red belt pattern ---------------------
+
+function drawHips(p, dy) {
+  oRR(29, HIP_TOP + dy, 54, HIP_BOT - HIP_TOP, 3, 4, 2.2, C.red, C.outline);
+
+  // The dark-red belt band printed across the hips.
+  oRR(31, HIP_TOP + 2 + dy, 50, 7, 2, 2, 1.4, C.darkRed, C.ink);
+  // Belt knot: two loops and a centre.
+  fEllipse(52.4, HIP_TOP + 6 + dy, 3.4, 2.6, -18, C.darkRed);
+  fEllipse(59.6, HIP_TOP + 6 + dy, 3.4, 2.6, 18, C.darkRed);
+  rrPath(53.6, HIP_TOP + 4.4 + dy, 4.8, 4.4, 1.4, 1.4);
+  ctx.fillStyle = C.darkRed; ctx.fill(); ring(C.ink, 1.0);
+  fEllipse(52.4, HIP_TOP + 6 + dy, 3.4, 2.6, -18, 'rgba(0,0,0,0)');
+  ring(C.ink, 1.0);
+
+  // The two belt ends hanging over the upper legs.
+  fTaper(53.6, HIP_BOT - 1 + dy, 51.4, 119 + dy, 2.6, 1.4, C.darkRed);
+  fTaper(58.4, HIP_BOT - 1 + dy, 60.6, 119 + dy, 2.6, 1.4, C.darkRed);
+  fPath([[53.6, HIP_BOT - 1 + dy], [51.4, 119 + dy]], 0.6, C.ink);
+  fPath([[58.4, HIP_BOT - 1 + dy], [60.6, 119 + dy]], 0.6, C.ink);
+}
+
+// Minifig legs swing at the hip — no knees, so the whole leg pivots. The leg
+// length is true to the real figure (legs ≈ 34 %, legs+hips ≈ 44 %, matching
+// LEGO's 42 %); what reads as "too long" without them are the FEET, so each leg
+// is capped with a shoe — a rounded block, a rounded toe and a sole line — and
+// the two feet are split by a moulded notch, exactly like the real piece.
+function drawLegs(p, dy) {
+  const sw = p.hop ? p.legSwing * 0.3 : p.legSwing;
+  const ang = sw * 1.7 * Math.PI / 180;              // ±10° at full swing
+  for (const side of [-1, 1]) {
+    const hipX = CX + side * 14;
+    ctx.save();
+    ctx.translate(hipX, 107 + dy);
+    ctx.rotate(side < 0 ? ang : -ang);
+    // Thigh + shin cylinder (same width as the hips, like the real leg piece).
+    oRR(-13, LEG_TOP - 107, 26, FOOT_TOP - LEG_TOP, 3, 2, 2.2, C.red, C.outline);
+    // Shoe: rounded block with a rounded toe (bigger bottom radius) and a sole.
+    oRR(-13, FOOT_TOP - 107, 26, LEG_BOT - FOOT_TOP, 2, 4.5, 2.0, C.red, C.outline);
+    fRect(-11, LEG_BOT - 4.2 - 107, 22, 2.0, 'rgba(74,9,5,0.30)');   // sole shadow
+    // Inner-edge seam: the moulded join running down between the two legs and
+    // the notch between the two feet — it travels with the swinging leg.
+    fPath([[side * -12, LEG_TOP - 1 - 107], [side * -12, LEG_BOT - 4 - 107]], 1.0, 'rgba(74,9,5,0.42)');
+    ctx.restore();
+  }
+}
+
+// ---- arms and black claw hands --------------------------------------------
+
+// The LEGO C-claw hand (part 93552): a chunky, solid open "C", sized like the
+// real moulded part — noticeably wider than the arm it hangs from (the real
+// claw is about 45 % of torso width). Built as a filled crescent (outer arc
+// minus the inner wedge) so it has real mass, with a black outline and a
+// rim-light on top that reads glossy moulded plastic. The inner gap is left
+// genuinely OPEN (no backing disc) so the hand reads as a proper "C" — never a
+// filled blob. The opening faces forward (outward from the body) like the part.
+function drawHand(x, y, rot) {
+  // rOut 7.2 (Ø14.4 ≈ 36 % of the 40-wide torso) against a wrist taper of
+  // radius 4.4 — the claw reads as its own part, not as a cap on the arm tip.
+  const rOut = 7.2, rIn = 2.6;                 // ring thickness ≈ 4.6
+  const g = Math.PI * 0.22;                    // half-angle of the open gap
+  // The opening faces outward, away from the body: +90° for the right hand,
+  // -90° for the left — exactly how the moulded C-claw part is oriented.
+  const faceOut = (rot === undefined || rot >= 0) ? Math.PI * 0.5 : -Math.PI * 0.5;
+
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(rot || 0);
+  ctx.lineJoin = 'round';
+
+  // Filled "C": outer arc out, inner wedge back, closed — gap stays open.
+  ctx.beginPath();
+  ctx.arc(0, 0, rOut, faceOut + g, faceOut - g + TAU);
+  ctx.arc(0, 0, rIn, faceOut - g + TAU, faceOut + g, true);
+  ctx.closePath();
+  ctx.fillStyle = C.hand; ctx.fill();
+  ctx.lineWidth = 1.1;
+  ctx.strokeStyle = 'rgba(0,0,0,0.92)';
+  ctx.stroke();
+
+  // Rim-light along the outer (upper) edge of the claw — glossy moulded plastic.
+  ctx.beginPath();
+  ctx.arc(0, 0, rOut - 0.9, -Math.PI * 0.62, -Math.PI * 0.05);
+  ctx.lineWidth = 0.9;
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = 'rgba(255,255,255,0.32)';
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+// The red arm stops short of the hand: a thin black wrist pin bridges a small
+// air gap, exactly like the real minifigure where the hand's peg is visible
+// between the end of the arm and the claw.
+function armTo(p, dy, side, hx, hy) {
+  const sx = CX + side * SHOULDER_DX, sy = SHOULDER_Y + dy;
+  const len = Math.hypot(hx - sx, hy - sy) || 1;
+  const ux = (hx - sx) / len, uy = (hy - sy) / len;
+  // The visible peg is HALF of what it was: the arm's rounded tip (4.4 + 1.8
+  // outline = 6.2) and the claw rim (7.2) swallow 13.4 of the gap, so a gap of
+  // 15.6 leaves ≈ 2.2 of pin on screen — exactly half the old ≈ 4.4 — and
+  // every unit saved goes to the red arm itself. Short poses (disco lift)
+  // still keep a minimum of arm: gap ≤ len − 8, floor 4.
+  const gap = Math.max(4, Math.min(15.6, len - 8));
+  const ax = hx - ux * gap, ay = hy - uy * gap;         // where the red arm ends
+  // Pin first, so the arm's rounded end cap and the claw both cover its ends.
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = 'rgba(0,0,0,0.92)';
+  ctx.lineWidth = 2.6;
+  ctx.beginPath();
+  ctx.moveTo(ax, ay);
+  ctx.lineTo(hx, hy);
+  ctx.stroke();
+  ctx.restore();
+  oTaper(sx, sy, ax, ay, 6.4, 4.4, 1.8, C.red, C.outline);
+  oCircle(sx, sy + 1, 7.6, 1.8, C.red, C.outline);       // shoulder cap
+  drawHand(hx, hy, 0);
+}
+
+function drawArms(p, dy) {
+  const armSwing = -p.legSwing * 0.5;
+  for (const side of [-1, 1]) {
+    // Raised / disco arms are repainted by drawTopArms over the head layer.
+    if (p.wave && side > 0) continue;
+    if (p.dance) continue;
+    let hx, hy;
+    if (p.armUp) { hx = CX + side * 30; hy = 23 + dy; }   // arms straight up
+    // Relaxed hands hang at the hip line (y 95) like a real minifig: the red
+    // arm now spans shoulder → waist (≈ 29 units, was ≈ 20).
+    else { hx = CX + side * 34 + armSwing * side; hy = 95 + dy; }
+    armTo(p, dy, side, hx, hy);
+  }
+}
+
+// Wave, disco and spinjitzu arms travel up beside the wrap, so they are drawn
+// after the head (drawArms runs before it).
+function drawTopArms(p, dy) {
+  if (p.wave) {
+    const swing = Math.sin(TAU * p.wavePhase) * 5;
+    armTo(p, dy, 1, CX + 30 + swing, 23 + dy);           // hand up beside the hood
+  }
+  if (p.dance) {
+    for (const side of [-1, 1]) {
+      const lift = side < 0 ? p.danceLiftL : p.danceLiftR;
+      armTo(p, dy, side, CX + side * 30, 88 + dy + lift);
+    }
+  }
+}
+
+// ---- spinjitzu -------------------------------------------------------------
+
+function drawSpinFx(p) {
+  const base = 152, t = pet.t;
+  ctx.save();
+  for (let i = 0; i < 3; i++) {
+    const ph = t * 9 + i * 2.2;
+    const y = base - 14 - i * 30;
+    const rx = 34 - i * 5;
+    ctx.strokeStyle = i % 2 ? 'rgba(255,196,80,0.85)' : 'rgba(240,70,50,0.85)';
+    ctx.lineWidth = 4.5 - i * 0.8;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.ellipse(CX, y, rx, rx * 0.3, 0, ph, ph + 2.3);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// One full frame, shadow included (drawPet).
+function drawPet(p) {
+  const dy = p.bob;
+  const shrink = p.hop ? 0.72 : 1.0;
+  fEllipse(CX, 152, 30 * shrink, 5 * shrink, 0, C.shadow);   // ground shadow
+
+  ctx.save();
+  if (p.spin) {                       // fake the revolution by squashing X
+    ctx.translate(CX, 0);
+    ctx.scale(Math.cos(pet.t * 13), 1);
+    ctx.translate(-CX, 0);
+  }
+  drawLegs(p, dy);
+  drawHips(p, dy);
+  drawTorso(p, dy);
+  drawHead(p, dy);
+  drawArms(p, dy);
+  drawTopArms(p, dy);
+  ctx.restore();
+
+  if (p.spin) drawSpinFx(p);
+}
+
+// ---- speech bubble (bubble.go) --------------------------------------------
+
+const BUB = { fill: '#fcfaff', outline: '#2f223e', text: '#2d263c',
+  thinkFill: '#ece8f6', thinkEdge: '#bab2d0', thinkText: '#6e6684' };
+const BUB_PAD_X = 12, BUB_PAD_Y = 9, BUB_CORNER = 8;
+
+// Greedy word wrap, capped at maxLines; a dropped word becomes "..." on the
+// last line (layoutText + bubbleEllipsis in bubble.go).
+function wrapText(text, maxW, maxLines) {
+  const lines = [];
+  let line = '', dropped = false;
+  for (const w of text.split(/\s+/)) {
+    const t = line ? line + ' ' + w : w;
+    if (ctx.measureText(t).width > maxW && line) {
+      if (lines.length === maxLines - 1) { dropped = true; break; }
+      lines.push(line);
+      line = w;
+    } else line = t;
+  }
+  if (line && lines.length < maxLines) lines.push(line);
+  if (dropped) {
+    const keep = maxW - ctx.measureText('...').width;
+    let last = lines[maxLines - 1] || '';
+    while (last && ctx.measureText(last + '...').width > keep) last = last.slice(0, -1);
+    lines[maxLines - 1] = last + '...';
+  }
+  return lines;
+}
+
+// Soft-edged comic pop so a new bubble arrives with a little bounce.
+function drawBubble(x, y, text, pop) {
+  const fs = Math.max(13, Math.round(S * 4.4));
+  ctx.font = `600 ${fs}px "Trebuchet MS", "Segoe UI", system-ui, sans-serif`;
+  const lines = wrapText(text, Math.min(24 * fs * 0.52, viewW * 0.34), 3);
+  const lh = Math.round(fs * 1.35);
+  let tw = 0;
+  for (const l of lines) tw = Math.max(tw, ctx.measureText(l).width);
+  const bw = Math.ceil(tw) + BUB_PAD_X * 2;
+  const bh = lines.length * lh + BUB_PAD_Y * 2;
+  const ow = Math.max(2, S * 0.5);
+  const tailW = fs * 1.15, tailH = fs * 0.85;      // tail scales with the text
+
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(pop, pop);
+  ctx.translate(-x, -y);
+  ctx.lineJoin = 'round';
+  ctx.shadowColor = 'rgba(0,0,0,.35)';
+  ctx.shadowBlur = 10 * pop;
+  ctx.shadowOffsetY = 3 * pop;
+
+  // Tail first, so the body covers its base.
+  ctx.beginPath();
+  ctx.moveTo(x - tailW / 2, y + bh - 1);
+  ctx.lineTo(x, y + bh + tailH);
+  ctx.lineTo(x + tailW / 2, y + bh - 1);
+  ctx.closePath();
+  ctx.fillStyle = BUB.outline; ctx.fill();
+  ctx.shadowColor = 'transparent';
+  ctx.fillStyle = BUB.fill;
+  ctx.beginPath();
+  ctx.moveTo(x - tailW / 2, y + bh - 1);
+  ctx.lineTo(x, y + bh + tailH);
+  ctx.lineTo(x + tailW / 2, y + bh - 1);
+  ctx.closePath();
+  ctx.fill();
+
+  roundRect(x - bw / 2, y - bh, bw, bh, BUB_CORNER);
+  ctx.fillStyle = BUB.outline; ctx.fill();
+  ctx.shadowColor = 'transparent';
+  roundRect(x - bw / 2, y - bh, bw, bh, BUB_CORNER);
+  ctx.fillStyle = BUB.fill; ctx.fill();
+  ctx.lineWidth = ow; ctx.strokeStyle = BUB.outline; ctx.stroke();
+
+  ctx.fillStyle = BUB.text;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  lines.forEach((l, i) => ctx.fillText(l, x, y - bh + BUB_PAD_Y + lh * (i + 0.5)));
+  ctx.restore();
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+}
+
+// Thought cloud: overlapping discs, rims drawn rim-then-fill (bubble_page.go).
+function drawThink(x, y, text, pop) {
+  const fs = Math.max(12, Math.round(S * 3.4));
+  ctx.font = `500 ${fs}px "Trebuchet MS", "Segoe UI", system-ui, sans-serif`;
+  const lines = wrapText(text, Math.min(30 * fs * 0.5, viewW * 0.34), 6);
+  const lh = Math.round(fs * 1.3);
+  let tw = 0;
+  for (const l of lines) tw = Math.max(tw, ctx.measureText(l).width);
+  const bw = tw + fs * 1.6, bh = lines.length * lh + fs * 1.1;
+  const rim = Math.max(1.5, S * 0.38);
+
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(pop, pop);
+  ctx.translate(-x, -y);
+  ctx.lineJoin = 'round';
+
+  // Trailing dots down to his head.
+  for (let i = 0; i < 2; i++) {
+    const r = (3.2 - i * 1.1) * S * 0.5;
+    fCircle(x - 6 * S * 0.5, y - bh / 2 + 10 * S * 0.5 + i * 9 * S * 0.5, r, BUB.thinkFill);
+  }
+
+  const cy = y - bh / 2, discs = [
+    [x, cy, bw / 2, bh / 2],
+    [x - bw / 2 + bh * 0.3, cy, bh * 0.36, bh * 0.4],
+    [x + bw / 2 - bh * 0.3, cy, bh * 0.36, bh * 0.4],
+  ];
+  for (const [dx, dy, rx, ry] of discs) {
+    ellipsePath(dx, dy, rx + rim, ry + rim, 0);
+    ctx.fillStyle = BUB.thinkEdge; ctx.fill();
+  }
+  for (const [dx, dy, rx, ry] of discs) {
+    ellipsePath(dx, dy, rx, ry, 0);
+    ctx.fillStyle = BUB.thinkFill; ctx.fill();
+  }
+
+  ctx.fillStyle = BUB.thinkText;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  lines.forEach((l, i) => ctx.fillText(l, x, cy + lh * (i - (lines.length - 1) / 2)));
+  ctx.restore();
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+}
+
+// ---- the buddy brain -------------------------------------------------------
+
+const IDLE_MS = 4200;                     // how long he rests between actions
+const pet = {
+  x: 0, dir: 1, speed: 40,               // logical units per second
+  action: 'idle', until: 0, t: 0,         // current action + when it ends
+  facing: 1, exprForced: false,
+  expr: 'neutral', exprUntil: 0,
+  blinkNext: 2, blinkUntil: 0,
+  talkUntil: 0,
+  hood: true,                             // the ninja wrap (hood checkbox)
+  bubble: null, bubbleUntil: 0,           // {text, kind, born, life}
+  nextChatter: 3.5,
+};
+
+function newPose() {
+  return {
+    bob: 0, legSwing: 0, stepLiftL: 0, stepLiftR: 0, tailSway: 0,
+    blink: 0, armUp: false, wave: false, wavePhase: 0,
+    dance: false, danceLiftL: 0, danceLiftR: 0, hop: false, spin: false,
+    expr: pet.expr, talk: 0, breath: 0,
+  };
+}
+
+function setAction(a, secs) {
+  pet.action = a;
+  pet.until = pet.t + secs;
+  if (a === 'idle') pet.expr = 'neutral';
+}
+
+function say(text, expr, opts = {}) {
+  const e = expr || 'neutral';
+  pet.bubble = { text, kind: opts.think ? 'think' : 'speak', born: pet.t, life: opts.life || (2.2 + text.length * 0.055) };
+  pet.bubbleUntil = pet.t + pet.bubble.life;
+  pet.expr = e;
+  pet.exprUntil = pet.bubbleUntil;
+  pet.talkUntil = pet.bubbleUntil;
+  if (opts.stop) { setAction('idle', 0.1); pet.exprForced = true; }
+}
+
+// Pin a face for a while (the Face buttons), ignoring what the action wants.
+function setFace(e, secs = 3) {
+  pet.expr = e;
+  pet.exprUntil = pet.t + secs;
+  pet.exprForced = true;
+  pet.bubble = null;
+  pet.talkUntil = 0;
+}
+
+function boop() {
+  const lines = [['boop!', 'wink'], ['hey!!', 'angry'], ['hiya-ya!', 'angry'],
+    ['eep!!', 'surprised'], ['*chuckles*', 'happy']];
+  const [t, e] = lines[(Math.random() * lines.length) | 0];
+  setAction('spin', 1.4);
+  say(t, e);
+}
+
+// He answers you in his own words, matched to what you said.
+function reply(text) {
+  const s = text.toLowerCase();
+  const hit = (re, opts) => re.test(s) ? opts : null;
+  let out = hit(/\b(hi|hey|hello|yo|morning|evening)\b/, ['ninja, go!', 'happy'])
+    || hit(/\blove|like you|miss you|<3|heart|cute|sweet\b/, ['high five!', 'happy'])
+    || hit(/\b(sad|tired|sleepy|exhausted|awful|bad)\b/, ["i'm fine... really...", 'sad'])
+    || hit(/\b(angry|stop|hate|ew|yuck|gross|shut)\b/, ['hmph.', 'angry'])
+    || hit(/\b(sorry|apolog|my bad)\b/, ['i tripped. it was the floor.', 'embarrassed'])
+    || hit(/\b(help|how|why|what|where|who|when|can you)\b/, ['sensei wu is watching.', 'thinking'])
+    || hit(/\b(thank|thanks|ta|cheers|thx)\b/, ['you got this!', 'happy'])
+    || hit(/\b(walk|run|move|go|follow|spin)\b/, ['spinjitzu, baby!', 'happy'])
+    || hit(/\b(fire|flame|dragon|sword|ninja|ninjago)\b/, ['dragon power!', 'adore'])
+    || hit(/\b(bye|goodbye|see ya|later|night)\b/, ['so sleepy...', 'sleepy']);
+  if (!out) out = PHRASES[(Math.random() * PHRASES.length) | 0];
+  say(out[0], out[1], { think: true, stop: true });
+}
+
+// Pose per action, driven by the same constants the Go behaviour uses.
+function buildPose(dt) {
+  const p = newPose();
+  const t = pet.t;
+
+  if (pet.exprUntil > 0 && t > pet.exprUntil && pet.action === 'idle') {
+    pet.expr = 'neutral';
+    pet.exprUntil = 0;
+    pet.exprForced = false;
+  }
+
+  // Blinking is independent of everything else.
+  if (t > pet.blinkNext) { pet.blinkUntil = t + 0.13; pet.blinkNext = t + 2.4 + Math.random() * 3.4; }
+  p.blink = t < pet.blinkUntil ? 1 : 0;
+
+  if (t < pet.talkUntil) {
+    // Jaw flaps a few times a second while a bubble is up.
+    p.talk = 0.35 + 0.65 * Math.abs(Math.sin(t * 11));
+  }
+
+  switch (pet.action) {
+    case 'walk': {
+      // Straight from behavior.go: walkCycleHz = 2.2 full leg cycles per
+      // second, so the phase advances by 2.2*TAU each second.
+      const ph = t * 2.2 * TAU;
+      const s = Math.sin(ph);
+      p.legSwing = s * 6;
+      p.stepLiftL = Math.max(0, s) * 4;
+      p.stepLiftR = Math.max(0, -s) * 4;
+      p.bob = -Math.abs(s) * 2.4 - 0.8;
+      break;
+    }
+    case 'wave': {
+      p.wave = true;
+      p.wavePhase = (t % 1.15) / 1.15;
+      p.bob = Math.sin(t * 6) * 1.2;
+      if (!pet.exprForced) p.expr = 'happy';
+      break;
+    }
+    case 'spin': {                          // spinjitzu: whirl + little bounce
+      p.spin = true;
+      p.bob = -Math.abs(Math.sin(t * 7)) * 2.4;
+      p.legSwing = Math.sin(t * 13) * 3;
+      if (!pet.exprForced) p.expr = 'happy';
+      break;
+    }
+    case 'dance': {
+      p.dance = true;
+      const beat = (t % 0.55) / 0.55;                    // one swap + bounce per beat
+      const swap = Math.floor(t / 0.55) % 2 === 0;
+      p.danceLiftL = swap ? -31 : 19;
+      p.danceLiftR = swap ? 19 : -31;
+      p.bob = -Math.abs(Math.sin(beat * Math.PI)) * 3.4;
+      if (!pet.exprForced) p.expr = 'happy';
+      break;
+    }
+    case 'sleep': {
+      if (!pet.exprForced) p.expr = 'sleepy';
+      p.breath = 0.5 + 0.5 * Math.sin(t * 0.9);
+      p.bob = Math.sin(t * 0.45) * 0.8;
+      break;
+    }
+    case 'happy': {
+      p.bob = -Math.abs(Math.sin(t * 7)) * 4;
+      p.armUp = true; p.hop = Math.sin(t * 7) > 0;
+      break;
+    }
+    default: {                                          // idle: gentle breathing bob
+      p.bob = Math.sin(t * 1.5) * 1.4;
+    }
+  }
+  return p;
+}
+
+// ---- stage: ground, grid, buddy, bubble --------------------------------------
+
+const showGrid = document.getElementById('grid');
+const autoChk = document.getElementById('auto');
+const lightBg = document.getElementById('light');
+const groundY = () => viewH - Math.max(18, viewH * 0.055);
+
+function drawStage(dt) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, viewW, viewH);
+
+  // Floor line and a warm pool of fire light (matches the page's red/amber mood).
+  const gy = groundY();
+  if (lightBg.checked) {
+    // Bright "daylight" backdrop: a soft sky wash above the floor and a light
+    // sunlit floor, so Kai pops against a cheerful scene instead of the dark one.
+    const sky = ctx.createLinearGradient(0, 0, 0, gy);
+    sky.addColorStop(0, '#bfe3ff');
+    sky.addColorStop(0.65, '#e7f4ff');
+    sky.addColorStop(1, '#fdf3e3');
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, viewW, gy);
+    const sun = ctx.createLinearGradient(0, gy - 20, 0, viewH);
+    sun.addColorStop(0, 'rgba(255,214,150,0.55)');
+    sun.addColorStop(1, 'rgba(255,186,120,0.95)');
+    ctx.fillStyle = sun;
+    ctx.fillRect(0, gy, viewW, viewH - gy);
+    ctx.strokeStyle = 'rgba(150,90,40,0.55)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(0, gy + 0.5); ctx.lineTo(viewW, gy + 0.5); ctx.stroke();
+  } else {
+    const grad = ctx.createLinearGradient(0, gy - 20, 0, viewH);
+    grad.addColorStop(0, 'rgba(255,150,80,0.10)');
+    grad.addColorStop(1, 'rgba(255,110,40,0.30)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, gy, viewW, viewH - gy);
+    ctx.strokeStyle = 'rgba(255,205,150,0.35)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(0, gy + 0.5); ctx.lineTo(viewW, gy + 0.5); ctx.stroke();
+  }
+
+  if (showGrid.checked) {
+    // The 112x160 authoring grid, so you can see his real proportions.
+    ctx.strokeStyle = lightBg.checked ? 'rgba(60,40,20,0.16)' : 'rgba(255,190,120,0.10)';
+    ctx.lineWidth = 1;
+    const top = gy - BASEH * S, left = pet.x - CX * S;
+    ctx.beginPath();
+    for (let x = 0; x <= BASEW; x += 14) { ctx.moveTo(left + x * S, top); ctx.lineTo(left + x * S, gy); }
+    for (let y = 0; y <= BASEH; y += 20) { ctx.moveTo(left, top + y * S); ctx.lineTo(left + BASEW * S, top + y * S); }
+    ctx.stroke();
+  }
+
+  const p = buildPose(dt);
+
+  // The buddy lives on the author grid: logical (CX, GROUNDY) is the point he
+  // stands on, so that is the transform origin. The grid's Y axis already
+  // grows downward, like the canvas.
+  ctx.save();
+  ctx.translate(pet.x - pet.facing * CX * S, gy - GROUNDY * S);
+  ctx.scale(pet.facing * S, S);
+  drawPet(p);
+  ctx.restore();
+
+  if (pet.bubble) drawBubbleOverlay();
+}
+
+function drawBubbleOverlay() {
+  const b = pet.bubble;
+  const age = pet.t - b.born;
+  const left = b.life - age;
+  if (left <= 0) { pet.bubble = null; return; }
+
+  // Pop in with a slight overshoot, then fade over the last 0.35s.
+  const inT = Math.min(1, age / 0.22);
+  const u = inT - 1;
+  const pop = inT < 1 ? 1 + 2.7 * u * u * u + 1.7 * u * u : 1;
+  const alpha = Math.min(1, left / 0.35);
+  // Keep the bubble fully on screen when he walks to an edge.
+  const half = b.kind === 'think' ? 120 : 136;
+  const bx = Math.min(Math.max(pet.x + Math.sin(age * 1.6) * 3 * S, half), Math.max(half, viewW - half));
+  // Sit the tail tip right at the top of his head.
+  const by = Math.max(70, groundY() - (GROUNDY - 12) * S);
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  if (b.kind === 'think') drawThink(bx, by, b.text, pop);
+  else drawBubble(bx, by, b.text, pop);
+  ctx.restore();
+}
+
+
+
+
+
+
+
+
+
+// ---- idle behaviour: he picks things to do on his own -----------------------
+
+// Idle behaviour: what he does when nobody asks (AUTO_ACTIONS = action, secs,
+// line to say, face to make while doing it).
+const AUTO_ACTIONS = [
+  ['walk', 3.2, null, null], ['spin', 1.6, 'spinjitzu!', 'happy'],
+  ['wave', 2.4, 'hiya-ya!', 'happy'], ['dance', 3.6, 'ninja, go!', 'happy'],
+  ['happy', 1.4, 'fire never gives up!', 'happy'], ['sleep', 6.0, 'so sleepy...', 'sleepy'],
+  ['walk', 2.6, null, null], ['walk', 4.0, "i'm the fire ninja!", 'happy'],
+];
+
+function tickBehaviour(dt) {
+  const t = pet.t;
+
+  if (pet.action !== 'idle' && t > pet.until) {
+    setAction('idle', 0);
+    pet.exprForced = false;
+    pet.nextChatter = t + 1.2;
+  }
+  // Walking moves him along the floor; he turns at the edges. This runs before
+  // the bubble check below, so he can walk and talk at the same time instead of
+  // freezing mid-stride until the line finishes.
+  if (pet.action === 'walk') {
+    pet.x += pet.dir * pet.speed * dt * S * 0.9;
+    const margin = 46 * S;
+    if (pet.x < margin) { pet.x = margin; pet.dir = 1; }
+    if (pet.x > viewW - margin) { pet.x = viewW - margin; pet.dir = -1; }
+    pet.facing = pet.dir;
+  } else if (pet.action === 'idle') {
+    pet.facing = 1;
+  }
+
+  if (t < pet.bubbleUntil) return;                    // never interrupt a line
+  if (!autoChk.checked) return;                        // "random chatter" is off
+
+  if (t > pet.nextChatter) {
+    if (Math.random() < 0.55) {
+      const [a, secs, line, e] = AUTO_ACTIONS[(Math.random() * AUTO_ACTIONS.length) | 0];
+      setAction(a, secs);
+      pet.exprForced = false;
+      if (line) say(line, e, { life: secs * 0.8 });
+      else { pet.expr = e || 'neutral'; pet.exprUntil = t + secs; }
+    } else {
+      const [text, e] = PHRASES[(Math.random() * PHRASES.length) | 0];
+      say(text, e);
+    }
+    pet.nextChatter = t + IDLE_MS / 1000 + Math.random() * 3.5;
+  }
+}
+
+// ---- UI --------------------------------------------------------------------
+
+function buildButtons() {
+  const acts = document.getElementById('actions');
+  for (const key of ['idle', 'walk', 'wave', 'dance', 'sleep', 'spin', 'boop']) {
+    const b = document.createElement('button');
+    b.className = 'btn';
+    b.textContent = key;
+    b.dataset.act = key;
+    b.onclick = () => {
+      if (key === 'boop') { boop(); markActive(); return; }
+      pet.exprForced = false;
+      if (key === 'idle') {
+        setAction('idle', 0);
+        pet.bubble = null; pet.talkUntil = 0;
+        pet.expr = 'neutral'; pet.exprUntil = pet.t + 1.5;
+        pet.nextChatter = pet.t + 1.5;
+      } else if (key === 'walk') {
+        setAction('walk', 6);
+        pet.dir = pet.x < viewW / 2 ? 1 : -1;
+      } else if (key === 'sleep') {
+        setAction('sleep', 7); pet.expr = 'sleepy';
+      } else if (key === 'spin') {
+        setAction('spin', 2.0);
+      } else {
+        setAction(key, 3.2);
+      }
+      markActive();
+    };
+    acts.appendChild(b);
+  }
+
+  const faces = document.getElementById('faces');
+  for (const name of EXPR_NAMES) {
+    const b = document.createElement('button');
+    b.className = 'btn face';
+    b.textContent = name;
+    b.dataset.face = name;
+    b.onclick = () => { setAction('idle', 0); setFace(name, 3.5); markActive(); };
+    faces.appendChild(b);
+  }
+  markActive();
+}
+
+function markActive() {
+  document.querySelectorAll('#actions .btn').forEach(b =>
+    b.classList.toggle('on', b.dataset.act === pet.action));
+  document.querySelectorAll('#faces .btn').forEach(b =>
+    b.classList.toggle('on', b.dataset.face === pet.expr));
+}
+
+function wireInput() {
+  const input = document.getElementById('say');
+  const send = () => {
+    const v = input.value.trim();
+    if (!v) { boop(); return; }
+    reply(v);
+    input.value = '';
+    input.blur();
+    markActive();
+  };
+  document.getElementById('send').onclick = send;
+  document.getElementById('boop').onclick = () => { boop(); markActive(); };
+  input.addEventListener('keydown', e => {
+    e.stopPropagation();                       // typing must not fire shortcuts
+    if (e.key === 'Enter') { e.preventDefault(); send(); }
+  });
+  document.addEventListener('keydown', e => {
+    if (e.code === 'Space' && document.activeElement !== input) {
+      e.preventDefault();
+      boop();
+      markActive();
+    }
+  });
+  autoChk.addEventListener('change', () => {
+    // Re-arming the timer means a long "off" stretch doesn't fire a burst the
+    // instant chatter is switched back on.
+    pet.nextChatter = pet.t + 1.2;
+  });
+  // The "ninja hood" checkbox hides the wrap so you can see the bare face print.
+  const hoodChk = document.getElementById('hood');
+  hoodChk.addEventListener('change', () => { pet.hood = hoodChk.checked; });
+  cv.addEventListener('pointerdown', e => {
+    const r = cv.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;   // CSS pixels, like the scene
+    const gy = groundY(), top = gy - BASEH * S;
+    if (x > pet.x - 44 * S && x < pet.x + 44 * S && y > top && y < gy) {
+      boop();                                  // clicked him
+    } else if (x < pet.x) {                     // clicked beside him: walk over
+      pet.dir = -1;
+      if (pet.action === 'idle') setAction('walk', 2.5);
+    } else {
+      pet.dir = 1;
+      if (pet.action === 'idle') setAction('walk', 2.5);
+    }
+    markActive();
+  });
+}
+
+// ---- main loop -------------------------------------------------------------
+
+let prev = performance.now();
+let lastMark = '';
+function loop(now) {
+  const dt = Math.min((now - prev) / 1000, 0.05);
+  prev = now;
+  pet.t += dt;
+  tickBehaviour(dt);
+  drawStage(dt);
+  // Keep the buttons lit up with whatever he is doing on his own.
+  const mark = pet.action + '/' + pet.expr;
+  if (mark !== lastMark) { lastMark = mark; markActive(); }
+  requestAnimationFrame(loop);
+}
+
+function boot() {
+  resize();
+  pet.x = viewW / 2;
+  buildButtons();
+  wireInput();
+  window.addEventListener('resize', () => {
+    resize();
+    pet.x = Math.min(Math.max(pet.x, 46 * S), Math.max(46 * S, viewW - 46 * S));
+  });
+  requestAnimationFrame(loop);
+}
+boot();
+</script>
+</body>
+</html>
+
