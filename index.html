@@ -16,7 +16,7 @@
 <meta name="description" content="Onidia is a chibi desktop buddy in pure Go. She walks, blinks, naps, talks in comic speech bubbles, and answers you out loud. No cgo, no toolkit, ~0% idle CPU — happy on a Raspberry Pi.">
 <meta name="theme-color" content="#0c1018">
 <meta property="og:title" content="Onidia — a tiny anime companion for your desktop">
-<meta property="og:description" content="A chibi desktop buddy in pure Go. Walk her, fling her, talk to her. She answers out loud.">
+<meta property="og:description" content="How to move Onidia: drag to reposition, scroll to resize, double-click to hide, and the Haiya! button to bring her back. Meet her, then read the menu.">
 <meta property="og:type" content="website">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="favicon.png">
@@ -965,7 +965,7 @@ footer{border-top:1px solid var(--surface-3);padding:52px 0 40px;margin-top:40px
       <a href="#meet">Meet her</a>
       <a href="#inaction">In Action</a>
       <a href="nerd.html">Nerd start from here</a>
-      <a href="https://onidia.babeh.com/docs/index.html">Docs</a>
+      <a href="https://onidia.babeh.com/docs/">Docs</a>
       <a href="https://registry.babeh.com/">Agents</a>
       <a href="#contact">Contact</a>
     </nav>
@@ -1556,7 +1556,15 @@ onidia-chat -provider ollama -model qwen2:1.5b</pre>
 
     <div class="contact-grid rv">
       <div class="card" style="padding:32px">
-        <form id="cform" action="https://formspree.io/f/mdekrvdp" method="POST" novalidate>
+        <a class="clink" href="docs/onidia-chat-menu.html">
+          <span class="ci ci-chat">
+            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
+              <path d="M4 4h4l5 20 2 20h6l2-12 5-14 2-8h4"/>
+            </svg></span>
+          <span><b>Menu explained</b><small>every button, from top to bottom</small></span>
+          <span class="go">&rarr;</span>
+        </a>
+        <form id="cform" method="POST" novalidate>
           <!-- Honeypot. Formspree treats a filled _gotcha as spam and silently
                drops it, so real visitors never see this and never have to
                solve a captcha. Kept off-screen rather than display:none,
