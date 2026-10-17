@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1MPT6SXMJN"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-1MPT6SXMJN');
+</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Model provider &mdash; Onidia</title>
+<meta name="description" content="How Onidia uses a model as her brain to answer you, which model providers she supports, and which model to pick for daily conversation.">
+<link rel="stylesheet" href="setup.css">
+</head>
+<body>
+
+<div class="topbar"><div class="wrap topbar-in">
+  <a class="brand" href="../index.html">&larr; Onidia</a>
+  <nav>
+    <a href="model-provider.html" aria-current="page">Model Provider</a>
+    <a href="setup-typecast.html">Speech</a>
+    <a href="agents.html">Agents</a>
+  </nav>
+</div></div>
+
+<section><div class="wrap">
+  <span class="eyebrow">Model provider</span>
+  <h1 class="h-lg" style="margin-top:20px">How her <span class="grad-teal">mind works.</span></h1>
+  <p class="lede">Onidia is a body without a mind on her own. The model is her brain: you ask her
+    something, your words travel to the model, and the model writes the answer that she speaks or
+    shows you. Everything she does &mdash; her replies, her reactions, the way she puts words
+    together &mdash; comes from the model you choose.</p>
+  <div class="chips">
+    <span class="chip on">One model at a time</span>
+    <span class="chip">Swap in settings</span>
+    <span class="chip">Applies on restart</span>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2 class="h-md">Which provider to use</h2>
+  <p class="lede" style="margin-top:0">She can talk to several model providers. Pick the one that
+    fits your setup &mdash; each one is a card below.</p>
+  <div class="grid" style="margin-top:20px">
+    <a class="card" href="setup-gemini.html">
+      <div class="provider-box">&#128218;</div>
+      <h3>Gemini</h3>
+      <p>Google's models via AI Studio. Free tier, no card needed, five minutes to start.</p>
+      <div class="chips">
+        <span class="chip on">Free tier</span>
+        <span class="chip">Cloud</span>
+      </div>
+    </a>
+    <a class="card" href="setup-bedrock.html">
+      <div class="provider-box">&#128218;</div>
+      <h3>Bedrock</h3>
+      <p>Anthropic's Claude on AWS. Pay per token, no key written into her config.</p>
+      <div class="chips">
+        <span class="chip">Claude</span>
+        <span class="chip">Pay per token</span>
+      </div>
+    </a>
+    <a class="card" href="setup-hailo-ollama.html">
+      <div class="provider-box">&#128218;</div>
+      <h3>Hailo-Ollama</h3>
+      <p>Local LLM on Raspberry Pi 5 with Hailo AI HAT+. Runs on the NPU, nothing leaves your home.</p>
+      <div class="chips">
+        <span class="chip on">100% local</span>
+        <span class="chip">No API key</span>
+      </div>
+    </a>
+    <a class="card" href="#open-router">
+      <div class="provider-box">&#128218;</div>
+      <h3>OpenRouter</h3>
+      <p>Access many models through one endpoint. Pick from a catalog of open and commercial models.</p>
+      <div class="chips">
+        <span class="chip">Many models</span>
+        <span class="chip">Cloud</span>
+      </div>
+    </a>
+  </div>
+</div></section>
+
+<section id="open-router"><div class="wrap">
+  <h2 class="h-md">OpenRouter &mdash; many models, one door</h2>
+  <p class="lede" style="margin-top:0">OpenRouter is a router, not a single model. You point Onidia
+    at it and choose from its catalog: open models, commercial models, new releases. Good if you
+    want to try different models without creating accounts everywhere.</p>
+  <div class="note">
+    <b>Tip:</b>
+    <p>You still need an OpenRouter API key and a model id from their catalog. The setup is the
+      same shape as the other providers &mdash; key in the config, provider set to match.</p>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2 class="h-md">Which model to pick</h2>
+  <p class="lede" style="margin-top:0">For day-to-day chatting you do not need the biggest model
+    available.</p>
+  <div class="card">
+    <h3>Nova Lite or Gemini Flash &mdash; enough for daily conversation</h3>
+    <p>Both are fast, inexpensive, and more than capable of ordinary chat. Nova Lite on Bedrock or
+      Gemini Flash on Google AI Studio will answer quickly and keep the cost near zero. Save the
+      larger models for when you need deeper reasoning or longer context.</p>
+  </div>
+</div></section>
+
+<footer class="foot"><div class="wrap foot-in">
+  <a href="../index.html">Onidia</a><span class="dot">&#8226;</span>
+  <a href="setup-typecast.html">Speech</a><span class="dot">&#8226;</span>
+  <a href="agents.html">Agents</a><span class="dot">&#8226;</span>
+  <a href="user-guide.html">User guide</a>
+</div></footer>
+
+<script>
+(function(){
+  var $ = function(s){ return document.querySelector(s); };
+  var pre = function(el){ return el ? el.innerText : ''; };
+  function fallback(el, done){
+    var t = document.createElement('textarea');
+    t.value = pre(el); t.setAttribute('readonly','');
+    t.style.cssText = 'position:absolute;left:-9999px';
+    document.body.appendChild(t); t.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(t); done();
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.copy'), function(b){
+    b.addEventListener('click', function(){
+      var el = $(b.dataset.copy);
+      var done = function(){
+        b.classList.add('done'); b.textContent = 'copied';
+        setTimeout(function(){ b.classList.remove('done'); b.textContent = 'copy'; }, 1600);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(pre(el)).then(done, function(){ fallback(el, done); });
+      } else { fallback(el, done); }
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
